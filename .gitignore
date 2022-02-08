@@ -13,3 +13,8 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+.idea
+.DS_Store
+vendor
+.vscode
+__debug_bin
