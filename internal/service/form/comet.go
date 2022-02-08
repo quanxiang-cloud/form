@@ -2,6 +2,7 @@ package form
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/quanxiang-cloud/form/pkg/client"
 )
@@ -11,6 +12,7 @@ type comet struct {
 }
 
 func NewForm() Form {
+
 	return &comet{}
 }
 
@@ -30,7 +32,7 @@ func (c *comet) Search(ctx context.Context, req *SearchReq) (*SearchResp, error)
 		Sort: req.Sort,
 		Size: req.Size,
 		Page: req.Page,
-	}, dsl, req.TableID)
+	}, dsl, getTableID(req.AppID, req.TableID))
 	if err != nil {
 		return nil, err
 	}
@@ -40,4 +42,11 @@ func (c *comet) Search(ctx context.Context, req *SearchReq) (*SearchResp, error)
 		Entities:     searchResp.Entities,
 		Aggregations: searchResp.Aggregations,
 	}, nil
+}
+
+func getTableID(appID, tableID string) string {
+	if len(appID) == 36 {
+		return fmt.Sprintf("%s%s%s", "A", appID, tableID)
+	}
+	return fmt.Sprintf("%s%s%s", "a", appID, tableID)
 }

@@ -2,6 +2,8 @@ package form
 
 import (
 	"context"
+	"github.com/quanxiang-cloud/form/pkg/client"
+	config2 "github.com/quanxiang-cloud/form/pkg/misc/config"
 
 	error2 "github.com/quanxiang-cloud/cabin/error"
 	"github.com/quanxiang-cloud/form/internal/filters"
@@ -15,20 +17,43 @@ type auth struct {
 	comet
 }
 
-func NewAuthForm() Form {
-	return &auth{}
+func NewAuthForm(conf *config2.Config) (Form, error) {
+	permits, err := service.NewPermission(conf)
+	if err != nil {
+		return nil, err
+	}
+	formApi, err := client.NewFormAPI()
+	if err != nil {
+		return nil, err
+	}
+	return &auth{
+		permit: permits,
+		comet: comet{
+			formClient: formApi,
+		},
+	}, nil
 }
 
 func (a *auth) Search(ctx context.Context, req *SearchReq) (*SearchResp, error) {
+
 	bus := &bus{
-		// TODO
+		AppID:     req.AppID,
+		userID:    req.UserID,
+		depID:     req.DepID,
+		tableName: req.TableID,
+		permit:    &permit{},
+		method:    "find",
 	}
-	a.pre(ctx, bus, checkOperate())
+	err := a.pre(ctx, bus, checkOperate())
+	if err != nil {
+		return nil, err
+	}
 	resp, err := a.comet.Search(ctx, req)
 	if err != nil {
 		return nil, err
 	}
-	a.post(ctx, bus)
+	bus.entity = resp.Entities
+	a.post(ctx, bus, JSONFilter())
 	return resp, nil
 }
 
@@ -38,7 +63,7 @@ type bus struct {
 	tableName string
 	AppID     string
 	permit    *permit
-	entity    *Entity
+	entity    interface{}
 	method    string
 }
 
@@ -124,4 +149,30 @@ func (a *auth) getPermit(ctx context.Context, bus *bus) error {
 	return nil
 }
 
-func (a *auth) post(ctx context.Context, bus *bus) {}
+//FilterOption FilterOption
+type FilterOption func(data interface{}, filter map[string]interface{}) error
+
+func (a *auth) post(ctx context.Context, bus *bus, opts ...FilterOption) error {
+	if bus.permit.permitTypes == models.InitType {
+		return nil
+	}
+	for _, opt := range opts {
+		opt(bus.entity, bus.permit.Filter)
+	}
+	return nil
+}
+
+// JSONFilter JSONFilter
+func JSONFilter() FilterOption {
+	return func(data interface{}, filter map[string]interface{}) error {
+		if data == nil {
+			return nil
+		}
+
+		if filter == nil {
+			return error2.New(code.ErrNotPermit)
+		}
+		filters.JSONFilter2(data, filter)
+		return nil
+	}
+}

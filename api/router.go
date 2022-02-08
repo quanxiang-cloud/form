@@ -103,7 +103,10 @@ func permissionRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 }
 
 func cometRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
-	authForm := form.NewAuthForm()
+	authForm, err := form.NewAuthForm(c)
+	if err != nil {
+		return err
+	}
 	// form := form.NewForm()
 
 	cometHome := r[homePath].Group("/form/:tableName")
