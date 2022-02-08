@@ -79,36 +79,37 @@ func (f *form) Search(ctx context.Context, req *SearchReq) (*SearchResp, error) 
 }
 
 func (f *form) callSearch(ctx context.Context, req *SearchReq) (*client.SearchResp, error) {
-	searchReq := &engine.SearchReq{
-		AppID:   req.AppID,
-		TableID: getTableID(req.AppID, req.TableID),
-		Page:    req.Page,
-		Size:    req.Size,
-		Sort:    req.Sort,
-		Query:   req.Query,
-		Aggs:    req.Aggs,
-	}
+	//searchReq := &engine.SearchReq{
+	//	AppID:   req.AppID,
+	//	TableID: getTableID(req.AppID, req.TableID),
+	//	Page:    req.Page,
+	//	Size:    req.Size,
+	//	Sort:    req.Sort,
+	//	Query:   req.Query,
+	//	Aggs:    req.Aggs,
+	//}
+	//
+	//authOption := f.notAuth
+	//if req.IsAuth {
+	//	authOption = f.auth
+	//	permit, err := f.getPermit(ctx, &GetPerInCacheReq{
+	//		AppID:  req.AppID,
+	//		DepID:  req.DepID,
+	//		UserID: req.UserID,
+	//		FormID: req.TableID,
+	//	})
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//	searchReq.Permit = permit
+	//}
 
-	authOption := f.notAuth
-	if req.IsAuth {
-		authOption = f.auth
-		permit, err := f.getPermit(ctx, &GetPerInCacheReq{
-			AppID:  req.AppID,
-			DepID:  req.DepID,
-			UserID: req.UserID,
-			FormID: req.TableID,
-		})
-		if err != nil {
-			return nil, err
-		}
-		searchReq.Permit = permit
-	}
-
-	searchData, err := engine.SearchData(ctx, authOption, searchReq)
-	if err != nil {
-		return nil, err
-	}
-	return searchData, nil
+	//searchData, err := engine.SearchData(ctx, authOption, searchReq)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//return searchData, nil
+	return nil, nil
 }
 
 func (f *form) getPermit(ctx context.Context, req *GetPerInCacheReq) (*engine.Permit, error) {
