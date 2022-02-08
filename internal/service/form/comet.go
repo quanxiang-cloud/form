@@ -11,9 +11,19 @@ type comet struct {
 	formClient *client.FormAPI
 }
 
-func NewForm() Form {
+func NewForm() (Form, error) {
+	return newForm()
+}
 
-	return &comet{}
+func newForm() (*comet, error) {
+	formApi, err := client.NewFormAPI()
+	if err != nil {
+		return nil, err
+	}
+
+	return &comet{
+		formClient: formApi,
+	}, nil
 }
 
 func (c *comet) Search(ctx context.Context, req *SearchReq) (*SearchResp, error) {

@@ -2,7 +2,6 @@ package form
 
 import (
 	"context"
-	"github.com/quanxiang-cloud/form/pkg/client"
 	config2 "github.com/quanxiang-cloud/form/pkg/misc/config"
 
 	error2 "github.com/quanxiang-cloud/cabin/error"
@@ -14,7 +13,7 @@ import (
 
 type auth struct {
 	permit service.Permission
-	comet
+	*comet
 }
 
 func NewAuthForm(conf *config2.Config) (Form, error) {
@@ -22,15 +21,13 @@ func NewAuthForm(conf *config2.Config) (Form, error) {
 	if err != nil {
 		return nil, err
 	}
-	formApi, err := client.NewFormAPI()
+	comet, err := newForm()
 	if err != nil {
 		return nil, err
 	}
 	return &auth{
 		permit: permits,
-		comet: comet{
-			formClient: formApi,
-		},
+		comet:  comet,
 	}, nil
 }
 
