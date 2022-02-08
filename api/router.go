@@ -2,6 +2,7 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/quanxiang-cloud/form/internal/service/form"
 	config2 "github.com/quanxiang-cloud/form/pkg/misc/config"
 )
 
@@ -102,14 +103,13 @@ func permissionRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 }
 
 func cometRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
-	form, err := NewForm(c)
-	if err != nil {
-		return err
-	}
+	authForm := form.NewAuthForm()
+	// form := form.NewForm()
+
 	cometHome := r[homePath].Group("/form/:tableName")
 	{
-		cometHome.POST("/search", Search(form, true))
-		cometHome.POST("/get", Get(form, true))
+		cometHome.POST("/search", Search(authForm))
+		// cometHome.POST("/get", Get(form, true))
 		//cometHome.POST("/create", Create(form ,true ))
 		//cometHome.POST("/update", Update(form ,true ))
 		//cometHome.POST("/delete", Delete(form ,true ))
