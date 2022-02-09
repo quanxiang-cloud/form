@@ -10,16 +10,21 @@ type Form interface {
 	Search(ctx context.Context, req *SearchReq) (*SearchResp, error)
 }
 
-type SearchReq struct {
+type base struct {
 	AppID   string
 	TableID string
-	Page    int64
-	Size    int64
-	Sort    []string
-	Query   types.Query
-	Aggs    types.Any
-	UserID  string
-	DepID   string
+
+	UserID string
+	DepID  string
+}
+
+type SearchReq struct {
+	base
+	Page  int64
+	Size  int64
+	Sort  []string
+	Query types.Query
+	Aggs  types.Any
 }
 
 type SearchResp struct {

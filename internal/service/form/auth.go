@@ -2,6 +2,7 @@ package form
 
 import (
 	"context"
+
 	config2 "github.com/quanxiang-cloud/form/pkg/misc/config"
 
 	error2 "github.com/quanxiang-cloud/cabin/error"
@@ -13,7 +14,7 @@ import (
 
 type auth struct {
 	permit service.Permission
-	*comet
+	form   Form
 }
 
 func NewAuthForm(conf *config2.Config) (Form, error) {
@@ -21,18 +22,17 @@ func NewAuthForm(conf *config2.Config) (Form, error) {
 	if err != nil {
 		return nil, err
 	}
-	comet, err := newForm()
+	form, err := newForm()
 	if err != nil {
 		return nil, err
 	}
 	return &auth{
 		permit: permits,
-		comet:  comet,
+		form:   form,
 	}, nil
 }
 
 func (a *auth) Search(ctx context.Context, req *SearchReq) (*SearchResp, error) {
-
 	bus := &bus{
 		AppID:     req.AppID,
 		userID:    req.UserID,
@@ -45,7 +45,7 @@ func (a *auth) Search(ctx context.Context, req *SearchReq) (*SearchResp, error) 
 	if err != nil {
 		return nil, err
 	}
-	resp, err := a.comet.Search(ctx, req)
+	resp, err := a.form.Search(ctx, req)
 	if err != nil {
 		return nil, err
 	}
