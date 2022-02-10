@@ -23,7 +23,7 @@ const (
 )
 
 func init() {
-	flag.StringVar(&polyHost, "poly-host", "http://192.168.200.20:9017", "poly api host. default http://polyapi")
+	flag.StringVar(&polyHost, "poly-host", "http://ployapi", "poly api host. default http://polyapi")
 	flag.DurationVar(&polyProxyTimeout, "poly-proxy-timeout", 20*time.Second, "poly porxy timeout.default 20s")
 	flag.IntVar(&polyProxymaxIdleConns, "poly-proxy-max-idle", 30, "poly proxy max idle conns. default 30")
 }
