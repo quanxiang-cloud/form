@@ -113,9 +113,22 @@ func cometRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 	{
 		cometHome.POST("/search", Search(authForm))
 		// cometHome.POST("/get", Get(form, true))
-		//cometHome.POST("/create", Create(form ,true ))
+		cometHome.POST("/create", Create(authForm))
 		//cometHome.POST("/update", Update(form ,true ))
 		//cometHome.POST("/delete", Delete(form ,true ))
+	}
+	return nil
+
+}
+
+func innerRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
+	form, err := form.NewForm()
+	if err != nil {
+		return err
+	}
+	inner := r[internalPath].Group("/form/:tableName")
+	{
+		inner.POST("/search", Search(form))
 	}
 	return nil
 

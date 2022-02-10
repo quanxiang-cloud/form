@@ -84,20 +84,20 @@ type InsertResp struct {
 
 // Insert insert
 func (f *FormAPI) Insert(ctx context.Context, tableName string, entity interface{}) (*InsertResp, error) {
-	//marshal, err := json.Marshal(entity)
-	//if err != nil {
-	//	return nil ,err
-	//}
-	//any, err := rawToAny(marshal)
-	//if err != nil {
-	//	return nil ,err
-	//}
-
+	marshal, err := json.Marshal(entity)
+	if err != nil {
+		return nil, err
+	}
+	any, err := rawToAny(marshal)
+	if err != nil {
+		return nil, err
+	}
+	anyArr := make([]*anypb.Any, 0)
+	anyArr = append(anyArr, any)
 	insert, err := f.client.Insert(ctx, &pb.InsertReq{
 		TableName: tableName,
-		//Entities: any,
+		Entities:  anyArr,
 	})
-
 	if err != nil {
 		return nil, err
 	}

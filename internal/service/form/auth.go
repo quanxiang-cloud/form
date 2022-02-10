@@ -54,6 +54,15 @@ func (a *auth) Search(ctx context.Context, req *SearchReq) (*SearchResp, error) 
 	return resp, nil
 }
 
+func (a *auth) Create(ctx context.Context, req *CreateReq) (*CreateResp, error) {
+	resp, err := a.comet.Create(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+
+}
+
 type bus struct {
 	userID    string
 	depID     string
