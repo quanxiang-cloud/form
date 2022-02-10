@@ -26,10 +26,10 @@ func CheckURL(c *gin.Context) (appID, tableName string, err error) {
 func Search(f form.Form) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		depIDS := strings.Split(c.GetHeader(_departmentID), ",")
-		req := &form.SearchReq{
-			UserID: c.GetHeader(_userID),
-			DepID:  depIDS[len(depIDS)-1],
-		}
+		req := &form.SearchReq{}
+		req.UserID = c.GetHeader(_userID)
+		req.DepID = depIDS[len(depIDS)-1]
+
 		var err error
 		req.AppID, req.TableID, err = CheckURL(c)
 		if err != nil {
@@ -62,5 +62,27 @@ func Create(f form.Form) gin.HandlerFunc {
 			return
 		}
 		resp.Format(f.Create(header.MutateContext(c), req)).Context(c)
+	}
+}
+
+func Action(p *form.Poly) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		depIDS := strings.Split(c.GetHeader(_departmentID), ",")
+		req := &form.ProxyReq{}
+		req.UserID = c.GetHeader(_userID)
+		req.DepID = depIDS[len(depIDS)-1]
+		req.Action = c.Param("action")
+
+		var err error
+		req.AppID, req.TableID, err = CheckURL(c)
+		if err != nil {
+			c.AbortWithError(http.StatusBadRequest, err)
+			return
+		}
+		if err = c.ShouldBind(req); err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+		resp.Format(p.Proxy(header.MutateContext(c), req)).Context(c)
 	}
 }

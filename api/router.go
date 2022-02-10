@@ -116,6 +116,8 @@ func cometRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 		cometHome.POST("/create", Create(authForm))
 		//cometHome.POST("/update", Update(form ,true ))
 		//cometHome.POST("/delete", Delete(form ,true ))
+
+		cometHome.POST("/:action", Action(form.NewPoly()))
 	}
 	return nil
 
