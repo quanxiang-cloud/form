@@ -10,6 +10,7 @@ type common struct {
 	comet         *comet
 	userID        string
 	depID         string
+	userName      string
 	tag           string
 	key           string
 	refValue      types.Ref // ref 结构
@@ -24,6 +25,7 @@ type subTable struct {
 type comReq struct {
 	comet         *comet
 	userID        string
+	userName      string
 	depID         string
 	tag           string
 	key           string
@@ -32,14 +34,15 @@ type comReq struct {
 	oldValue      types.M
 }
 
-func (s *subTable) GetTag() string {
+func (s *subTable) getTag() string {
 	return "sub_table"
 }
 
-func (c *common) SetValue(com *comReq) {
+func (c *common) setValue(com *comReq) {
 	c.comet = com.comet
 	c.userID = com.userID
 	c.depID = com.depID
+	c.userName = com.userName
 	c.tag = com.tag
 	c.key = com.key
 	c.refValue = com.refValue
@@ -47,7 +50,7 @@ func (c *common) SetValue(com *comReq) {
 	c.oldValue = com.oldValue
 }
 
-func (s *subTable) HandlerFunc(ctx context.Context, action string) error {
+func (s *subTable) handlerFunc(ctx context.Context, action string) error {
 
 	switch action {
 	case post: // 更新
@@ -102,13 +105,13 @@ func (c *common) new(ctx context.Context, refData *RefData, originalData *Origin
 			return err
 		}
 		req := &CreateReq{
-			AppID:       refData.AppID,
-			TableID:     refData.TableID,
-			Entity:      opt.Entity,
-			UserID:      c.userID,
-			CreatorName: "zht",
-			Ref:         opt.Ref,
+			Entity: opt.Entity,
+			Ref:    opt.Ref,
 		}
+		req.AppID = refData.AppID
+		req.TableID = refData.TableID
+		req.UserName = c.userName
+		req.UserID = c.userID
 		_, err = c.comet.Create(ctx, req)
 		if err != nil {
 			return err

@@ -34,6 +34,7 @@ type router func(c *config2.Config, r map[string]*gin.RouterGroup) error
 var routers = []router{
 	permissionRouter,
 	cometRouter,
+	innerRouter,
 }
 
 // NewRouter 开启路由
@@ -107,15 +108,14 @@ func cometRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 	if err != nil {
 		return err
 	}
-	// form := form.NewForm()
-
 	cometHome := r[homePath].Group("/form/:tableName")
 	{
 		cometHome.POST("/search", Search(authForm))
-		// cometHome.POST("/get", Get(form, true))
+		cometHome.POST("/get", Get(authForm))
 		cometHome.POST("/create", Create(authForm))
-		//cometHome.POST("/update", Update(form ,true ))
-		//cometHome.POST("/delete", Delete(form ,true ))
+
+		cometHome.POST("/update", Update(authForm))
+		cometHome.POST("/delete", Delete(authForm))
 
 		cometHome.POST("/:action", Action(form.NewPoly()))
 	}

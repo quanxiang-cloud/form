@@ -18,6 +18,34 @@ type FormAPI struct {
 	client pb.DSLServiceClient
 }
 
+type FindOptions struct {
+	Page int64    `json:"page"`
+	Size int64    `json:"size"`
+	Sort []string `json:"sort"`
+}
+
+type FormReq struct {
+	FindOptions
+	DslQuery interface{}
+	Entity   interface{}
+	TableID  string
+}
+
+type StructorReq struct {
+	FindOptions
+	TableID string
+	Dsl     *anypb.Any
+	Entity  *anypb.Any
+}
+
+type FormResp struct {
+	Aggregations interface{}              `json:"aggregations"`
+	Entities     []map[string]interface{} `json:"entities"`
+	Total        int64                    `json:"total"`
+	Entity       map[string]interface{}   `json:"entity"`
+	SuccessCount int64                    `json:"successCount"`
+}
+
 func NewFormAPI() (*FormAPI, error) {
 	client, err := connect(target)
 	if err != nil {
@@ -38,28 +66,53 @@ func connect(target string) (pb.DSLServiceClient, error) {
 	return pb.NewDSLServiceClient(conn), nil
 }
 
-type SearchResp struct {
-	Aggregations interface{}              `json:"aggregations"`
-	Entities     []map[string]interface{} `json:"entities"`
-	Total        int64                    `json:"total"`
+func getStructorReq(req *FormReq) (*StructorReq, error) {
+	structor := &StructorReq{}
+	structor.Size = req.Size
+	structor.Page = req.Page
+	structor.Sort = req.Sort
+	if req.DslQuery != nil {
+		marshal, err := json.Marshal(req.DslQuery)
+		if err != nil {
+			return nil, err
+		}
+		any, err := rawToAny(marshal)
+		if err != nil {
+			return nil, err
+		}
+		structor.Dsl = any
+	}
+	if req.Entity != nil {
+		marshal, err := json.Marshal(req.Entity)
+		if err != nil {
+			return nil, err
+		}
+		any, err := rawToAny(marshal)
+		if err != nil {
+			return nil, err
+		}
+		structor.Entity = any
+	}
+
+	return structor, nil
 }
 
-func (f *FormAPI) Search(ctx context.Context, options FindOptions, dsl interface{}, tableName string) (*SearchResp, error) {
-	marshal, err := json.Marshal(dsl)
-	if err != nil {
-		return nil, err
-	}
-	any, err := rawToAny(marshal)
-	if err != nil {
-		return nil, err
-	}
+type SearchResp struct {
+	Entities []map[string]interface{} `json:"entities"`
+	Total    int64                    `json:"total"`
+}
 
+func (f *FormAPI) Search(ctx context.Context, formReq *FormReq) (*SearchResp, error) {
+	req, err := getStructorReq(formReq)
+	if err != nil {
+		return nil, err
+	}
 	searchResp, err := f.client.Find(ctx, &pb.FindReq{
-		TableName: tableName,
-		Dsl:       any,
-		Page:      options.Page,
-		Size:      options.Size,
-		Sort:      options.Sort,
+		TableName: req.TableID,
+		Dsl:       req.Dsl,
+		Page:      req.Page,
+		Size:      req.Size,
+		Sort:      req.Sort,
 	})
 	if err != nil {
 		return nil, err
@@ -78,70 +131,103 @@ func (f *FormAPI) Search(ctx context.Context, options FindOptions, dsl interface
 	}, nil
 }
 
-type InsertResp struct {
-	SuccessCount int64 `json:"count"`
-}
-
-// Insert insert
-func (f *FormAPI) Insert(ctx context.Context, tableName string, entity interface{}) (*InsertResp, error) {
-	marshal, err := json.Marshal(entity)
-	if err != nil {
-		return nil, err
-	}
-	any, err := rawToAny(marshal)
-	if err != nil {
-		return nil, err
-	}
-	anyArr := make([]*anypb.Any, 0)
-	anyArr = append(anyArr, any)
-	insert, err := f.client.Insert(ctx, &pb.InsertReq{
-		TableName: tableName,
-		Entities:  anyArr,
-	})
-	if err != nil {
-		return nil, err
-	}
-	return &InsertResp{
-		SuccessCount: insert.Count,
-	}, err
-}
-
 type UpdateResp struct {
-	Count int64 `json:"count"`
+	SuccessCount int64 `json:"successCount"`
 }
 
-func (f *FormAPI) Update(ctx context.Context, entity map[string]interface{}, dsl map[string]interface{}) (*UpdateResp, error) {
-	//dslAny, err := MarshalAny(dsl)
-	//if err != nil {
-	//	return nil ,err
-	//}
-	//entityAny, err := MarshalAny(entity)
-	//if err != nil {
-	//	return nil ,err
-	//}
+func (f *FormAPI) Update(ctx context.Context, formReq *FormReq) (*UpdateResp, error) {
+	req, err := getStructorReq(formReq)
+	if err != nil {
+		return nil, err
+	}
 	update, err := f.client.Update(ctx, &pb.UpdateReq{
-		//Entity: entityAny,
-		//Dsl:    dslAny,
+		Entity:    req.Entity,
+		Dsl:       req.Dsl,
+		TableName: req.TableID,
 	})
 	if err != nil {
 		return nil, err
 	}
 	return &UpdateResp{
-		Count: update.Count,
+		SuccessCount: update.Count,
+	}, nil
+}
+
+type InsertResp struct {
+	SuccessCount int64 `json:"successCount"`
+}
+
+func (f *FormAPI) Insert(ctx context.Context, formReq *FormReq) (*InsertResp, error) {
+	req, err := getStructorReq(formReq)
+	if err != nil {
+		return nil, err
+	}
+	anyArr := make([]*anypb.Any, 0)
+	anyArr = append(anyArr, req.Entity)
+	insert, err := f.client.Insert(ctx, &pb.InsertReq{
+		TableName: req.TableID,
+		Entities:  nil,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &InsertResp{
+		SuccessCount: insert.Count,
+	}, err
+}
+
+type GetResp struct {
+	Entity map[string]interface{} `json:"entity"`
+}
+
+func (f *FormAPI) Get(ctx context.Context, formReq *FormReq) (*GetResp, error) {
+	req, err := getStructorReq(formReq)
+	if err != nil {
+		return nil, err
+	}
+	getResp, err := f.client.FindOne(ctx, &pb.FindOneReq{
+		TableName: req.TableID,
+		Dsl:       req.Dsl,
+	})
+	if err != nil {
+		return nil, err
+	}
+	data, err := anyToRaw(getResp.GetData())
+	if err != nil {
+		return nil, err
+	}
+	var entity map[string]interface{}
+	err = json.Unmarshal(data, &entity)
+	if err != nil {
+		return nil, err
+	}
+	return &GetResp{
+		Entity: entity,
+	}, nil
+}
+
+type DeleteResp struct {
+	SuccessCount int64 `json:"successCount"`
+}
+
+func (f *FormAPI) Delete(ctx context.Context, formReq *FormReq) (*DeleteResp, error) {
+	req, err := getStructorReq(formReq)
+	if err != nil {
+		return nil, err
+	}
+	deleteResp, err := f.client.Delete(ctx, &pb.DeleteReq{
+		Dsl:       req.Dsl,
+		TableName: req.TableID,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &DeleteResp{
+		SuccessCount: deleteResp.Count,
 	}, nil
 
 }
-
-func (f *FormAPI) Delete(ctx context.Context, dsl map[string]interface{}) {
-
-}
-
-type FindOptions struct {
-	Page int64    `json:"page"`
-	Size int64    `json:"size"`
-	Sort []string `json:"sort"`
-}
-
 func anyToRaw(any *anypb.Any) (json.RawMessage, error) {
 	out := structpb.NewNullValue()
 	err := any.UnmarshalTo(out)

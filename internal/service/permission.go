@@ -73,10 +73,11 @@ func NewPermission(conf *config.Config) (Permission, error) {
 	}
 
 	u := &permission{
-		db:             db,
-		permissionRepo: redis.NewPermissionRepo(redisClient),
-		perGroupRepo:   mysql.NewPerGroupRepo(),
-		perFormRepo:    mysql.NewGroupFormRepo(),
+		db:              db,
+		permissionRepo:  redis.NewPermissionRepo(redisClient),
+		perGroupRepo:    mysql.NewPerGroupRepo(),
+		perFormRepo:     mysql.NewGroupFormRepo(),
+		permitGrantRepo: mysql.NewPerGrantRepo(),
 	}
 	return u, nil
 }

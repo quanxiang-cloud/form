@@ -63,6 +63,23 @@ func (a *auth) Create(ctx context.Context, req *CreateReq) (*CreateResp, error) 
 
 }
 
+func (a *auth) Get(ctx context.Context, req *GetReq) (*GetResp, error) {
+	resp, err := a.form.Get(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+
+}
+
+func (a *auth) Update(ctx context.Context, req *UpdateReq) (*UpdateResp, error) {
+	return a.form.Update(ctx, req)
+}
+
+func (a *auth) Delete(ctx context.Context, req *DeleteReq) (*DeleteResp, error) {
+	return nil, nil
+}
+
 type bus struct {
 	userID    string
 	depID     string
