@@ -77,9 +77,19 @@ func busTOMap(dst map[string]interface{}, bus *consensus.Bus) {
 
 func queryToMap(dst map[string]interface{}, query types.Query) {
 	qd := qd{}
-	if val, ok := query["bool"].(map[string]interface{}); ok {
-		qd.boolSet(dst, val)
+	for key, val := range query {
+		val, ok := val.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		if key == "bool" {
+			qd.boolSet(dst, val)
+			continue
+		}
+
+		qd.defaultSet(dst, val)
 	}
+
 }
 
 // bool must must_not should match term terms range lt gt lte gte
