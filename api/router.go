@@ -3,6 +3,7 @@ package api
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/quanxiang-cloud/form/internal/service/form"
+	"github.com/quanxiang-cloud/form/internal/service/guidance"
 	config2 "github.com/quanxiang-cloud/form/pkg/misc/config"
 )
 
@@ -117,7 +118,11 @@ func cometRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 		//cometHome.POST("/update", Update(form ,true ))
 		//cometHome.POST("/delete", Delete(form ,true ))
 
-		cometHome.POST("/:action", Action(form.NewPoly()))
+		g, err := guidance.New(c)
+		if err != nil {
+			return err
+		}
+		cometHome.POST("/:action", action(g))
 	}
 	return nil
 

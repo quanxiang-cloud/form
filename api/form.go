@@ -8,7 +8,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/quanxiang-cloud/cabin/tailormade/header"
 	"github.com/quanxiang-cloud/cabin/tailormade/resp"
+	"github.com/quanxiang-cloud/form/internal/service/consensus"
 	"github.com/quanxiang-cloud/form/internal/service/form"
+	"github.com/quanxiang-cloud/form/internal/service/guidance"
 )
 
 // CheckURL CheckURL
@@ -65,24 +67,25 @@ func Create(f form.Form) gin.HandlerFunc {
 	}
 }
 
-func Action(p *form.Poly) gin.HandlerFunc {
+func action(ctr guidance.Guidance) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		depIDS := strings.Split(c.GetHeader(_departmentID), ",")
-		req := &form.ProxyReq{}
-		req.UserID = c.GetHeader(_userID)
-		req.DepID = depIDS[len(depIDS)-1]
-		req.Action = c.Param("action")
+		bus := &consensus.Bus{}
+		bus.UserID = c.GetHeader(_userID)
+
+		bus.Method = c.Param("action")
 
 		var err error
-		req.AppID, req.TableID, err = CheckURL(c)
+		bus.AppID, bus.TableID, err = CheckURL(c)
 		if err != nil {
 			c.AbortWithError(http.StatusBadRequest, err)
 			return
 		}
-		if err = c.ShouldBind(req); err != nil {
+
+		if err = c.ShouldBind(bus); err != nil {
 			c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
-		resp.Format(p.Proxy(header.MutateContext(c), req)).Context(c)
+
+		resp.Format(ctr.Do(header.MutateContext(c), bus)).Context(c)
 	}
 }
