@@ -2,12 +2,13 @@ package main
 
 import (
 	"flag"
-	"github.com/quanxiang-cloud/cabin/logger"
-	"github.com/quanxiang-cloud/form/api"
-	"github.com/quanxiang-cloud/form/pkg/misc/config"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/quanxiang-cloud/cabin/logger"
+	"github.com/quanxiang-cloud/form/api"
+	"github.com/quanxiang-cloud/form/pkg/misc/config"
 )
 
 var (

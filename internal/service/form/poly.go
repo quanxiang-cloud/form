@@ -2,7 +2,6 @@ package form
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"net/http"
 	"time"
@@ -23,9 +22,9 @@ const (
 )
 
 func init() {
-	flag.StringVar(&polyHost, "poly-host", "http://ployapi", "poly api host. default http://polyapi")
-	flag.DurationVar(&polyProxyTimeout, "poly-proxy-timeout", 20*time.Second, "poly porxy timeout.default 20s")
-	flag.IntVar(&polyProxymaxIdleConns, "poly-proxy-max-idle", 30, "poly proxy max idle conns. default 30")
+	// flag.StringVar(&polyHost, "poly-host", "http://192.168.200.20:9017", "poly api host. default http://polyapi")
+	// flag.DurationVar(&polyProxyTimeout, "poly-proxy-timeout", 20*time.Second, "poly porxy timeout.default 20s")
+	// flag.IntVar(&polyProxymaxIdleConns, "poly-proxy-max-idle", 30, "poly proxy max idle conns. default 30")
 }
 
 type Poly struct {
@@ -43,9 +42,10 @@ func NewPoly() *Poly {
 
 type ProxyReq struct {
 	base
-	Page  int64
-	Size  int64
-	Query types.Query
+	Page   int64
+	Size   int64
+	Query  types.Query
+	Entity Entity `json:"entity"`
 
 	Action string
 }
@@ -71,6 +71,8 @@ func queryTOMap(dst map[string]interface{}, params *ProxyReq) {
 	for name, value := range params.Query {
 		dst[name] = value
 	}
+
+	dst["entity"] = params.Entity
 
 	if params.Page != 0 {
 		dst["page"] = params.Page
