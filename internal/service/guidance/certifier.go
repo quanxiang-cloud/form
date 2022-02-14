@@ -35,7 +35,7 @@ func newCertifier(conf *config.Config) (Guidance, error) {
 	}, nil
 }
 
-func (c *certifier) Do(ctx context.Context, bus *consensus.Bus) (*consensus.Response, error) {
+func (c *certifier) Do(ctx context.Context, bus *consensus.Bus) (consensus.Response, error) {
 	// err := c.pre(ctx, bus, checkOperate())
 	// if err != nil {
 	// 	return nil, err

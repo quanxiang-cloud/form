@@ -135,6 +135,7 @@ func action(ctr guidance.Guidance) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		bus := &consensus.Bus{}
 		bus.UserID = c.GetHeader(_userID)
+		bus.UserName = c.GetHeader(_userName)
 
 		bus.Method = c.Param("action")
 

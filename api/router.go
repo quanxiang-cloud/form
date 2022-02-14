@@ -105,18 +105,18 @@ func permissionRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 }
 
 func cometRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
-	authForm, err := form.NewAuthForm(c)
-	if err != nil {
-		return err
-	}
+	//authForm, err := form.NewAuthForm(c)
+	//if err != nil {
+	//	return err
+	//}
 	cometHome := r[homePath].Group("/form/:tableName")
 	{
-		cometHome.POST("/search", Search(authForm))
-		cometHome.POST("/get", Get(authForm))
-		cometHome.POST("/create", Create(authForm))
-
-		cometHome.POST("/update", Update(authForm))
-		cometHome.POST("/delete", Delete(authForm))
+		//cometHome.POST("/search", Search(authForm))
+		//cometHome.POST("/get", Get(authForm))
+		//cometHome.POST("/create", Create(authForm))
+		//
+		//cometHome.POST("/update", Update(authForm))
+		//cometHome.POST("/delete", Delete(authForm))
 
 		g, err := guidance.New(c)
 		if err != nil {

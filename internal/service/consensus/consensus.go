@@ -9,6 +9,8 @@ type Universal struct {
 	UserID string `json:"userID,omitempty"`
 	// fixme
 	DepID string `json:"depID,omitempty"`
+
+	UserName string `json:"userName "`
 }
 
 type Foundation struct {
@@ -20,10 +22,11 @@ type Foundation struct {
 
 type Get struct {
 	Query types.Query `json:"query,omitempty"`
+	Ref   types.Ref   `json:"ref"`
 }
 
 type List struct {
-	Get  `json:"get,omitempty"`
+	//Get  `json:"get,omitempty"`
 	Page int64     `json:"page,omitempty"`
 	Size int64     `json:"size,omitempty"`
 	Sort []string  `json:"sort,omitempty"`

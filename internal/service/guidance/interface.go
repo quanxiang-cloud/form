@@ -8,7 +8,7 @@ import (
 )
 
 type Guidance interface {
-	Do(ctx context.Context, bus *consensus.Bus) (*consensus.Response, error)
+	Do(ctx context.Context, bus *consensus.Bus) (consensus.Response, error)
 }
 
 func New(conf *config.Config) (Guidance, error) {

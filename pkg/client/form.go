@@ -71,6 +71,7 @@ func getStructorReq(req *FormReq) (*StructorReq, error) {
 	structor.Size = req.Size
 	structor.Page = req.Page
 	structor.Sort = req.Sort
+	structor.TableID = req.TableID
 	if req.DslQuery != nil {
 		marshal, err := json.Marshal(req.DslQuery)
 		if err != nil {
@@ -166,7 +167,7 @@ func (f *FormAPI) Insert(ctx context.Context, formReq *FormReq) (*InsertResp, er
 	anyArr = append(anyArr, req.Entity)
 	insert, err := f.client.Insert(ctx, &pb.InsertReq{
 		TableName: req.TableID,
-		Entities:  nil,
+		Entities:  anyArr,
 	})
 	if err != nil {
 		return nil, err
