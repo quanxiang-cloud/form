@@ -123,6 +123,11 @@ func cometRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 			return err
 		}
 		cometHome.POST("/:action", action(g))
+
+		cometHome.GET("data/:id", get(g))
+		cometHome.POST("data", create(g))
+		cometHome.PATCH("data/:id", update(g))
+		cometHome.DELETE("data/:id", delete(g))
 	}
 	return nil
 
