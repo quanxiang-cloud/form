@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/quanxiang-cloud/form/internal/service/consensus"
 	"github.com/quanxiang-cloud/form/internal/service/form"
 	"github.com/quanxiang-cloud/form/internal/service/guidance"
+	"github.com/quanxiang-cloud/form/internal/service/types"
 )
 
 // CheckURL CheckURL
@@ -163,5 +165,118 @@ func getProfile(c *gin.Context) *profile {
 		userID:   userID,
 		userName: userName,
 		depID:    depIDS[len(depIDS)-1],
+	}
+}
+
+func get(ctr guidance.Guidance) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		bus := &consensus.Bus{}
+		bus.UserID = c.GetHeader(_userID)
+		bus.Method = "get"
+
+		var err error
+		bus.AppID, bus.TableID, err = checkURL(c)
+		if err != nil {
+			c.AbortWithError(http.StatusBadRequest, err)
+			return
+		}
+
+		id := c.Param("id")
+		if id == "" {
+			c.AbortWithError(http.StatusBadRequest, fmt.Errorf("id is must"))
+			return
+		}
+
+		bus.Query = types.Query{
+			"term": map[string]interface{}{
+				"_id": id,
+			},
+		}
+
+		resp.Format(ctr.Do(header.MutateContext(c), bus)).Context(c)
+	}
+}
+
+func create(ctr guidance.Guidance) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		bus := &consensus.Bus{}
+		bus.UserID = c.GetHeader(_userID)
+		bus.Method = "create"
+
+		var err error
+		bus.AppID, bus.TableID, err = checkURL(c)
+		if err != nil {
+			c.AbortWithError(http.StatusBadRequest, err)
+			return
+		}
+
+		if err := c.ShouldBind(bus); err != nil {
+			c.AbortWithError(http.StatusBadRequest, err)
+			return
+		}
+
+		resp.Format(ctr.Do(header.MutateContext(c), bus)).Context(c)
+	}
+}
+
+func update(ctr guidance.Guidance) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		bus := &consensus.Bus{}
+		bus.UserID = c.GetHeader(_userID)
+		bus.Method = "update"
+
+		var err error
+		bus.AppID, bus.TableID, err = checkURL(c)
+		if err != nil {
+			c.AbortWithError(http.StatusBadRequest, err)
+			return
+		}
+
+		id := c.Param("id")
+		if id == "" {
+			c.AbortWithError(http.StatusBadRequest, fmt.Errorf("id is must"))
+			return
+		}
+		bus.Query = types.Query{
+			"term": map[string]interface{}{
+				"_id": id,
+			},
+		}
+
+		if err := c.ShouldBind(bus); err != nil {
+			c.AbortWithError(http.StatusBadRequest, err)
+			return
+		}
+
+		resp.Format(ctr.Do(header.MutateContext(c), bus)).Context(c)
+	}
+}
+
+func delete(ctr guidance.Guidance) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		bus := &consensus.Bus{}
+		bus.UserID = c.GetHeader(_userID)
+		bus.Method = "delete"
+
+		var err error
+		bus.AppID, bus.TableID, err = checkURL(c)
+		if err != nil {
+			c.AbortWithError(http.StatusBadRequest, err)
+			return
+		}
+
+		id := c.Param("id")
+		if id == "" {
+			c.AbortWithError(http.StatusBadRequest, fmt.Errorf("id is must"))
+			return
+		}
+
+		bus.Query = types.Query{
+			"term": map[string]interface{}{
+				"_id": id,
+			},
+		}
+
+		resp.Format(ctr.Do(header.MutateContext(c), bus)).Context(c)
 	}
 }
