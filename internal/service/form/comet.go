@@ -97,12 +97,19 @@ func (c *comet) Update(ctx context.Context, req *UpdateReq) (*UpdateResp, error)
 
 func (c *comet) callUpdate(ctx context.Context, req *UpdateReq) (*UpdateResp, error) {
 	req.Entity = DefaultField(req.Entity,
-		WithID(),
 		WithUpdated(req.UserID, req.UserName))
+	dsl := make(map[string]interface{})
+	if req.Query != nil {
+		dsl["query"] = req.Query
+	}
+	if len(dsl) == 0 {
+		dsl = nil
+	}
 
 	formReq := &client.FormReq{
-		Entity:  req.Entity,
-		TableID: getTableID(req.AppID, req.TableID),
+		Entity:   req.Entity,
+		TableID:  getTableID(req.AppID, req.TableID),
+		DslQuery: dsl,
 	}
 	update, err := c.formClient.Update(ctx, formReq)
 
@@ -192,7 +199,7 @@ func (c *comet) callGet(ctx context.Context, req *GetReq) (*GetResp, error) {
 }
 
 func (c *comet) Delete(ctx context.Context, req *DeleteReq) (*DeleteResp, error) {
-	return nil, nil
+	return c.callDelete(ctx, req)
 }
 
 func (c *comet) callDelete(ctx context.Context, req *DeleteReq) (*DeleteResp, error) {

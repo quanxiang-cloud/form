@@ -28,7 +28,7 @@ const (
 // WithID default field with id
 func WithID() EntityOpt {
 	return func(d defaultFieldMap) {
-		d[_id] = id2.ShortID(8)
+		d[_id] = id2.HexUUID(true)
 	}
 }
 

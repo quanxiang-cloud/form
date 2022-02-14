@@ -22,11 +22,9 @@ type Foundation struct {
 
 type Get struct {
 	Query types.Query `json:"query,omitempty"`
-	Ref   types.Ref   `json:"ref"`
 }
 
 type List struct {
-	//Get  `json:"get,omitempty"`
 	Page int64     `json:"page,omitempty"`
 	Size int64     `json:"size,omitempty"`
 	Sort []string  `json:"sort,omitempty"`
@@ -35,6 +33,10 @@ type List struct {
 
 type CreatedOrUpdate struct {
 	Entity interface{} `json:"entity,omitempty"`
+	Ref    types.Ref   `json:"ref"`
+}
+
+type Delete struct {
 }
 
 type Incidental struct {
@@ -55,6 +57,7 @@ type Bus struct {
 	Get
 	List
 	CreatedOrUpdate
+	Delete
 }
 
 type Response interface{}

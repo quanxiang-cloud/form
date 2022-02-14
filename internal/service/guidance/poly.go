@@ -61,7 +61,7 @@ func (p *poly) proxy(ctx context.Context, bus *consensus.Bus) (consensus.Respons
 }
 
 func busTOMap(dst map[string]interface{}, bus *consensus.Bus) {
-	queryToMap(dst, bus.Query)
+	queryToMap(dst, bus.Get.Query)
 
 	if bus.Entity != nil {
 		dst["entity"] = bus.Entity

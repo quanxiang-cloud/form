@@ -38,14 +38,6 @@ type StructorReq struct {
 	Entity  *anypb.Any
 }
 
-type FormResp struct {
-	Aggregations interface{}              `json:"aggregations"`
-	Entities     []map[string]interface{} `json:"entities"`
-	Total        int64                    `json:"total"`
-	Entity       map[string]interface{}   `json:"entity"`
-	SuccessCount int64                    `json:"successCount"`
-}
-
 func NewFormAPI() (*FormAPI, error) {
 	client, err := connect(target)
 	if err != nil {

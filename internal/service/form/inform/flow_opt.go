@@ -1,21 +1,21 @@
-package form
+package inform
 
 import (
 	"context"
 	"github.com/quanxiang-cloud/form/internal/service/types"
 )
 
-type optionReq struct {
+type OptionReq struct {
 	tableID string
 	userId  string
 	query   types.Query
 }
 
-type Options func(ctx context.Context, req *optionReq) error
+type Options func(ctx context.Context, req *OptionReq) error
 
 // CreateOption CreateOption
 func CreateOption() Options {
-	return func(ctx context.Context, option *optionReq) error {
+	return func(ctx context.Context, option *OptionReq) error {
 		//if f1, ok := f.(*form); ok {
 		//	data := new(inform.FormData)
 		//	data.TableID = option.tableID

@@ -14,7 +14,7 @@ type Form interface {
 	Delete(ctx context.Context, req *DeleteReq) (*DeleteResp, error)
 }
 
-type base struct {
+type Base struct {
 	AppID   string
 	TableID string
 
@@ -24,7 +24,7 @@ type base struct {
 }
 
 type SearchReq struct {
-	base
+	Base
 	Page  int64
 	Size  int64
 	Sort  []string
@@ -38,7 +38,7 @@ type SearchResp struct {
 }
 
 type CreateReq struct {
-	base
+	Base
 	Entity Entity    `json:"entity"`
 	Ref    types.Ref `json:"ref"`
 }
@@ -49,17 +49,18 @@ type CreateResp struct {
 }
 
 type GetReq struct {
-	base
+	Base
+	AppID string
 	Query types.Query `json:"query"`
 	Ref   types.Ref   `json:"ref"`
 }
 
 type GetResp struct {
-	Entity types.Any `json:"entity"`
+	Entity types.M `json:"entity"`
 }
 
 type UpdateReq struct {
-	base
+	Base
 	Entity Entity      `json:"entity"`
 	Ref    types.Ref   `json:"ref"`
 	Query  types.Query `json:"query"`
@@ -70,7 +71,7 @@ type UpdateResp struct {
 }
 
 type DeleteReq struct {
-	base
+	Base
 	Query types.Query `json:"query"`
 }
 
