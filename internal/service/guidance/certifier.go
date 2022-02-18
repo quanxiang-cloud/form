@@ -36,10 +36,6 @@ func newCertifier(conf *config.Config) (Guidance, error) {
 }
 
 func (c *certifier) Do(ctx context.Context, bus *consensus.Bus) (consensus.Response, error) {
-	// err := c.pre(ctx, bus, checkOperate())
-	// if err != nil {
-	// 	return nil, err
-	// }
 
 	resp, err := c.next.Do(ctx, bus)
 	if err != nil {

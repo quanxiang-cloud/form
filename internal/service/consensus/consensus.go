@@ -59,5 +59,4 @@ type Bus struct {
 	CreatedOrUpdate
 	Delete
 }
-
 type Response interface{}

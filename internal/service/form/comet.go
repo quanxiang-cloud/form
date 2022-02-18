@@ -3,6 +3,9 @@ package form
 import (
 	"context"
 	"fmt"
+	"github.com/quanxiang-cloud/cabin/logger"
+	"github.com/quanxiang-cloud/form/internal/service/form/base"
+	"github.com/quanxiang-cloud/form/internal/service/form/inform"
 	"github.com/quanxiang-cloud/form/internal/service/types"
 	"reflect"
 
@@ -12,6 +15,7 @@ import (
 type comet struct {
 	formClient *client.FormAPI
 	components *component
+	hook       *inform.HookManger
 }
 
 func NewForm() (Form, error) {
@@ -19,6 +23,12 @@ func NewForm() (Form, error) {
 }
 
 func newForm() (*comet, error) {
+	manger, err := inform.NewHookManger(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	go manger.Start(context.Background())
+
 	formApi, err := client.NewFormAPI()
 	if err != nil {
 		return nil, err
@@ -27,13 +37,25 @@ func newForm() (*comet, error) {
 	return &comet{
 		formClient: formApi,
 		components: newFormComponent(),
+		hook:       manger,
 	}, nil
 }
 
-func (c *comet) Search(ctx context.Context, req *SearchReq) (*SearchResp, error) {
+func (c *comet) Search(ctx context.Context, req *SearchReq, opts ...inform.Options) (*SearchResp, error) {
+	defer func() {
+		after(ctx, &inform.OptionReq{}, opts...)
+	}()
 	return c.callSearch(ctx, req)
 }
 
+func after(ctx context.Context, req *inform.OptionReq, opts ...inform.Options) {
+	for _, opt := range opts {
+		err := opt(ctx, req)
+		if err != nil {
+			logger.Logger.Errorw(err.Error())
+		}
+	}
+}
 func (c *comet) callSearch(ctx context.Context, req *SearchReq) (*SearchResp, error) {
 	dsl := make(map[string]interface{})
 	if req.Aggs != nil {
@@ -66,7 +88,11 @@ func (c *comet) callSearch(ctx context.Context, req *SearchReq) (*SearchResp, er
 }
 
 //Create Create
-func (c *comet) Create(ctx context.Context, req *CreateReq) (*CreateResp, error) {
+func (c *comet) Create(ctx context.Context, req *CreateReq, opts ...inform.Options) (*CreateResp, error) {
+	defer func() {
+		after(ctx, &inform.OptionReq{}, opts...)
+	}()
+
 	resp, err := c.callCreate(ctx, req)
 	if err != nil {
 		return nil, err
@@ -91,13 +117,16 @@ func (c *comet) Create(ctx context.Context, req *CreateReq) (*CreateResp, error)
 	return resp, nil
 }
 
-func (c *comet) Update(ctx context.Context, req *UpdateReq) (*UpdateResp, error) {
+func (c *comet) Update(ctx context.Context, req *UpdateReq, opts ...inform.Options) (*UpdateResp, error) {
+	defer func() {
+		after(ctx, &inform.OptionReq{}, opts...)
+	}()
 	return c.callUpdate(ctx, req)
 }
 
 func (c *comet) callUpdate(ctx context.Context, req *UpdateReq) (*UpdateResp, error) {
-	req.Entity = DefaultField(req.Entity,
-		WithUpdated(req.UserID, req.UserName))
+	req.Entity = base.DefaultField(req.Entity,
+		base.WithUpdated(req.UserID, req.UserName))
 	dsl := make(map[string]interface{})
 	if req.Query != nil {
 		dsl["query"] = req.Query
@@ -146,9 +175,9 @@ func (c *comet) getManyCom(ctx context.Context, req *comReq, method string) erro
 }
 
 func (c *comet) callCreate(ctx context.Context, req *CreateReq) (*CreateResp, error) {
-	req.Entity = DefaultField(req.Entity,
-		WithID(),
-		WithCreated(req.UserID, req.UserName))
+	req.Entity = base.DefaultField(req.Entity,
+		base.WithID(),
+		base.WithCreated(req.UserID, req.UserName))
 
 	formReq := &client.FormReq{
 		Entity:  req.Entity,
@@ -171,7 +200,10 @@ func getTableID(appID, tableID string) string {
 	return fmt.Sprintf("%s%s%s", "a", appID, tableID)
 }
 
-func (c *comet) Get(ctx context.Context, req *GetReq) (*GetResp, error) {
+func (c *comet) Get(ctx context.Context, req *GetReq, opts ...inform.Options) (*GetResp, error) {
+	defer func() {
+		after(ctx, &inform.OptionReq{}, opts...)
+	}()
 	return c.callGet(ctx, req)
 }
 
@@ -198,7 +230,10 @@ func (c *comet) callGet(ctx context.Context, req *GetReq) (*GetResp, error) {
 
 }
 
-func (c *comet) Delete(ctx context.Context, req *DeleteReq) (*DeleteResp, error) {
+func (c *comet) Delete(ctx context.Context, req *DeleteReq, opts ...inform.Options) (*DeleteResp, error) {
+	defer func() {
+		after(ctx, &inform.OptionReq{}, opts...)
+	}()
 	return c.callDelete(ctx, req)
 }
 

@@ -18,26 +18,6 @@ type FormAPI struct {
 	client pb.DSLServiceClient
 }
 
-type FindOptions struct {
-	Page int64    `json:"page"`
-	Size int64    `json:"size"`
-	Sort []string `json:"sort"`
-}
-
-type FormReq struct {
-	FindOptions
-	DslQuery interface{}
-	Entity   interface{}
-	TableID  string
-}
-
-type StructorReq struct {
-	FindOptions
-	TableID string
-	Dsl     *anypb.Any
-	Entity  *anypb.Any
-}
-
 func NewFormAPI() (*FormAPI, error) {
 	client, err := connect(target)
 	if err != nil {
@@ -56,6 +36,26 @@ func connect(target string) (pb.DSLServiceClient, error) {
 		return nil, err
 	}
 	return pb.NewDSLServiceClient(conn), nil
+}
+
+type FindOptions struct {
+	Page int64    `json:"page"`
+	Size int64    `json:"size"`
+	Sort []string `json:"sort"`
+}
+
+type FormReq struct {
+	FindOptions
+	DslQuery interface{}
+	Entity   interface{}
+	TableID  string
+}
+
+type StructorReq struct {
+	FindOptions
+	TableID string
+	Dsl     *anypb.Any
+	Entity  *anypb.Any
 }
 
 func getStructorReq(req *FormReq) (*StructorReq, error) {

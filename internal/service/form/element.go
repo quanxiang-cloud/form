@@ -2,6 +2,7 @@ package form
 
 import (
 	"context"
+	"github.com/quanxiang-cloud/form/internal/service/form/base"
 	"github.com/quanxiang-cloud/form/internal/service/types"
 	"reflect"
 )
@@ -13,9 +14,9 @@ type common struct {
 	userName      string
 	tag           string
 	key           string
-	refValue      types.Ref // ref 结构
-	primaryEntity Entity    // 主表的entity
-	oldValue      types.M   // 透传的数据
+	refValue      types.Ref   // ref 结构
+	primaryEntity base.Entity // 主表的entity
+	oldValue      types.M     // 透传的数据
 }
 
 type subTable struct {
@@ -30,7 +31,7 @@ type comReq struct {
 	tag           string
 	key           string
 	refValue      types.Ref
-	primaryEntity Entity
+	primaryEntity base.Entity
 	oldValue      types.M
 }
 
@@ -176,7 +177,7 @@ func (c *common) perInitData(ctx context.Context, refData *RefData, original *Or
 	return nil
 }
 
-func getPrimaryID(e Entity) (string, error) {
+func getPrimaryID(e base.Entity) (string, error) {
 	if e == nil {
 		return "", nil
 	}

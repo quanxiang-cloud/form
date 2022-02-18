@@ -26,14 +26,13 @@ func NewTable(conf *config2.Config) (*Table, error) {
 	return &Table{
 		table: t,
 	}, nil
-
 }
 
 func (t *Table) CreateSchema(c *gin.Context) {
 	req := &service.CreateTableReq{
-		AppID:    c.Param("appID"),
-		UserID:   c.GetHeader("User-Id"),
-		UserName: c.GetHeader("User-Name"),
+		AppID:    c.Param(_appID),
+		UserID:   c.GetHeader(_userID),
+		UserName: c.GetHeader(_userName),
 	}
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {

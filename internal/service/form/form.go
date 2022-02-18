@@ -2,16 +2,18 @@ package form
 
 import (
 	"context"
+	"github.com/quanxiang-cloud/form/internal/service/form/base"
+	"github.com/quanxiang-cloud/form/internal/service/form/inform"
 
 	"github.com/quanxiang-cloud/form/internal/service/types"
 )
 
 type Form interface {
-	Search(ctx context.Context, req *SearchReq) (*SearchResp, error)
-	Create(ctx context.Context, req *CreateReq) (*CreateResp, error)
-	Get(ctx context.Context, req *GetReq) (*GetResp, error)
-	Update(ctx context.Context, req *UpdateReq) (*UpdateResp, error)
-	Delete(ctx context.Context, req *DeleteReq) (*DeleteResp, error)
+	Search(ctx context.Context, req *SearchReq, opt ...inform.Options) (*SearchResp, error)
+	Create(ctx context.Context, req *CreateReq, opt ...inform.Options) (*CreateResp, error)
+	Get(ctx context.Context, req *GetReq, opt ...inform.Options) (*GetResp, error)
+	Update(ctx context.Context, req *UpdateReq, opt ...inform.Options) (*UpdateResp, error)
+	Delete(ctx context.Context, req *DeleteReq, opt ...inform.Options) (*DeleteResp, error)
 }
 
 type Base struct {
@@ -39,13 +41,13 @@ type SearchResp struct {
 
 type CreateReq struct {
 	Base
-	Entity Entity    `json:"entity"`
-	Ref    types.Ref `json:"ref"`
+	Entity base.Entity `json:"entity"`
+	Ref    types.Ref   `json:"ref"`
 }
 
 type CreateResp struct {
-	Entity Entity `json:"entity"`
-	Count  int64  `json:"errorCount"`
+	Entity base.Entity `json:"entity"`
+	Count  int64       `json:"errorCount"`
 }
 
 type GetReq struct {
@@ -61,7 +63,7 @@ type GetResp struct {
 
 type UpdateReq struct {
 	Base
-	Entity Entity      `json:"entity"`
+	Entity base.Entity `json:"entity"`
 	Ref    types.Ref   `json:"ref"`
 	Query  types.Query `json:"query"`
 }
