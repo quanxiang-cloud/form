@@ -1,6 +1,7 @@
 package consensus
 
 import (
+	"context"
 	"github.com/quanxiang-cloud/form/internal/models"
 	"github.com/quanxiang-cloud/form/internal/service/types"
 )
@@ -44,10 +45,11 @@ type Incidental struct {
 }
 
 type Permit struct {
-	Filter      map[string]interface{}  `json:"filter,omitempty"`
-	Condition   map[string]models.Query `json:"condition,omitempty"`
-	Authority   int64                   `json:"authority,omitempty"`
-	PermitTypes models.PerType          `json:"permitTypes,omitempty"`
+	Name      string
+	Params    models.FiledPermit
+	Response  models.FiledPermit
+	Condition interface{}
+	types     models.RoleType
 }
 
 type Bus struct {
@@ -60,3 +62,7 @@ type Bus struct {
 	Delete
 }
 type Response interface{}
+
+type Guidance interface {
+	Do(ctx context.Context, bus *Bus) (Response, error)
+}

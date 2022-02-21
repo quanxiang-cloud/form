@@ -10,7 +10,7 @@ type structor struct {
 	form form.Form
 }
 
-func newStructor() (Guidance, error) {
+func newStructor() (consensus.Guidance, error) {
 	form, err := form.NewForm()
 	if err != nil {
 		return nil, err

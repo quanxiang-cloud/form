@@ -33,7 +33,7 @@ type poly struct {
 	client http.Client
 }
 
-func newPoly() (Guidance, error) {
+func newPoly() (consensus.Guidance, error) {
 	return &poly{
 		client: client.New(client.Config{
 			Timeout:      polyProxyTimeout,

@@ -7,11 +7,11 @@ import (
 )
 
 type ruling struct {
-	poly     Guidance
-	structor Guidance
+	poly     consensus.Guidance
+	structor consensus.Guidance
 }
 
-func newRuling() (Guidance, error) {
+func newRuling() (consensus.Guidance, error) {
 	poly, err := newPoly()
 	if err != nil {
 		return nil, err

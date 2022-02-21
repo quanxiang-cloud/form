@@ -11,7 +11,6 @@ import (
 	"github.com/quanxiang-cloud/cabin/tailormade/resp"
 	"github.com/quanxiang-cloud/form/internal/service/consensus"
 	"github.com/quanxiang-cloud/form/internal/service/form"
-	"github.com/quanxiang-cloud/form/internal/service/guidance"
 	"github.com/quanxiang-cloud/form/internal/service/types"
 )
 
@@ -133,7 +132,7 @@ type profile struct {
 	userName string
 }
 
-func action(ctr guidance.Guidance) gin.HandlerFunc {
+func action(ctr consensus.Guidance) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		bus := &consensus.Bus{}
 		bus.UserID = c.GetHeader(_userID)
@@ -168,7 +167,7 @@ func getProfile(c *gin.Context) *profile {
 	}
 }
 
-func get(ctr guidance.Guidance) gin.HandlerFunc {
+func get(ctr consensus.Guidance) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		bus := &consensus.Bus{}
 		bus.UserID = c.GetHeader(_userID)
@@ -197,7 +196,7 @@ func get(ctr guidance.Guidance) gin.HandlerFunc {
 	}
 }
 
-func create(ctr guidance.Guidance) gin.HandlerFunc {
+func create(ctr consensus.Guidance) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		bus := &consensus.Bus{}
 		bus.UserID = c.GetHeader(_userID)
@@ -219,7 +218,7 @@ func create(ctr guidance.Guidance) gin.HandlerFunc {
 	}
 }
 
-func update(ctr guidance.Guidance) gin.HandlerFunc {
+func update(ctr consensus.Guidance) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		bus := &consensus.Bus{}
 		bus.UserID = c.GetHeader(_userID)
@@ -252,7 +251,7 @@ func update(ctr guidance.Guidance) gin.HandlerFunc {
 	}
 }
 
-func delete(ctr guidance.Guidance) gin.HandlerFunc {
+func delete(ctr consensus.Guidance) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		bus := &consensus.Bus{}
 		bus.UserID = c.GetHeader(_userID)

@@ -68,37 +68,41 @@ func NewRouter(c *config2.Config) (*Router, error) {
 	}, nil
 }
 
+func permit(c *config2.Config, r map[string]*gin.RouterGroup) error {
+	return nil
+}
+
 func permissionRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
-	permission, err := NewPermission(c)
-	if err != nil {
-		return err
-	}
-	manager := r[managerPath].Group("/permission")
-	{
-		manager.POST("/perGroup/create", permission.CreatePerGroup)     //  创建权限组
-		manager.POST("/perGroup/updateName", permission.UpdatePerGroup) //  更新权限组
-		manager.POST("/perGroup/update", permission.AddOwnerToGroup, permission.AddOwnerToApp)
-
-		manager.POST("/perGroup/delete", permission.DelPerGroup)   // 删除权限组 ,要删除缓存
-		manager.POST("/perGroup/getByID", permission.GetPerGroup)  // 根据id 获取权限组
-		manager.POST("/perGroup/getList", permission.FindPerGroup) // 根据条件获取 权限组列表
-
-		manager.POST("/perGroup/saveForm", permission.SaveForm) // 保存表单权限
-
-		manager.POST("/perGroup/deleteForm", permission.DeleteForm) // 删除表单权限
-
-		manager.POST("/perGroup/getForm", permission.FindForm) // 获取form 的信息
-		manager.POST("/perGroup/getPerData", permission.GetPerInfo)
-
-		manager.POST("/perGroup/getPerGroupByMenu", permission.GetPerGroupsByMenu)
-	}
-
-	home := r[homePath].Group("/permission")
-	{
-		home.POST("/operatePer/getOperate", permission.GetOperate) // 跟据用户id 和 部门ID，得到操作权限
-		home.POST("/perGroup/getPerOption", permission.GetPerOption)
-		home.POST("/perGroup/saveUserPerMatch", permission.SaveUserPerMatch) // 保存用户匹配的权限组
-	}
+	//permission, err := NewPermission(c)
+	//if err != nil {
+	//	return err
+	//}
+	//manager := r[managerPath].Group("/permission")
+	//{
+	//	manager.POST("/perGroup/create", permission.CreatePerGroup)     //  创建权限组
+	//	manager.POST("/perGroup/updateName", permission.UpdatePerGroup) //  更新权限组
+	//	manager.POST("/perGroup/update", permission.AddOwnerToGroup, permission.AddOwnerToApp)
+	//
+	//	manager.POST("/perGroup/delete", permission.DelPerGroup)   // 删除权限组 ,要删除缓存
+	//	manager.POST("/perGroup/getByID", permission.GetPerGroup)  // 根据id 获取权限组
+	//	manager.POST("/perGroup/getList", permission.FindPerGroup) // 根据条件获取 权限组列表
+	//
+	//	manager.POST("/perGroup/saveForm", permission.SaveForm) // 保存表单权限
+	//
+	//	manager.POST("/perGroup/deleteForm", permission.DeleteForm) // 删除表单权限
+	//
+	//	manager.POST("/perGroup/getForm", permission.FindForm) // 获取form 的信息
+	//	manager.POST("/perGroup/getPerData", permission.GetPerInfo)
+	//
+	//	manager.POST("/perGroup/getPerGroupByMenu", permission.GetPerGroupsByMenu)
+	//}
+	//
+	//home := r[homePath].Group("/permission")
+	//{
+	//	home.POST("/operatePer/getOperate", permission.GetOperate) // 跟据用户id 和 部门ID，得到操作权限
+	//	home.POST("/perGroup/getPerOption", permission.GetPerOption)
+	//	home.POST("/perGroup/saveUserPerMatch", permission.SaveUserPerMatch) // 保存用户匹配的权限组
+	//}
 
 	return nil
 
