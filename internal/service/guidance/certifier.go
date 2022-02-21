@@ -127,9 +127,9 @@ func (c *certifier) post(ctx context.Context, bus *consensus.Bus, opts ...Filter
 	//if bus.Permit.PermitTypes == models.InitType {
 	//	return nil
 	//}
-	for _, opt := range opts {
-		opt(bus.Entity, bus.Permit.Filter)
-	}
+	//for _, opt := range opts {
+	//	//opt(bus.Entity, bus.Permit.Filter)
+	//}
 	return nil
 }
 
