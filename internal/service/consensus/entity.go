@@ -1,4 +1,4 @@
-package base
+package consensus
 
 import (
 	"reflect"

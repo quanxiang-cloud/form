@@ -10,7 +10,7 @@ const (
 	array  = "array"
 )
 
-func pre(entity interface{}, fieldPermit models.FiledPermit) bool {
+func Pre(entity interface{}, fieldPermit models.FiledPermit) bool {
 	value := reflect.ValueOf(entity)
 	switch reflect.TypeOf(entity).Kind() {
 	case reflect.Map:
@@ -26,7 +26,7 @@ func pre(entity interface{}, fieldPermit models.FiledPermit) bool {
 			}
 			// 如果
 			if permit.Type == object {
-				if !pre(iter.Value(), permit.Properties) {
+				if !Pre(iter.Value(), permit.Properties) {
 					return false
 				}
 			}
@@ -34,14 +34,15 @@ func pre(entity interface{}, fieldPermit models.FiledPermit) bool {
 		return true
 	case reflect.Slice, reflect.Array:
 		for i := 0; i < value.Len(); i++ {
-			pre(value.Index(i), fieldPermit)
+			Pre(value.Index(i), fieldPermit)
 		}
 	}
 	return false
 }
 
-func post(response interface{}, fieldPermit models.FiledPermit) {
-	if fieldPermit == nil {
+func Post(response interface{}, fieldPermit models.FiledPermit) {
+
+	if response == nil || fieldPermit == nil {
 		return
 	}
 	value := reflect.ValueOf(response)
@@ -59,12 +60,12 @@ func post(response interface{}, fieldPermit models.FiledPermit) {
 			}
 			// 如果
 			if permit.Type == object || permit.Type == array {
-				post(iter.Value(), permit.Properties)
+				Post(iter.Value(), permit.Properties)
 			}
 		}
 	case reflect.Slice, reflect.Array:
 		for i := 0; i < value.Len(); i++ {
-			post(value.Index(i), fieldPermit)
+			Post(value.Index(i), fieldPermit)
 		}
 	}
 }

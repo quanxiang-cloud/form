@@ -1,13 +1,11 @@
 
-
-DROP TABLE IF EXISTS `permit_group`;
-CREATE TABLE `permit_group` (
+DROP TABLE IF EXISTS `role`;
+CREATE TABLE `role` (
     `id` 		 VARCHAR(64) 	COMMENT 'unique id',
     `app_id` 	 VARCHAR(64) 	NOT NULL COMMENT 'app id',
     `name`          VARCHAR(64)     NOT NULL COMMENT 'permit group name',
     `description`   VARCHAR(255) COMMENT 'description',
     `created_at`     BIGINT(20) 	    COMMENT 'create time',
-    `update_at`     BIGINT(20)  	COMMENT 'update time',
     `creator_id`    VARCHAR(36) COMMENT 'creator id',
     `creator_name`   VARCHAR(16) COMMENT 'creator name',
     `types`        TINYINT(1)   COMMENT 'types 1 init 2 create',
@@ -16,30 +14,32 @@ CREATE TABLE `permit_group` (
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
-DROP TABLE IF EXISTS `permit_grant`;
-CREATE TABLE `permit_grant` (
+DROP TABLE IF EXISTS `role_grant`;
+CREATE TABLE `role_grant` (
     `id` 		 VARCHAR(64) 	COMMENT 'unique id',
-    `permit_id` 		 VARCHAR(64) NOT NULL 	COMMENT 'permit id',
+    `role_id` 		 VARCHAR(64) NOT NULL 	COMMENT 'role id',
     `owner` 	 VARCHAR(64) 	NOT NULL COMMENT 'owner id',
     `owner_name` VARCHAR(64)     NOT NULL COMMENT 'owner_nam',
     `types`        TINYINT(1)   COMMENT 'types 1 init 2 create',
-    UNIQUE KEY `idx_global_name` (`permit_id`, `owner`,`types`),
+    `created_at`     BIGINT(20) 	    COMMENT 'create time',
+    UNIQUE KEY `idx_global_name` (`role_id`, `owner`,`types`),
     PRIMARY KEY  (`id`)
 
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
-DROP TABLE IF EXISTS `permit_form`;
-CREATE TABLE `permit_form` (
+DROP TABLE IF EXISTS `permit`;
+CREATE TABLE `permit` (
     `id` 		 VARCHAR(64) 	COMMENT 'unique id',
-    `permit_id`  VARCHAR(64) 	 NOT NULL COMMENT 'permit id',
-    `form_id` 	 VARCHAR(64) 	 NOT NULL COMMENT 'form id',
-    `form_type`  TINYINT(1)    NOT NULL COMMENT 'form type',
-    `authority`  INT   COMMENT 'authority' ,
+    `role_id`  VARCHAR(64)    COMMENT 'authority' ,
+    `path`       VARCHAR(255) 	 NOT NULL COMMENT 'permit id',
+    `params` 	TEXT	 COMMENT 'params',
+    `response`  TEXT     COMMENT 'response',
     `conditions` 		 TEXT 	COMMENT 'conditions',
-    `field_json` 	 TEXT	COMMENT 'field json',
-    `web_schema` TEXT     COMMENT 'web schema',
-    UNIQUE KEY `idx_global_name` (`permit_id`, `form_id`),
+    `created_at`     BIGINT(20) 	    COMMENT 'create time',
+    `creator_id`    VARCHAR(36) COMMENT 'creator id',
+    `creator_name`   VARCHAR(16) COMMENT 'creator name',
+    UNIQUE KEY `idx_global_name` (`role_id`, `path`),
     PRIMARY KEY  (`id`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

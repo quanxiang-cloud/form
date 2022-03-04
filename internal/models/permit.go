@@ -8,47 +8,22 @@ import (
 
 // Permit Permit
 type Permit struct {
-	ID        string
-	Path      string
-	Params    FiledPermit
-	Response  FiledPermit
-	Condition interface{}
-
-	RoleID string
-
+	ID          string
+	RoleID      string
+	Path        string
+	Params      FiledPermit
+	Response    FiledPermit
+	Condition   interface{}
 	CreatedAt   int64
 	CreatorID   string
 	CreatorName string
 }
 
-type Bool map[string][]Query
-
-type Aggs map[string]Agg
-
-type Agg map[string]struct {
-	Field string `json:"field"`
-}
-
-type Query map[string]Field
-
-type Field map[string]Value
-
-type Value interface{}
-
-type DSL struct {
-	QY map[string]interface{} `json:"query"`
-
-	Query Query
-	Bool  Bool
-
-	Aggs Aggs `json:"aggs"`
-}
-
 //
 
 type Key struct {
-	Type       string
-	Properties FiledPermit
+	Type       string      `json:"type"`
+	Properties FiledPermit `json:"properties"`
 }
 
 type FiledPermit map[string]Key
@@ -71,11 +46,11 @@ type PermitQuery struct {
 type PermitRepo interface {
 	BatchCreate(db *gorm.DB, form ...*Permit) error
 
-	Get(db *gorm.DB, path, roleID string) (*Permit, error)
+	Get(db *gorm.DB, roleID, path string) (*Permit, error)
 
 	Find(db *gorm.DB, query *PermitQuery) ([]*Permit, error)
 
 	Delete(db *gorm.DB, query *PermitQuery) error
 
-	Update(db *gorm.DB, path, roleID string, permit *Permit) error
+	Update(db *gorm.DB, id string, permit *Permit) error
 }

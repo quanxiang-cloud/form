@@ -3,60 +3,74 @@ package form
 import (
 	"context"
 	"fmt"
-	"github.com/quanxiang-cloud/cabin/logger"
-	"github.com/quanxiang-cloud/form/internal/service/form/base"
-	"github.com/quanxiang-cloud/form/internal/service/form/inform"
-	"github.com/quanxiang-cloud/form/internal/service/types"
-	"reflect"
-
-	"github.com/quanxiang-cloud/form/pkg/client"
+	"github.com/quanxiang-cloud/form/internal/service/consensus"
+	client2 "github.com/quanxiang-cloud/form/pkg/misc/client"
 )
 
 type comet struct {
-	formClient *client.FormAPI
-	components *component
-	hook       *inform.HookManger
+	formClient *client2.FormAPI
 }
 
-func NewForm() (Form, error) {
-	return newForm()
-}
-
-func newForm() (*comet, error) {
-	manger, err := inform.NewHookManger(context.Background())
+func newForm() (consensus.Guidance, error) {
+	formApi, err := client2.NewFormAPI()
 	if err != nil {
 		return nil, err
 	}
-	go manger.Start(context.Background())
-
-	formApi, err := client.NewFormAPI()
-	if err != nil {
-		return nil, err
-	}
-
 	return &comet{
 		formClient: formApi,
-		components: newFormComponent(),
-		hook:       manger,
 	}, nil
 }
 
-func (c *comet) Search(ctx context.Context, req *SearchReq, opts ...inform.Options) (*SearchResp, error) {
-	defer func() {
-		after(ctx, &inform.OptionReq{}, opts...)
-	}()
-	return c.callSearch(ctx, req)
+func (c *comet) Do(ctx context.Context, bus *consensus.Bus) (*consensus.Response, error) {
+	// TODO
+	base := Base{
+		AppID:   bus.AppID,
+		TableID: bus.TableID,
+		UserID:  bus.UserID,
+	}
+	switch bus.Foundation.Method {
+	case "get":
+		req := &GetReq{
+			Base:  base,
+			Query: bus.Query,
+		}
+		req.Base = base
+		req.Query = bus.Query
+		return c.callGet(ctx, req)
+
+	case "search":
+		req := &SearchReq{
+			Sort:  bus.List.Sort,
+			Page:  bus.List.Page,
+			Size:  bus.List.Size,
+			Query: bus.Query,
+			Base:  base,
+		}
+		return c.callSearch(ctx, req)
+	case "create":
+		req := &CreateReq{
+			Entity: bus.CreatedOrUpdate.Entity,
+			Base:   base,
+		}
+		return c.callCreate(ctx, req)
+	case "update":
+		req := &UpdateReq{
+			Entity: bus.CreatedOrUpdate.Entity,
+			Query:  bus.Query,
+			Base:   base,
+		}
+		return c.callUpdate(ctx, req)
+	case "delete":
+		req := &DeleteReq{
+			Query: bus.Query,
+			Base:  base,
+		}
+		return c.callDelete(ctx, req)
+	}
+	return nil, nil
 }
 
-func after(ctx context.Context, req *inform.OptionReq, opts ...inform.Options) {
-	for _, opt := range opts {
-		err := opt(ctx, req)
-		if err != nil {
-			logger.Logger.Errorw(err.Error())
-		}
-	}
-}
-func (c *comet) callSearch(ctx context.Context, req *SearchReq) (*SearchResp, error) {
+func (c *comet) callSearch(ctx context.Context, req *SearchReq) (*consensus.Response, error) {
 	dsl := make(map[string]interface{})
 	if req.Aggs != nil {
 		dsl["aggs"] = req.Aggs
@@ -68,7 +82,7 @@ func (c *comet) callSearch(ctx context.Context, req *SearchReq) (*SearchResp, er
 	if len(dsl) == 0 {
 		dsl = nil
 	}
-	formReq := &client.FormReq{
+	formReq := &client2.FormReq{
 		DslQuery: dsl,
 	}
 	formReq.Size = req.Size
@@ -80,53 +94,31 @@ func (c *comet) callSearch(ctx context.Context, req *SearchReq) (*SearchResp, er
 	if err != nil {
 		return nil, err
 	}
-
-	return &SearchResp{
-		Total:    searchResp.Total,
-		Entities: searchResp.Entities,
-	}, nil
+	response := new(consensus.Response)
+	response.ListResp.Total = searchResp.Total
+	response.ListResp.Entities = searchResp.Entities
+	return &consensus.Response{}, nil
 }
 
-//Create Create
-func (c *comet) Create(ctx context.Context, req *CreateReq, opts ...inform.Options) (*CreateResp, error) {
-	defer func() {
-		after(ctx, &inform.OptionReq{}, opts...)
-	}()
+func (c *comet) callCreate(ctx context.Context, req *CreateReq) (*consensus.Response, error) {
+	formReq := &client2.FormReq{
+		Entity:  req.Entity,
+		TableID: getTableID(req.AppID, req.TableID),
+	}
+	insert, err := c.formClient.Insert(ctx, formReq)
 
-	resp, err := c.callCreate(ctx, req)
 	if err != nil {
 		return nil, err
 	}
-	// 处理ref 等高级字段的数据   //
-	comReq := &comReq{
-		comet:         c,
-		userID:        req.UserID,
-		depID:         req.DepID,
-		primaryEntity: req.Entity,
-		refValue:      req.Ref,
-		oldValue: types.M{
-			appIDKey:   req.AppID,
-			tableIDKey: req.TableID,
-		},
-	}
-
-	err = c.getManyCom(ctx, comReq, post)
-	if err != nil {
-		return nil, err
-	}
+	resp := new(consensus.Response)
+	resp.CreatedOrUpdateResp.Count = insert.SuccessCount
+	resp.CreatedOrUpdateResp.Entity = req.Entity
 	return resp, nil
 }
 
-func (c *comet) Update(ctx context.Context, req *UpdateReq, opts ...inform.Options) (*UpdateResp, error) {
-	defer func() {
-		after(ctx, &inform.OptionReq{}, opts...)
-	}()
-	return c.callUpdate(ctx, req)
-}
-
-func (c *comet) callUpdate(ctx context.Context, req *UpdateReq) (*UpdateResp, error) {
-	req.Entity = base.DefaultField(req.Entity,
-		base.WithUpdated(req.UserID, req.UserName))
+func (c *comet) callUpdate(ctx context.Context, req *UpdateReq) (*consensus.Response, error) {
+	req.Entity = consensus.DefaultField(req.Entity,
+		consensus.WithUpdated(req.UserID, req.UserName))
 	dsl := make(map[string]interface{})
 	if req.Query != nil {
 		dsl["query"] = req.Query
@@ -135,7 +127,7 @@ func (c *comet) callUpdate(ctx context.Context, req *UpdateReq) (*UpdateResp, er
 		dsl = nil
 	}
 
-	formReq := &client.FormReq{
+	formReq := &client2.FormReq{
 		Entity:   req.Entity,
 		TableID:  getTableID(req.AppID, req.TableID),
 		DslQuery: dsl,
@@ -145,52 +137,10 @@ func (c *comet) callUpdate(ctx context.Context, req *UpdateReq) (*UpdateResp, er
 	if err != nil {
 		return nil, err
 	}
-	return &UpdateResp{
-		Count: update.SuccessCount,
-	}, nil
-}
-
-func (c *comet) getManyCom(ctx context.Context, req *comReq, method string) error {
-	for fieldKey, value := range req.refValue {
-		optionValue, ok := value.(map[string]interface{})
-		if !ok {
-			continue
-		}
-		t := optionValue[_type]
-		if reflect.ValueOf(t).Kind() == reflect.String {
-			req.tag = reflect.ValueOf(t).String()
-			req.key = fieldKey
-			req.refValue = optionValue
-			com, err := c.components.getCom(reflect.ValueOf(t).String(), req)
-			if err != nil {
-				continue
-			}
-			err = com.handlerFunc(ctx, method)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-func (c *comet) callCreate(ctx context.Context, req *CreateReq) (*CreateResp, error) {
-	req.Entity = base.DefaultField(req.Entity,
-		base.WithID(),
-		base.WithCreated(req.UserID, req.UserName))
-
-	formReq := &client.FormReq{
-		Entity:  req.Entity,
-		TableID: getTableID(req.AppID, req.TableID),
-	}
-	insert, err := c.formClient.Insert(ctx, formReq)
-
-	if err != nil {
-		return nil, err
-	}
-	return &CreateResp{
-		Count: insert.SuccessCount,
-	}, nil
+	resp := &consensus.Response{}
+	resp.CreatedOrUpdateResp.Count = update.SuccessCount
+	resp.CreatedOrUpdateResp.Entity = req.Entity
+	return resp, nil
 }
 
 func getTableID(appID, tableID string) string {
@@ -200,14 +150,7 @@ func getTableID(appID, tableID string) string {
 	return fmt.Sprintf("%s%s%s", "a", appID, tableID)
 }
 
-func (c *comet) Get(ctx context.Context, req *GetReq, opts ...inform.Options) (*GetResp, error) {
-	defer func() {
-		after(ctx, &inform.OptionReq{}, opts...)
-	}()
-	return c.callGet(ctx, req)
-}
-
-func (c *comet) callGet(ctx context.Context, req *GetReq) (*GetResp, error) {
+func (c *comet) callGet(ctx context.Context, req *GetReq) (*consensus.Response, error) {
 	dsl := make(map[string]interface{})
 	if req.Query != nil {
 		dsl["query"] = req.Query
@@ -216,28 +159,21 @@ func (c *comet) callGet(ctx context.Context, req *GetReq) (*GetResp, error) {
 		dsl = nil
 	}
 
-	formReq := &client.FormReq{
+	formReq := &client2.FormReq{
 		DslQuery: dsl,
 		TableID:  getTableID(req.AppID, req.TableID),
 	}
-	resp, err := c.formClient.Get(ctx, formReq)
+	gets, err := c.formClient.Get(ctx, formReq)
 	if err != nil {
 		return nil, err
 	}
-	return &GetResp{
-		Entity: resp.Entity,
-	}, nil
+	resp := &consensus.Response{}
+	resp.GetResp.Entity = gets.Entity
+	return resp, nil
 
 }
 
-func (c *comet) Delete(ctx context.Context, req *DeleteReq, opts ...inform.Options) (*DeleteResp, error) {
-	defer func() {
-		after(ctx, &inform.OptionReq{}, opts...)
-	}()
-	return c.callDelete(ctx, req)
-}
-
-func (c *comet) callDelete(ctx context.Context, req *DeleteReq) (*DeleteResp, error) {
+func (c *comet) callDelete(ctx context.Context, req *DeleteReq) (*consensus.Response, error) {
 	dsl := make(map[string]interface{})
 	if req.Query != nil {
 		dsl["query"] = req.Query
@@ -245,15 +181,15 @@ func (c *comet) callDelete(ctx context.Context, req *DeleteReq) (*DeleteResp, er
 	if len(dsl) == 0 {
 		dsl = nil
 	}
-	formReq := &client.FormReq{
+	formReq := &client2.FormReq{
 		DslQuery: dsl,
 		TableID:  getTableID(req.AppID, req.TableID),
 	}
-	resp, err := c.formClient.Delete(ctx, formReq)
+	deletes, err := c.formClient.Delete(ctx, formReq)
 	if err != nil {
 		return nil, err
 	}
-	return &DeleteResp{
-		Count: resp.SuccessCount,
-	}, nil
+	resp := &consensus.Response{}
+	resp.DeleteResp.Count = deletes.SuccessCount
+	return resp, nil
 }

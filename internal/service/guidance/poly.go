@@ -42,11 +42,11 @@ func newPoly() (consensus.Guidance, error) {
 	}, nil
 }
 
-func (p *poly) Do(ctx context.Context, bus *consensus.Bus) (consensus.Response, error) {
+func (p *poly) Do(ctx context.Context, bus *consensus.Bus) (*consensus.Response, error) {
 	return p.proxy(ctx, bus)
 }
 
-func (p *poly) proxy(ctx context.Context, bus *consensus.Bus) (consensus.Response, error) {
+func (p *poly) proxy(ctx context.Context, bus *consensus.Bus) (*consensus.Response, error) {
 	params := map[string]interface{}{
 		"userID": bus.UserID,
 	}

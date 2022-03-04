@@ -45,6 +45,8 @@ const (
 
 	// ErrNotPermit ErrNotPermit
 	ErrNotPermit = 90074000002
+
+	ErrParameter = 90074000003
 )
 
 // CodeTable 码表
@@ -68,4 +70,6 @@ var CodeTable = map[int64]string{
 	ErrCustomFileNotExist: "自定义页面文件不存在",
 
 	ErrNotPermit: "没有权限 ，权限为空",
+
+	ErrParameter: "类型转换错误",
 }

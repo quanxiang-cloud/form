@@ -13,6 +13,9 @@ type components interface {
 
 var cs = []components{
 	&subTable{},
+	&serial{},
+	&foreignTable{},
+	&associatedRecords{},
 }
 
 var (

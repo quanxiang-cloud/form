@@ -2,6 +2,7 @@ package guidance
 
 import (
 	"context"
+	"github.com/quanxiang-cloud/form/pkg/misc/config"
 
 	"github.com/quanxiang-cloud/form/internal/service/consensus"
 )
@@ -11,12 +12,12 @@ type ruling struct {
 	structor consensus.Guidance
 }
 
-func newRuling() (consensus.Guidance, error) {
+func newRuling(conf *config.Config) (consensus.Guidance, error) {
 	poly, err := newPoly()
 	if err != nil {
 		return nil, err
 	}
-	structor, err := newStructor()
+	structor, err := newStructor(conf)
 	if err != nil {
 		return nil, err
 	}
@@ -26,7 +27,7 @@ func newRuling() (consensus.Guidance, error) {
 	}, nil
 }
 
-func (r *ruling) Do(ctx context.Context, bus *consensus.Bus) (consensus.Response, error) {
+func (r *ruling) Do(ctx context.Context, bus *consensus.Bus) (*consensus.Response, error) {
 	switch bus.Method {
 	case "get", "search", "create", "update", "delete":
 		// Specified method, distributed to form processor
