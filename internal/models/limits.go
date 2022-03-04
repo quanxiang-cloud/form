@@ -10,7 +10,7 @@ type Limits struct {
 	Name      string
 	Params    FiledPermit
 	Response  FiledPermit
-	Condition interface{}
+	Condition *Condition
 }
 
 //PermitMatch PermitMatch

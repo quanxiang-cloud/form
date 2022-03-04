@@ -244,7 +244,7 @@ type CreatePerReq struct {
 	RoleID    string             `json:"roleID"`
 	UserID    string             `json:"userID"`
 	UserName  string             `json:"userName"`
-	Condition interface{}        `json:"condition"`
+	Condition *models.Condition  `json:"condition"`
 }
 
 type CreatePerResp struct {
@@ -274,7 +274,7 @@ type UpdatePerReq struct {
 	ID        string             `json:"id"`
 	Params    models.FiledPermit `json:"params"`
 	Response  models.FiledPermit `json:"response"`
-	Condition interface{}        `json:"condition"`
+	Condition *models.Condition  `json:"condition"`
 }
 
 type UpdatePerResp struct {
@@ -301,7 +301,7 @@ func (p *permit) modifyRedis(ctx context.Context, permits *models.Permit) {
 		Path:      permits.Path,
 		Params:    permits.Params,
 		Response:  permits.Response,
-		Condition: permits.Params,
+		Condition: permits.Condition,
 	})
 	if err != nil {
 		logger.Logger.Errorw("add permit cache ", permits.RoleID, err.Error())
@@ -328,7 +328,7 @@ type GetPerInCacheReq struct {
 type GetPerInCacheResp struct {
 	Params    models.FiledPermit
 	Response  models.FiledPermit
-	Condition interface{}
+	Condition *models.Condition
 	Types     models.RoleType
 }
 

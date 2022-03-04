@@ -35,7 +35,7 @@ CREATE TABLE `permit` (
     `path`       VARCHAR(255) 	 NOT NULL COMMENT 'permit id',
     `params` 	TEXT	 COMMENT 'params',
     `response`  TEXT     COMMENT 'response',
-    `conditions` 		 TEXT 	COMMENT 'conditions',
+    `condition` 		 TEXT 	COMMENT 'conditions',
     `created_at`     BIGINT(20) 	    COMMENT 'create time',
     `creator_id`    VARCHAR(36) COMMENT 'creator id',
     `creator_name`   VARCHAR(16) COMMENT 'creator name',

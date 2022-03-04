@@ -13,7 +13,7 @@ type Permit struct {
 	Path        string
 	Params      FiledPermit
 	Response    FiledPermit
-	Condition   Condition
+	Condition   *Condition
 	CreatedAt   int64
 	CreatorID   string
 	CreatorName string
@@ -34,7 +34,7 @@ func (p FiledPermit) Value() (driver.Value, error) {
 }
 
 // Scan 实现方法
-func (p *FiledPermit) Scan(data interface{}) error {
+func (p FiledPermit) Scan(data interface{}) error {
 	return json.Unmarshal(data.([]byte), &p)
 }
 
