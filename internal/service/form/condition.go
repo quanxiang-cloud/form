@@ -15,12 +15,12 @@ type condition struct {
 }
 
 func NewCondition(conf *config.Config) (consensus.Guidance, error) {
-	//newRefs, err := NewRefs(conf)
-	//if err != nil {
-	//	return nil, err
-	//}
+	newRefs, err := NewRefs(conf)
+	if err != nil {
+		return nil, err
+	}
 	return &condition{
-		//next:    newRefs,
+		next:    newRefs,
 		parsers: make(map[string]Parser),
 	}, nil
 }
