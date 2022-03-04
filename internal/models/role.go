@@ -37,5 +37,5 @@ type RoleRepo interface {
 	Get(db *gorm.DB, id string) (*Role, error)
 	Find(db *gorm.DB, query *RoleQuery) ([]*Role, error)
 	Update(db *gorm.DB, id string, role *Role) error
-	Delete(db *gorm.DB, role *Role) error
+	Delete(db *gorm.DB, query *RoleQuery) error
 }

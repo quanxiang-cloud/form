@@ -2,7 +2,9 @@ package form
 
 import (
 	"context"
-	//"github.com/quanxiang-cloud/cabin/logger"
+	error2 "github.com/quanxiang-cloud/cabin/error"
+	"github.com/quanxiang-cloud/cabin/logger"
+	"github.com/quanxiang-cloud/form/pkg/misc/code"
 	"reflect"
 )
 
@@ -25,13 +27,12 @@ const (
 
 	queryKey = "query"
 
-	put = "put" //update
-
-	post = "post" // create
-
-	delete = "delete" //delete
-
-	get = "get"
+	// PrimitiveID PrimitiveID
+	primitiveID = "primitiveID"
+	// SubID subID
+	subIDs = "subID"
+	// FieldName  FieldName
+	fieldName = "fieldName"
 )
 
 type OptionEntity struct {
@@ -102,18 +103,18 @@ func initRefData(ctx context.Context, optValue map[string]interface{}, data *Ref
 	return
 }
 
-// OriginalData OriginalData
-type OriginalData struct {
+// ExtraData ExtraData
+type ExtraData struct {
 	AppID   string `json:"appID"`
 	TableID string `json:"tableID"`
 }
 
-func initOriginalData(ctx context.Context, optValue map[string]interface{}, original *OriginalData) (err error) {
+func initExtraData(ctx context.Context, optValue map[string]interface{}, extraData *ExtraData) (err error) {
 	if tableID, ok := optValue[tableIDKey]; ok {
-		err = SetFieldValue(ctx, tableID, &original.TableID)
+		err = SetFieldValue(ctx, tableID, &extraData.TableID)
 	}
 	if appID, ok := optValue[appIDKey]; ok {
-		err = SetFieldValue(ctx, appID, &original.AppID)
+		err = SetFieldValue(ctx, appID, &extraData.AppID)
 	}
 	return
 }
@@ -131,8 +132,8 @@ func SetFieldValue(ctx context.Context, data interface{}, ptr interface{}) error
 
 	}
 	if dateKind != ptrKind {
-		//logger.Logger.Errorw("dateKind type is not ptrKind", logger.STDRequestID(ctx))
-		//return error2.NewError(code.ErrParameter)
+		logger.Logger.Errorw("dateKind type is not ptrKind", "", "")
+		return error2.New(code.ErrParameter)
 	}
 	reflect.ValueOf(ptr).Elem().Set(value)
 	return nil

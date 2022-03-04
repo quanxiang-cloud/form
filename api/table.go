@@ -41,5 +41,4 @@ func (t *Table) CreateSchema(c *gin.Context) {
 		return
 	}
 	resp.Format(t.table.CreateSchema(ctx, req)).Context(c)
-
 }

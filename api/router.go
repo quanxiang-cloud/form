@@ -2,7 +2,6 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/quanxiang-cloud/form/internal/service/form"
 	"github.com/quanxiang-cloud/form/internal/service/guidance"
 	config2 "github.com/quanxiang-cloud/form/pkg/misc/config"
 )
@@ -36,6 +35,7 @@ var routers = []router{
 	permissionRouter,
 	cometRouter,
 	innerRouter,
+	permitRouter,
 }
 
 // NewRouter 开启路由
@@ -68,7 +68,31 @@ func NewRouter(c *config2.Config) (*Router, error) {
 	}, nil
 }
 
-func permit(c *config2.Config, r map[string]*gin.RouterGroup) error {
+func permitRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
+	permits, err := NewPermit(c)
+	if err != nil {
+		return err
+	}
+	manager := r[managerPath].Group("/permit")
+
+	{
+		manager.POST("/role/create", permits.CreateRole) //  创建权限组
+		manager.POST("/role/update", permits.UpdateRole) //  更新权限组
+		manager.POST("/role/addOwner", permits.AddToRole)
+		manager.POST("/role/deleteOwner", permits.DeleteOwner)
+		manager.POST("/role/delete", permits.DeleteRole)
+		//
+		manager.POST("/apiPermit/create", permits.CratePermit)
+		manager.POST("/apiPermit/update", permits.UpdatePermit)
+		manager.POST("/apiPermit/get", permits.GetPermit)
+	}
+	home := r[homePath].Group("/permission")
+	{
+		//home.POST("/operatePer/getOperate", permits.GetOperate)  // 跟据用户id 和 部门ID，得到操作权限
+		//home.POST("/perGroup/getPerOption", permits.GetPerOption)
+		home.POST("/perGroup/saveUserPerMatch", permits.SaveUserPerMatch) // 保存用户匹配的权限组
+	}
+
 	return nil
 }
 
@@ -77,7 +101,7 @@ func permissionRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 	//if err != nil {
 	//	return err
 	//}
-	//manager := r[managerPath].Group("/permission")
+	// manager := r[managerPath].Group("/permission")
 	//{
 	//	manager.POST("/perGroup/create", permission.CreatePerGroup)     //  创建权限组
 	//	manager.POST("/perGroup/updateName", permission.UpdatePerGroup) //  更新权限组
@@ -138,14 +162,7 @@ func cometRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 }
 
 func innerRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
-	form, err := form.NewForm()
-	if err != nil {
-		return err
-	}
-	inner := r[internalPath].Group("/form/:tableName")
-	{
-		inner.POST("/search", Search(form))
-	}
+
 	return nil
 
 }

@@ -8,17 +8,22 @@ import (
 
 type Universal struct {
 	UserID string `json:"userID,omitempty"`
-	// fixme
+
 	DepID string `json:"depID,omitempty"`
 
 	UserName string `json:"userName "`
+
+	Path string `json:"path"`
+}
+
+type Ref struct {
+	Ref types.Ref `json:"ref,omitempty"`
 }
 
 type Foundation struct {
 	TableID string `json:"tableID,omitempty"`
 	AppID   string `json:"appID,omitempty"`
-
-	Method string `json:"method,omitempty"`
+	Method  string `json:"method,omitempty"`
 }
 
 type Get struct {
@@ -26,15 +31,13 @@ type Get struct {
 }
 
 type List struct {
-	Page int64     `json:"page,omitempty"`
-	Size int64     `json:"size,omitempty"`
-	Sort []string  `json:"sort,omitempty"`
-	Aggs types.Any `json:"aggs,omitempty"`
+	Page int64    `json:"page,omitempty"`
+	Size int64    `json:"size,omitempty"`
+	Sort []string `json:"sort,omitempty"`
 }
 
 type CreatedOrUpdate struct {
 	Entity interface{} `json:"entity,omitempty"`
-	Ref    types.Ref   `json:"ref"`
 }
 
 type Delete struct {
@@ -49,20 +52,44 @@ type Permit struct {
 	Params    models.FiledPermit
 	Response  models.FiledPermit
 	Condition interface{}
-	types     models.RoleType
+	Types     models.RoleType
 }
 
 type Bus struct {
 	Universal
 	Foundation
 	Incidental
+	Ref
 	Get
 	List
 	CreatedOrUpdate
 	Delete
 }
-type Response interface{}
+type Response struct {
+	GetResp
+	ListResp
+	DeleteResp
+	CreatedOrUpdateResp
+}
+
+type GetResp struct {
+	Entity types.M `json:"entity"`
+}
+
+type DeleteResp struct {
+	Count int64 `json:"count"`
+}
+
+type CreatedOrUpdateResp struct {
+	Entity interface{} `json:"entity"`
+	Count  int64       `json:"count"`
+}
+
+type ListResp struct {
+	Entities types.Entities `json:"entities"`
+	Total    int64          `json:"total"`
+}
 
 type Guidance interface {
-	Do(ctx context.Context, bus *Bus) (Response, error)
+	Do(ctx context.Context, bus *Bus) (*Response, error)
 }

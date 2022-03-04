@@ -10,7 +10,6 @@ import (
 	"github.com/quanxiang-cloud/cabin/tailormade/header"
 	"github.com/quanxiang-cloud/cabin/tailormade/resp"
 	"github.com/quanxiang-cloud/form/internal/service/consensus"
-	"github.com/quanxiang-cloud/form/internal/service/form"
 	"github.com/quanxiang-cloud/form/internal/service/types"
 )
 
@@ -26,106 +25,6 @@ func checkURL(c *gin.Context) (appID, tableName string, err error) {
 
 }
 
-func Search(f form.Form) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		req := &form.SearchReq{}
-		p := getProfile(c)
-		req.UserID = p.userID
-		req.DepID = p.depID
-		var err error
-		req.AppID, req.TableID, err = checkURL(c)
-		if err != nil {
-			c.AbortWithError(http.StatusBadRequest, err)
-			return
-		}
-		if err = c.ShouldBind(req); err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
-			return
-		}
-		resp.Format(f.Search(header.MutateContext(c), req)).Context(c)
-	}
-}
-
-func Create(f form.Form) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		req := &form.CreateReq{}
-		p := getProfile(c)
-		req.UserID = p.userID
-		req.DepID = p.depID
-		var err error
-		req.AppID, req.TableID, err = checkURL(c)
-		if err != nil {
-			c.AbortWithError(http.StatusBadRequest, err)
-			return
-		}
-		if err = c.ShouldBind(req); err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
-			return
-		}
-		resp.Format(f.Create(header.MutateContext(c), req)).Context(c)
-	}
-}
-
-func Get(f form.Form) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		req := &form.GetReq{}
-		p := getProfile(c)
-		req.UserID = p.userID
-		req.DepID = p.depID
-		var err error
-		req.AppID, req.TableID, err = checkURL(c)
-		if err != nil {
-			c.AbortWithError(http.StatusBadRequest, err)
-			return
-		}
-		if err = c.ShouldBind(req); err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
-			return
-		}
-		resp.Format(f.Get(header.MutateContext(c), req)).Context(c)
-	}
-}
-
-func Update(f form.Form) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		req := &form.UpdateReq{}
-		p := getProfile(c)
-		req.UserID = p.userID
-		req.DepID = p.depID
-		var err error
-		req.AppID, req.TableID, err = checkURL(c)
-		if err != nil {
-			c.AbortWithError(http.StatusBadRequest, err)
-			return
-		}
-		if err = c.ShouldBind(req); err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
-			return
-		}
-		resp.Format(f.Update(header.MutateContext(c), req)).Context(c)
-	}
-}
-
-func Delete(f form.Form) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		req := &form.DeleteReq{}
-		p := getProfile(c)
-		req.UserID = p.userID
-		req.DepID = p.depID
-		var err error
-		req.AppID, req.TableID, err = checkURL(c)
-		if err != nil {
-			c.AbortWithError(http.StatusBadRequest, err)
-			return
-		}
-		if err = c.ShouldBind(req); err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
-			return
-		}
-		resp.Format(f.Delete(header.MutateContext(c), req)).Context(c)
-	}
-}
-
 type profile struct {
 	userID   string
 	depID    string
@@ -137,9 +36,8 @@ func action(ctr consensus.Guidance) gin.HandlerFunc {
 		bus := &consensus.Bus{}
 		bus.UserID = c.GetHeader(_userID)
 		bus.UserName = c.GetHeader(_userName)
-
 		bus.Method = c.Param("action")
-
+		bus.Path = c.Request.RequestURI
 		var err error
 		bus.AppID, bus.TableID, err = checkURL(c)
 		if err != nil {

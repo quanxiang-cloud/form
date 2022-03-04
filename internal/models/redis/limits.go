@@ -13,7 +13,12 @@ type limitRepo struct {
 	c *redis.ClusterClient
 }
 
-func (p *limitRepo) CreatePermit(ctx context.Context, roleID string, limits []*models.Limits) error {
+func (p *limitRepo) ExistsKey(ctx context.Context, key string) bool {
+	exists := p.c.Exists(ctx, key)
+	return exists.Val() > 0
+}
+
+func (p *limitRepo) CreatePermit(ctx context.Context, roleID string, limits ...*models.Limits) error {
 	key := p.PerKey() + roleID
 	for _, value := range limits {
 		entityJSON, err := json.Marshal(value)
@@ -26,28 +31,33 @@ func (p *limitRepo) CreatePermit(ctx context.Context, roleID string, limits []*m
 }
 
 func (p *limitRepo) GetPermit(ctx context.Context, roleID, path string) (*models.Limits, error) {
-	key := p.PerKey() + roleID + ":" + path
-	entityByte, err := p.c.Get(ctx, key).Bytes()
-	if err == redis.Nil {
+	result := p.c.HGet(ctx, p.PerKey()+roleID, path)
+	if result.Err() == redis.Nil {
 		return nil, nil
 	}
+	if result.Err() != nil {
+		return nil, result.Err()
+	}
+	bytes, err := result.Bytes()
 	if err != nil {
 		return nil, err
 	}
-
-	entity := new(models.Limits)
-	err = json.Unmarshal(entityByte, entity)
-	return entity, err
+	limits := new(models.Limits)
+	err = json.Unmarshal(bytes, limits)
+	if err != nil {
+		return nil, err
+	}
+	return limits, nil
 }
 
-func (p *limitRepo) DeletePermit(ctx context.Context, roleID, path string) error {
+func (p *limitRepo) DeletePermit(ctx context.Context, roleID string) error {
 
-	return p.c.Del(ctx, p.PerKey()+roleID+":"+path).Err()
+	return p.c.Del(ctx, p.PerKey()+roleID).Err()
 }
 
 func (p *limitRepo) CreatePerMatch(ctx context.Context, match *models.PermitMatch) error {
 	return p.c.HSet(ctx, p.PerMatchKey()+
-		match.AppID, match.UserID, match.PermitID).Err()
+		match.AppID, match.UserID, match.RoleID).Err()
 }
 
 func (p *limitRepo) GetPerMatch(ctx context.Context, appID, userID string) (*models.PermitMatch, error) {
@@ -62,7 +72,7 @@ func (p *limitRepo) GetPerMatch(ctx context.Context, appID, userID string) (*mod
 		UserID: userID,
 		AppID:  appID,
 	}
-	resp.PermitID = result.Val()
+	resp.RoleID = result.Val()
 	return resp, nil
 }
 
