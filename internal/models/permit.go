@@ -13,7 +13,7 @@ type Permit struct {
 	Path        string
 	Params      FiledPermit
 	Response    FiledPermit
-	Condition   interface{}
+	Condition   Condition
 	CreatedAt   int64
 	CreatorID   string
 	CreatorName string
