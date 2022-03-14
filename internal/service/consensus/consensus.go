@@ -11,7 +11,7 @@ type Universal struct {
 
 	DepID string `json:"depID,omitempty"`
 
-	UserName string `json:"userName "`
+	UserName string `json:"userName"`
 
 	Path string `json:"path"`
 }

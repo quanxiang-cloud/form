@@ -22,8 +22,8 @@ type Permit struct {
 //
 
 type Key struct {
-	Type       string      `json:"type"`
-	Properties FiledPermit `json:"properties"`
+	Type       string      `json:"type,omitempty"`
+	Properties FiledPermit `json:"properties,omitempty"`
 }
 
 type FiledPermit map[string]Key
@@ -34,7 +34,7 @@ func (p FiledPermit) Value() (driver.Value, error) {
 }
 
 // Scan 实现方法
-func (p FiledPermit) Scan(data interface{}) error {
+func (p *FiledPermit) Scan(data interface{}) error {
 	return json.Unmarshal(data.([]byte), &p)
 }
 

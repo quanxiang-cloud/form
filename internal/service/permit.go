@@ -123,10 +123,11 @@ type CreateRoleReq struct {
 }
 
 type CreateRoleResp struct {
+	ID string `json:"id"`
 }
 
 func (p *permit) CreateRole(ctx context.Context, req *CreateRoleReq) (*CreateRoleResp, error) {
-	permits := &models.Role{
+	roles := &models.Role{
 		ID:          id2.HexUUID(true),
 		AppID:       req.AppID,
 		Name:        req.Name,
@@ -136,14 +137,16 @@ func (p *permit) CreateRole(ctx context.Context, req *CreateRoleReq) (*CreateRol
 		CreatorID:   req.UserID,
 	}
 	if req.Types == 0 {
-		permits.Types = models.CreateType
+		roles.Types = models.CreateType
 	}
-	permits.Types = req.Types
-	err := p.roleRepo.BatchCreate(p.db, permits)
+	roles.Types = req.Types
+	err := p.roleRepo.BatchCreate(p.db, roles)
 	if err != nil {
 		return nil, err
 	}
-	return &CreateRoleResp{}, nil
+	return &CreateRoleResp{
+		ID: roles.ID,
+	}, nil
 }
 
 type UpdateRoleReq struct {
@@ -293,7 +296,7 @@ func (p *permit) UpdatePermit(ctx context.Context, req *UpdatePerReq) (*UpdatePe
 }
 
 func (p *permit) modifyRedis(ctx context.Context, permits *models.Permit) {
-	if !p.limitRepo.ExistsKey(ctx, permits.RoleID) {
+	if p.limitRepo.ExistsKey(ctx, permits.RoleID) {
 		return
 	}
 	// add redis cache
