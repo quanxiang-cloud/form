@@ -11,9 +11,7 @@ import (
 	"github.com/quanxiang-cloud/form/pkg/misc/config"
 )
 
-var (
-	configPath = flag.String("config", "../configs/config.yml", "-config 配置文件地址")
-)
+var configPath = flag.String("config", "../../configs/config.yml", "-config 配置文件地址")
 
 func main() {
 	flag.Parse()
@@ -44,5 +42,4 @@ func main() {
 			return
 		}
 	}
-
 }

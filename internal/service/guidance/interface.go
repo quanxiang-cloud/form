@@ -6,5 +6,5 @@ import (
 )
 
 func New(conf *config.Config) (consensus.Guidance, error) {
-	return newCertifier(conf)
+	return newRuling(conf)
 }
