@@ -83,7 +83,12 @@ func (f *FormAuth) Filter(resp *http.Response) error {
 	}
 	filters.Post(entity, f.consPermit.Response)
 
-	resp.Body = io.NopCloser(bytes.NewBuffer(data))
+	responseData, err := json.Marshal(f.consPermit.Response)
+	if err != nil {
+		return err
+	}
+
+	resp.Body = io.NopCloser(bytes.NewBuffer(responseData))
 	return nil
 }
 
