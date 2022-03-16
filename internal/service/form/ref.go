@@ -19,7 +19,7 @@ type refs struct {
 }
 
 func NewRefs(conf *config.Config) (consensus.Guidance, error) {
-	appriseFlows, err := NewAppriseFlow()
+	appriseFlows, err := NewAppriseFlow(conf)
 	if err != nil {
 		return nil, err
 	}

@@ -18,12 +18,12 @@ var DefaultPath = "./configs/config.yml"
 
 // Config 配置文件
 type Config struct {
-	PortInner string        `yaml:"portInner"`
-	Port      string        `yaml:"port"`
-	Model     string        `yaml:"model"`
-	Log       logger.Config `yaml:"log"`
-	Mysql     mysql2.Config `yaml:"mysql"`
-
+	PortInner   string        `yaml:"portInner"`
+	Port        string        `yaml:"port"`
+	Model       string        `yaml:"model"`
+	Log         logger.Config `yaml:"log"`
+	Mysql       mysql2.Config `yaml:"mysql"`
+	PubSubName  string        `yaml:"pubSubName"`
 	Redis       redis2.Config `yaml:"redis"`
 	Kafka       kafka.Config  `yaml:"kafka"`
 	SwaggerPath string        `yaml:"swaggerPath"`

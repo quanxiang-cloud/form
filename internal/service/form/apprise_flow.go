@@ -2,6 +2,8 @@ package form
 
 import (
 	"context"
+	"github.com/quanxiang-cloud/form/pkg/misc/config"
+
 	"github.com/quanxiang-cloud/cabin/logger"
 	"github.com/quanxiang-cloud/form/internal/service/consensus"
 	"github.com/quanxiang-cloud/form/internal/service/form/inform"
@@ -12,13 +14,13 @@ type appriseFlow struct {
 	inform *inform.HookManger
 }
 
-func NewAppriseFlow() (consensus.Guidance, error) {
+func NewAppriseFlow(conf *config.Config) (consensus.Guidance, error) {
 	form, err := newForm()
 	if err != nil {
 		return nil, err
 	}
 	ctx := context.Background()
-	manger, err := inform.NewHookManger(ctx)
+	manger, err := inform.NewHookManger(ctx, conf)
 	if err != nil {
 		return nil, err
 	}
@@ -86,5 +88,4 @@ func (a *appriseFlow) updateApprise(ctx context.Context, bus *consensus.Bus) {
 		logger.Logger.Infof(" %s send kafk data:   %+v : ", data)
 		a.inform.Send <- data
 	}
-
 }

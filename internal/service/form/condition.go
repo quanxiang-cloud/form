@@ -27,30 +27,30 @@ func NewCondition(conf *config.Config) (consensus.Guidance, error) {
 
 // Do Do
 func (c *condition) Do(ctx context.Context, bus *consensus.Bus) (*consensus.Response, error) {
-	err := c.SetParsers(ctx, bus)
-	if err != nil {
-		return nil, err
-	}
-	dataes := make([]interface{}, 0, 2)
-	if bus.Get.Query != nil {
-		dataes = append(dataes, bus.Get.Query)
-	}
-
-	err = c.parse(bus.Permit.Condition)
-	if err != nil {
-		return nil, err
-	}
-
-	if bus.Permit.Condition != nil {
-		dataes = append(dataes, bus.Permit.Condition)
-	}
-
-	query := types.Query{
-		"bool": types.M{
-			"must": dataes,
-		},
-	}
-	bus.Get.Query = query
+	//err := c.SetParsers(ctx, bus)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//dataes := make([]interface{}, 0, 2)
+	//if bus.Get.Query != nil {
+	//	dataes = append(dataes, bus.Get.Query)
+	//}
+	//
+	//err = c.parse(bus.Permit.Condition)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//if bus.Permit.Condition != nil {
+	//	dataes = append(dataes, bus.Permit.Condition)
+	//}
+	//
+	//query := types.Query{
+	//	"bool": types.M{
+	//		"must": dataes,
+	//	},
+	//}
+	//bus.Get.Query = query
 
 	return c.next.Do(ctx, bus)
 }

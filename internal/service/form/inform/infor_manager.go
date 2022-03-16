@@ -2,15 +2,14 @@ package inform
 
 import (
 	"context"
-	"encoding/json"
-	"git.internal.yunify.com/qxp/misc/logger"
-	"github.com/Shopify/sarama"
-	kafka2 "github.com/quanxiang-cloud/cabin/tailormade/db/kafka"
+	"fmt"
+	daprd "github.com/dapr/go-sdk/client"
+	"github.com/go-logr/logr"
 	"github.com/quanxiang-cloud/form/pkg/misc/config"
 )
 
 const (
-	topic = "form-data"
+	topic = "form-data4"
 )
 
 // FormData FormData
@@ -25,20 +24,23 @@ type FormData struct {
 
 // HookManger 管理发送kafka
 type HookManger struct {
-	Send chan *FormData // 增删改数据后，放到这个信道
-
-	kafkaProducer sarama.SyncProducer
+	Send       chan *FormData // 增删改数据后，放到这个信道
+	conf       *config.Config
+	daprClient daprd.Client
+	log        logr.Logger
 }
 
 // NewHookManger NewHookManger
-func NewHookManger(ctx context.Context) (*HookManger, error) {
-	producer, err := kafka2.NewSyncProducer(config.Conf.Kafka)
+func NewHookManger(ctx context.Context, conf *config.Config) (*HookManger, error) {
+
+	client, err := daprd.NewClient()
 	if err != nil {
 		return nil, err
 	}
 	m := &HookManger{
-		Send:          make(chan *FormData),
-		kafkaProducer: producer,
+		daprClient: client,
+		Send:       make(chan *FormData),
+		conf:       conf,
 	}
 	go m.Start(ctx)
 	return m, nil
@@ -50,22 +52,24 @@ func (manager *HookManger) Start(ctx context.Context) {
 	for {
 		select {
 		case sendData := <-manager.Send:
-			value, err := json.Marshal(sendData)
-			if err != nil {
-				logger.Logger.Error(err.Error()+sendData.TableID, logger.STDRequestID(ctx))
+			fmt.Println("121212121")
+			if err := manager.publish(ctx, topic, sendData); err != nil {
+				manager.log.Error(err, "push flow", "sendData ", sendData)
 			}
-			message := sarama.ProducerMessage{
-				Topic: topic,
-				Value: sarama.ByteEncoder(value),
-			}
-			_, _, err = manager.kafkaProducer.SendMessage(&message)
-			if err != nil {
-				logger.Logger.Error(err.Error()+sendData.TableID, logger.STDRequestID(ctx))
-			}
-
+			fmt.Println("1212121")
 		case <-ctx.Done():
 
 		}
 	}
 
+}
+func (manager *HookManger) publish(ctx context.Context, topic string, data interface{}) error {
+	//	manager.log.Info("send message", "data is ", data)
+	fmt.Println("2323232")
+	if err := manager.daprClient.PublishEvent(context.Background(), manager.conf.PubSubName, topic, data); err != nil {
+		manager.log.Error(err, "publishEvent", "topic", topic, "pubsubName", manager.conf.PubSubName)
+		return err
+	}
+	fmt.Println("32323232")
+	return nil
 }

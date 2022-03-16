@@ -67,3 +67,5 @@ kafka:
 
 # --------------------- swagger host -------------
 swaggerPath: ../configs/swagger
+
+pubSubName : form-kafka-pubsub
