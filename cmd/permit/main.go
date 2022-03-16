@@ -1,24 +1,24 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
 	"flag"
-	"io"
+	"fmt"
 	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"strings"
 	"time"
 
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/quanxiang-cloud/cabin/logger"
-	authi "github.com/quanxiang-cloud/form/pkg/auth"
-	"github.com/quanxiang-cloud/form/pkg/auth/lowcode"
+
+	"github.com/quanxiang-cloud/form/internal/auth"
 	"github.com/quanxiang-cloud/form/pkg/misc/config"
 )
+
+var transport *http.Transport
 
 func main() {
 	var port string
@@ -44,6 +44,19 @@ func main() {
 	flag.DurationVar(&expectContinueTimeout, "expect-continue-timeout", 1*time.Second, "")
 	flag.Parse()
 
+	transport = &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   timeout * time.Second,
+			KeepAlive: keepAlive * time.Second,
+			DualStack: true,
+		}).DialContext,
+		MaxIdleConns:          maxIdleConns,
+		IdleConnTimeout:       idleConnTimeout,
+		TLSHandshakeTimeout:   tlsHandshakeTimeout,
+		ExpectContinueTimeout: expectContinueTimeout * time.Second,
+	}
+
 	conf, err := config.NewConfig(configPath)
 	if err != nil {
 		panic(err)
@@ -54,42 +67,26 @@ func main() {
 		panic(err)
 	}
 
-	formURI, err := url.ParseRequestURI(formEndpoint)
+	form, err := NewForm(formEndpoint, conf)
 	if err != nil {
 		panic(err)
 	}
 
-	polyURI, err := url.ParseRequestURI(polyEndpoint)
+	poly, err := NewPoly(polyEndpoint)
 	if err != nil {
 		panic(err)
 	}
 
-	permit := &permit{
-		formURI: formURI,
-		polyURI: polyURI,
-		config:  conf,
-		transport: &http.Transport{
-			Proxy: http.ProxyFromEnvironment,
-			DialContext: (&net.Dialer{
-				Timeout:   timeout * time.Second,
-				KeepAlive: keepAlive * time.Second,
-				DualStack: true,
-			}).DialContext,
-			MaxIdleConns:          maxIdleConns,
-			IdleConnTimeout:       idleConnTimeout,
-			TLSHandshakeTimeout:   tlsHandshakeTimeout,
-			ExpectContinueTimeout: expectContinueTimeout * time.Second,
-		},
-	}
+	e := echo.New()
+	e.Use(middleware.Logger(), middleware.Recover())
 
-	e := gin.New()
-	e.Use(gin.Logger(), gin.Recovery())
+	e.Any("*", poly.proxy(), poly.auth)
 
-	group := e.Group("/", permit.auth())
-	group.Any("*path", permit.proxy())
+	e.Any("api/v1/form/:appID/table/:tableID/*", form.proxy(), form.auth)
 
 	logger.Logger.Info("start...")
-	e.Run(port)
+	// Start server
+	e.Start(port)
 }
 
 const (
@@ -97,96 +94,98 @@ const (
 	_userName     = "User-Name"
 	_departmentID = "Department-Id"
 	_appID        = "appID"
+	_tableID      = "tableID"
 	_action       = "action"
 )
 
-type permit struct {
-	formURI   *url.URL
-	polyURI   *url.URL
-	authi     authi.Interface
-	transport *http.Transport
-	config    *config.Config
+type Form struct {
+	url *url.URL
+	fa  auth.FormAuth
 }
 
-func (p *permit) proxy() func(c *gin.Context) {
-	return func(c *gin.Context) {
-		path := c.Request.URL.Path
-		if strings.HasPrefix(path, "/api/v1/form") {
-			p.serverHTTP(p.formURI, c)
-		} else {
-			p.serverHTTP(p.polyURI, c)
-		}
+func NewForm(endpoint string, conf *config.Config) (*Form, error) {
+	url, err := url.ParseRequestURI(endpoint)
+	if err != nil {
+		return nil, err
 	}
+
+	fa, err := auth.NewFormAuth(conf)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Form{
+		url: url,
+		fa:  fa,
+	}, nil
 }
 
-func (p *permit) auth() func(c *gin.Context) {
-	return func(c *gin.Context) {
-		path := c.Request.URL.Path
-
-		data, err := c.GetRawData()
+func (f *Form) auth(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		res, err := f.fa.Auth(c.Request().Context(), &auth.FormAuthReq{
+			AppID:   c.Param(_appID),
+			TableID: c.Param(_tableID),
+			Path:    c.Request().URL.Path,
+		})
 		if err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
-			return
+			return err
 		}
 
-		if strings.HasPrefix(path, "/api/v1/form") {
-
-			req := &lowcode.FormReq{}
-			req.UserID = c.GetHeader(_userID)
-			req.UserName = c.GetHeader(_userName)
-			req.Method = c.Param(_action)
-			req.DepID = c.GetHeader(_departmentID)
-			req.Path = c.Request.RequestURI
-			req.AppID, req.TableID, err = checkURL(c)
-			if err != nil {
-				c.AbortWithError(http.StatusBadRequest, err)
-				return
-			}
-
-			err = json.Unmarshal(data, req)
-			if err != nil {
-				c.AbortWithError(http.StatusBadRequest, err)
-				return
-			}
-
-			p.authi = lowcode.NewFormAuth(p.config, req)
-		} else {
-			p.authi = lowcode.NewPolyAuth()
+		if !res.IsPermit {
+			return errors.New("no permit")
 		}
 
-		if !p.authi.Auth(c) {
-			c.AbortWithStatus(http.StatusForbidden)
-			return
-		}
-
-		c.Request.Body = io.NopCloser(bytes.NewBuffer(data))
-		c.Next()
+		return next(c)
 	}
 }
 
-func (p *permit) serverHTTP(url *url.URL, c *gin.Context) {
-	proxy := httputil.NewSingleHostReverseProxy(url)
-	proxy.Transport = p.transport
-	proxy.ModifyResponse = func(resp *http.Response) error {
-		return p.authi.Filter(resp)
-	}
+func (f *Form) proxy() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		proxy := httputil.NewSingleHostReverseProxy(f.url)
+		proxy.Transport = transport
+		proxy.ModifyResponse = func(resp *http.Response) error {
+			return f.fa.Filter(resp)
+		}
 
-	proxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
-		logger.Logger.Errorf("Got error while modifying response: %v \n", err)
-		return
-	}
+		proxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
+			logger.Logger.Errorf("Got error while modifying response: %v \n", err)
+			return
+		}
 
-	r := c.Request
-	r.Host = url.Host
-	proxy.ServeHTTP(c.Writer, r)
+		r := c.Request()
+		r.Host = f.url.Host
+		proxy.ServeHTTP(c.Response().Writer, r)
+		return nil
+	}
 }
 
-func checkURL(c *gin.Context) (appID, tableName string, err error) {
-	appID, ok := c.Params.Get(_appID)
-	tableName, okt := c.Params.Get("tableName")
-	if !ok || !okt {
-		err = errors.New("invalid URI")
-		return
+type Poly struct {
+	url  *url.URL
+	poly auth.PolyAuth
+}
+
+func NewPoly(endpoint string) (*Poly, error) {
+	url, err := url.ParseRequestURI(endpoint)
+	if err != nil {
+		return nil, err
 	}
-	return
+
+	poly := auth.NewPolyAuth()
+	return &Poly{
+		url:  url,
+		poly: poly,
+	}, nil
+}
+
+func (p *Poly) auth(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		fmt.Println("a ...interface{}")
+		return next(c)
+	}
+}
+
+func (p *Poly) proxy() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		return nil
+	}
 }
