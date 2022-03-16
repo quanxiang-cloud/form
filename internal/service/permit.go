@@ -49,6 +49,8 @@ type Permit interface {
 
 	GetPermit(ctx context.Context, req *GetPermitReq) (*GetPermitResp, error)
 
+	FindPermit(ctx context.Context, req *FindPermitReq) (*FindPermitResp, error)
+
 	GetPerInCache(ctx context.Context, req *GetPerInCacheReq) (*GetPerInCacheResp, error)
 
 	SaveUserPerMatch(ctx context.Context, req *SaveUserPerMatchReq) (*SaveUserPerMatchResp, error)
@@ -60,6 +62,16 @@ type permit struct {
 	roleGrantRepo models.RoleRantRepo
 	permitRepo    models.PermitRepo
 	limitRepo     models.LimitsRepo
+}
+
+type FindPermitReq struct {
+}
+
+type FindPermitResp struct {
+}
+
+func (p *permit) FindPermit(ctx context.Context, req *FindPermitReq) (*FindPermitResp, error) {
+	panic("implement me")
 }
 
 type FindGrantRoleReq struct {

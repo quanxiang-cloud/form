@@ -150,3 +150,14 @@ func (p *Permit) UserRoleMatch(c *gin.Context) {
 	}
 	resp.Format(p.permit.GetRole(ctx, reqRole)).Context(c)
 }
+
+func (p *Permit) FindPermit(c *gin.Context) {
+	req := &service.FindPermitReq{}
+	ctx := header.MutateContext(c)
+	if err := c.ShouldBind(req); err != nil {
+		logger.Logger.Errorw("should bind", header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	resp.Format(p.permit.FindPermit(ctx, req)).Context(c)
+}

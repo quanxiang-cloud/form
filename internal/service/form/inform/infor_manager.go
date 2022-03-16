@@ -2,7 +2,6 @@ package inform
 
 import (
 	"context"
-	"fmt"
 	daprd "github.com/dapr/go-sdk/client"
 	"github.com/go-logr/logr"
 	"github.com/quanxiang-cloud/form/pkg/misc/config"
@@ -52,11 +51,9 @@ func (manager *HookManger) Start(ctx context.Context) {
 	for {
 		select {
 		case sendData := <-manager.Send:
-			fmt.Println("121212121")
 			if err := manager.publish(ctx, topic, sendData); err != nil {
 				manager.log.Error(err, "push flow", "sendData ", sendData)
 			}
-			fmt.Println("1212121")
 		case <-ctx.Done():
 
 		}
@@ -64,12 +61,9 @@ func (manager *HookManger) Start(ctx context.Context) {
 
 }
 func (manager *HookManger) publish(ctx context.Context, topic string, data interface{}) error {
-	//	manager.log.Info("send message", "data is ", data)
-	fmt.Println("2323232")
 	if err := manager.daprClient.PublishEvent(context.Background(), manager.conf.PubSubName, topic, data); err != nil {
 		manager.log.Error(err, "publishEvent", "topic", topic, "pubsubName", manager.conf.PubSubName)
 		return err
 	}
-	fmt.Println("32323232")
 	return nil
 }

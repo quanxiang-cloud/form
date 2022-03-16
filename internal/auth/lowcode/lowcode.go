@@ -31,9 +31,9 @@ func NewLowcode() *Lowcode {
 }
 
 func (l *Lowcode) GetCacheMatchRole() {
-	l.form.getCacheMatchRole()
+	l.form.GetCacheMatchRole("", "", "")
 }
 
 func (l *Lowcode) GetRoleMatchPermit() {
-	l.form.getRoleMatchPermit()
+	l.form.GetRoleMatchPermit("")
 }

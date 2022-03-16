@@ -2,7 +2,7 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/quanxiang-cloud/form/internal/service/guidance"
+	"github.com/quanxiang-cloud/form/internal/service/form"
 	config2 "github.com/quanxiang-cloud/form/pkg/misc/config"
 )
 
@@ -38,7 +38,7 @@ var routers = []router{
 	permitRouter,
 }
 
-// Newrouter enable routing
+// NewRouter enable routing
 func NewRouter(c *config2.Config) (*Router, error) {
 	engine, err := newRouter(c)
 	if err != nil {
@@ -80,10 +80,12 @@ func permitRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 		manager.POST("/role/update", permits.UpdateRole) //  更新权限组
 		manager.POST("/role/addOwner", permits.AddToRole)
 		manager.POST("/role/deleteOwner", permits.DeleteOwner)
+		manager.POST("/role/userRoleMatch", permits.UserRoleMatch)
 		manager.POST("/role/delete", permits.DeleteRole)
 		manager.POST("/apiPermit/create", permits.CratePermit)
 		manager.POST("/apiPermit/update", permits.UpdatePermit)
 		manager.POST("/apiPermit/get", permits.GetPermit)
+		manager.POST("/apiPermit/find", permits.FindPermit)
 
 	}
 	home := r[homePath].Group("/permission")
@@ -97,16 +99,12 @@ func permitRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 func cometRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 	cometHome := r[homePath].Group("/form/:tableName")
 	{
-		g, err := guidance.New(c)
+		g, err := form.NewRefs(c)
 		if err != nil {
 			return err
 		}
 
 		cometHome.POST("/:action", action(g))
-		cometHome.GET("data/:id", get(g))
-		cometHome.POST("data", create(g))
-		cometHome.PATCH("data/:id", update(g))
-		cometHome.DELETE("data/:id", delete(g))
 	}
 	return nil
 }
