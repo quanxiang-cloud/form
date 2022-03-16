@@ -2,6 +2,7 @@ package consensus
 
 import (
 	"context"
+
 	"github.com/quanxiang-cloud/form/internal/models"
 	"github.com/quanxiang-cloud/form/internal/service/types"
 )
@@ -40,8 +41,7 @@ type CreatedOrUpdate struct {
 	Entity interface{} `json:"entity,omitempty"`
 }
 
-type Delete struct {
-}
+type Delete struct{}
 
 type Incidental struct {
 	Permit *Permit `json:"-,omitempty"`
@@ -81,8 +81,8 @@ type DeleteResp struct {
 }
 
 type CreatedOrUpdateResp struct {
-	Entity interface{} `json:"entity"`
-	Count  int64       `json:"count"`
+	Data  interface{} `json:"data"`
+	Count int64       `json:"count"`
 }
 
 type ListResp struct {

@@ -1,8 +1,11 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -95,12 +98,9 @@ func main() {
 }
 
 const (
-	_userID       = "User-Id"
-	_userName     = "User-Name"
-	_departmentID = "Department-Id"
-	_appID        = "appID"
-	_tableID      = "tableID"
-	_action       = "action"
+	_userID = "User-Id"
+	_appID  = "appID"
+	_action = "action"
 )
 
 type Form struct {
@@ -127,13 +127,27 @@ func NewForm(endpoint string, conf *config.Config) (*Form, error) {
 
 func (f *Form) auth(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		res, err := f.fa.Auth(c.Request().Context(), &auth.FormAuthReq{
-			AppID:   c.Param(_appID),
-			TableID: c.Param(_tableID),
-			Action:  c.Param(_action),
-			Path:    c.Request().URL.Path,
-		})
+		reqData, err := io.ReadAll(c.Request().Body)
 		if err != nil {
+			logger.Logger.Errorw("read request body error", "error", err)
+			return err
+		}
+
+		formAuthReq := &auth.FormAuthReq{
+			AppID:  c.Param(_appID),
+			UserID: c.Request().Header.Get(_userID),
+			Path:   c.Request().URL.Path,
+		}
+
+		err = json.Unmarshal(reqData, formAuthReq)
+		if err != nil {
+			logger.Logger.Errorw("unmarshal request body error", "error", err)
+			return err
+		}
+
+		res, err := f.fa.Auth(c.Request().Context(), formAuthReq)
+		if err != nil {
+			logger.Logger.Errorw("auth error", "error", err)
 			return err
 		}
 
@@ -142,6 +156,7 @@ func (f *Form) auth(next echo.HandlerFunc) echo.HandlerFunc {
 			return nil
 		}
 
+		c.Request().Body = io.NopCloser(bytes.NewReader(reqData))
 		return next(c)
 	}
 }
@@ -151,7 +166,7 @@ func (f *Form) proxy() echo.HandlerFunc {
 		proxy := httputil.NewSingleHostReverseProxy(f.url)
 		proxy.Transport = transport
 		proxy.ModifyResponse = func(resp *http.Response) error {
-			return f.fa.Filter(resp)
+			return f.fa.Filter(resp, c.Param(_action))
 		}
 
 		proxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {

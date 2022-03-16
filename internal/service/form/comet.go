@@ -3,6 +3,7 @@ package form
 import (
 	"context"
 	"fmt"
+
 	"github.com/quanxiang-cloud/form/internal/service/consensus"
 	client2 "github.com/quanxiang-cloud/form/pkg/misc/client"
 )
@@ -106,13 +107,12 @@ func (c *comet) callCreate(ctx context.Context, req *CreateReq) (*consensus.Resp
 		TableID: getTableID(req.AppID, req.TableID),
 	}
 	insert, err := c.formClient.Insert(ctx, formReq)
-
 	if err != nil {
 		return nil, err
 	}
 	resp := new(consensus.Response)
 	resp.CreatedOrUpdateResp.Count = insert.SuccessCount
-	resp.CreatedOrUpdateResp.Entity = req.Entity
+	resp.CreatedOrUpdateResp.Data = req.Entity
 	return resp, nil
 }
 
@@ -133,13 +133,12 @@ func (c *comet) callUpdate(ctx context.Context, req *UpdateReq) (*consensus.Resp
 		DslQuery: dsl,
 	}
 	update, err := c.formClient.Update(ctx, formReq)
-
 	if err != nil {
 		return nil, err
 	}
 	resp := &consensus.Response{}
 	resp.CreatedOrUpdateResp.Count = update.SuccessCount
-	resp.CreatedOrUpdateResp.Entity = req.Entity
+	resp.CreatedOrUpdateResp.Data = req.Entity
 	return resp, nil
 }
 
@@ -170,7 +169,6 @@ func (c *comet) callGet(ctx context.Context, req *GetReq) (*consensus.Response, 
 	resp := &consensus.Response{}
 	resp.GetResp.Entity = gets.Entity
 	return resp, nil
-
 }
 
 func (c *comet) callDelete(ctx context.Context, req *DeleteReq) (*consensus.Response, error) {

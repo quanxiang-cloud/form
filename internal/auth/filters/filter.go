@@ -14,6 +14,10 @@ const (
 func Pre(entity interface{}, fieldPermit models.FiledPermit) bool {
 	value := reflect.ValueOf(entity)
 	switch reflect.TypeOf(entity).Kind() {
+	case reflect.Ptr:
+		if value.Elem().CanInterface() {
+			return Pre(value.Elem().Interface(), fieldPermit)
+		}
 	case reflect.Map:
 		iter := value.MapRange()
 		for iter.Next() {
@@ -35,19 +39,24 @@ func Pre(entity interface{}, fieldPermit models.FiledPermit) bool {
 		return true
 	case reflect.Slice, reflect.Array:
 		for i := 0; i < value.Len(); i++ {
-			Pre(value.Index(i), fieldPermit)
+			if value.Index(i).CanInterface() {
+				Pre(value.Index(i).Interface(), fieldPermit)
+			}
 		}
 	}
 	return false
 }
 
 func Post(response interface{}, fieldPermit models.FiledPermit) {
-
 	if response == nil || fieldPermit == nil {
 		return
 	}
 	value := reflect.ValueOf(response)
 	switch reflect.TypeOf(response).Kind() {
+	case reflect.Ptr:
+		if value.Elem().CanInterface() {
+			Post(value.Elem().Interface(), fieldPermit)
+		}
 	case reflect.Map:
 		iter := value.MapRange()
 		for iter.Next() {
@@ -66,7 +75,9 @@ func Post(response interface{}, fieldPermit models.FiledPermit) {
 		}
 	case reflect.Slice, reflect.Array:
 		for i := 0; i < value.Len(); i++ {
-			Post(value.Index(i), fieldPermit)
+			if value.Index(i).CanInterface() {
+				Post(value.Index(i).Interface(), fieldPermit)
+			}
 		}
 	}
 }
