@@ -2,7 +2,6 @@ package auth
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -11,8 +10,10 @@ import (
 	redis2 "github.com/quanxiang-cloud/cabin/tailormade/db/redis"
 	"github.com/quanxiang-cloud/cabin/tailormade/header"
 	"github.com/quanxiang-cloud/form/internal/auth/cache"
+	"github.com/quanxiang-cloud/form/internal/auth/filters"
 	"github.com/quanxiang-cloud/form/internal/auth/lowcode"
 	"github.com/quanxiang-cloud/form/internal/models"
+	"github.com/quanxiang-cloud/form/internal/service/consensus"
 	"github.com/quanxiang-cloud/form/pkg/misc/code"
 	"github.com/quanxiang-cloud/form/pkg/misc/config"
 )
@@ -48,11 +49,13 @@ func NewFormAuth(conf *config.Config) (FormAuth, error) {
 }
 
 type FormAuthReq struct {
-	AppID   string `json:"appID,omitempty"`
-	TableID string `json:"tableID,omitempty"`
-	Path    string `json:"path,omitempty"`
-	UserID  string `json:"userID,omitempty"`
-	DepID   string `json:"depID,omitempty"`
+	AppID   string      `json:"appID,omitempty"`
+	TableID string      `json:"tableID,omitempty"`
+	Path    string      `json:"path,omitempty"`
+	Action  string      `json:"action,omitempty"`
+	UserID  string      `json:"userID,omitempty"`
+	DepID   string      `json:"depID,omitempty"`
+	Entity  interface{} `json:"entity,omitempty"`
 }
 
 type FormAuthResp struct {
@@ -60,41 +63,64 @@ type FormAuthResp struct {
 }
 
 func (f *formAuth) Auth(ctx context.Context, req *FormAuthReq) (*FormAuthResp, error) {
-	// 从redis获取权限
+	// get the role information owned by the user
+	match, err := f.getCacheMatch(ctx, req)
+	if err != nil {
+		return &FormAuthResp{}, err
+	}
 
-	return nil, nil
+	if match == nil {
+		return &FormAuthResp{}, error2.New(code.ErrNotPermit)
+	}
+
+	if match.Types == models.InitType {
+		return &FormAuthResp{true}, nil
+	}
+
+	permits, err := f.getCachePermit(ctx, match.RoleID, req)
+	if err != nil {
+		return &FormAuthResp{}, err
+	}
+
+	// access judgment
+	if !filters.Pre(req.Entity, permits.Params) {
+		return &FormAuthResp{}, error2.New(code.ErrNotPermit)
+	}
+
+	return &FormAuthResp{}, nil
 }
 
 func (f *formAuth) Filter(resp *http.Response) error {
 	return nil
 }
 
-func (f *formAuth) getPermit(ctx context.Context, req *FormAuthReq) {
+func (f *formAuth) getPermit(ctx context.Context, req *FormAuthReq) (*consensus.Permit, error) {
 	match, err := f.getCacheMatch(ctx, req)
 	if err != nil {
-		// return nil, err
+		return nil, err
 	}
+
 	if match == nil {
-		// return nil, error2.New(code.ErrNotPermit)
+		return nil, error2.New(code.ErrNotPermit)
 	}
 
 	if match.Types == models.InitType {
-		// return &GetPerInCacheResp{
-		// 	Types: match.Types,
-		// }, nil
-	}
-	permits, err := f.getCachePermit(ctx, match.RoleID, req)
-	if err != nil {
-		// return nil, err
+		return &consensus.Permit{
+			Types: match.Types,
+		}, nil
 	}
 
-	fmt.Println(permits)
-	// return &GetPerInCacheResp{
-	// 	Params:    permits.Params,
-	// 	Response:  permits.Response,
-	// 	Condition: permits.Condition,
-	// 	Types:     match.Types,
-	// }, err
+	permits, err := f.getCachePermit(ctx, match.RoleID, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return &consensus.Permit{
+		Params:    permits.Params,
+		Response:  permits.Response,
+		Condition: permits.Condition,
+		Types:     match.Types,
+	}, nil
 }
 
 func (f *formAuth) getCacheMatch(ctx context.Context, req *FormAuthReq) (*models.PermitMatch, error) {
@@ -122,6 +148,7 @@ func (f *formAuth) getCacheMatch(ctx context.Context, req *FormAuthReq) (*models
 		break
 	}
 
+	// 从form获取match
 	f.lowcode.GetCacheMatchRole()
 	return nil, nil
 }

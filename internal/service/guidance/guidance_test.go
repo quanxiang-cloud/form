@@ -3,24 +3,24 @@ package guidance
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"github.com/quanxiang-cloud/form/internal/models"
 	"github.com/quanxiang-cloud/form/internal/service"
 	"github.com/quanxiang-cloud/form/pkg/misc/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"testing"
 )
 
 type CertifierSuite struct {
 	suite.Suite
-	ctx        context.Context
-	AppID      string
-	TableID    string
-	permit     service.Permit
-	certifiers certifier
-	conf       *config.Config
-	UserID     string
-	UserName   string
+	ctx      context.Context
+	AppID    string
+	TableID  string
+	permit   service.Permit
+	conf     *config.Config
+	UserID   string
+	UserName string
 }
 
 func TestCertifier(t *testing.T) {
@@ -42,15 +42,12 @@ func (suite *CertifierSuite) SetupTest() {
 	suite.permit, err = service.NewPermit(suite.conf)
 	assert.Nil(suite.T(), err)
 	assert.NotNil(suite.T(), suite.conf)
-
 }
 
 func (suite *CertifierSuite) CertifierBefore() {
-
 }
 
 func (suite *CertifierSuite) CertifierAfter() {
-
 }
 
 func (suite *CertifierSuite) TestCertifier() {
@@ -71,7 +68,6 @@ func (suite *CertifierSuite) TestCertifier() {
 	//	Authorizes []*Owners `json:"authorizes"`
 	//	RoleID     string    `json:"roleID"`
 	owners := &service.Owners{
-
 		Owner:     suite.UserID,
 		OwnerName: suite.UserName,
 		Types:     1,

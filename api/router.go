@@ -19,26 +19,26 @@ const (
 	internalPath = "internal"
 )
 
-// Router 路由
+// Router routing
 type Router struct {
 	c *config2.Config
 
 	engine *gin.Engine
 
-	// 流程引擎与表单的交互，单独开端口，校验逻辑不同
+	// for the interaction between the process engine and the form,
+	// the port is opened separately, and the verification logic is different
 	engineInner *gin.Engine
 }
 
 type router func(c *config2.Config, r map[string]*gin.RouterGroup) error
 
 var routers = []router{
-	permissionRouter,
 	cometRouter,
 	innerRouter,
 	permitRouter,
 }
 
-// NewRouter 开启路由
+// Newrouter enable routing
 func NewRouter(c *config2.Config) (*Router, error) {
 	engine, err := newRouter(c)
 	if err != nil {
@@ -81,9 +81,6 @@ func permitRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 		manager.POST("/role/addOwner", permits.AddToRole)
 		manager.POST("/role/deleteOwner", permits.DeleteOwner)
 		manager.POST("/role/delete", permits.DeleteRole)
-		manager.POST("/role/userRoleMatch", permits.UserRoleMatch)
-
-		//
 		manager.POST("/apiPermit/create", permits.CratePermit)
 		manager.POST("/apiPermit/update", permits.UpdatePermit)
 		manager.POST("/apiPermit/get", permits.GetPermit)
@@ -91,83 +88,31 @@ func permitRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 	}
 	home := r[homePath].Group("/permission")
 	{
-		//home.POST("/operatePer/getOperate", permits.GetOperate)  // 跟据用户id 和 部门ID，得到操作权限
-		//home.POST("/perGroup/getPerOption", permits.GetPerOption)
 		home.POST("/perGroup/saveUserPerMatch", permits.SaveUserPerMatch) // 保存用户匹配的权限组
 	}
 
 	return nil
 }
 
-func permissionRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
-	//permission, err := NewPermission(c)
-	//if err != nil {
-	//	return err
-	//}
-	// manager := r[managerPath].Group("/permission")
-	//{
-	//	manager.POST("/perGroup/create", permission.CreatePerGroup)     //  创建权限组
-	//	manager.POST("/perGroup/updateName", permission.UpdatePerGroup) //  更新权限组
-	//	manager.POST("/perGroup/update", permission.AddOwnerToGroup, permission.AddOwnerToApp)
-	//
-	//	manager.POST("/perGroup/delete", permission.DelPerGroup)   // 删除权限组 ,要删除缓存
-	//	manager.POST("/perGroup/getByID", permission.GetPerGroup)  // 根据id 获取权限组
-	//	manager.POST("/perGroup/getList", permission.FindPerGroup) // 根据条件获取 权限组列表
-	//
-	//	manager.POST("/perGroup/saveForm", permission.SaveForm) // 保存表单权限
-	//
-	//	manager.POST("/perGroup/deleteForm", permission.DeleteForm) // 删除表单权限
-	//
-	//	manager.POST("/perGroup/getForm", permission.FindForm) // 获取form 的信息
-	//	manager.POST("/perGroup/getPerData", permission.GetPerInfo)
-	//
-	//	manager.POST("/perGroup/getPerGroupByMenu", permission.GetPerGroupsByMenu)
-	//}
-	//
-	//home := r[homePath].Group("/permission")
-	//{
-	//	home.POST("/operatePer/getOperate", permission.GetOperate) // 跟据用户id 和 部门ID，得到操作权限
-	//	home.POST("/perGroup/getPerOption", permission.GetPerOption)
-	//	home.POST("/perGroup/saveUserPerMatch", permission.SaveUserPerMatch) // 保存用户匹配的权限组
-	//}
-
-	return nil
-
-}
-
 func cometRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
-	//authForm, err := form.NewAuthForm(c)
-	//if err != nil {
-	//	return err
-	//}
 	cometHome := r[homePath].Group("/form/:tableName")
 	{
-		//cometHome.POST("/search", Search(authForm))
-		//cometHome.POST("/get", Get(authForm))
-		//cometHome.POST("/create", Create(authForm))
-		//
-		//cometHome.POST("/update", Update(authForm))
-		//cometHome.POST("/delete", Delete(authForm))
-
 		g, err := guidance.New(c)
 		if err != nil {
 			return err
 		}
-		cometHome.POST("/:action", action(g))
 
+		cometHome.POST("/:action", action(g))
 		cometHome.GET("data/:id", get(g))
 		cometHome.POST("data", create(g))
 		cometHome.PATCH("data/:id", update(g))
 		cometHome.DELETE("data/:id", delete(g))
 	}
 	return nil
-
 }
 
 func innerRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
-
 	return nil
-
 }
 
 func newRouter(c *config2.Config) (*gin.Engine, error) {
@@ -191,9 +136,7 @@ func (r *Router) Run() {
 
 // Close router
 func (r *Router) Close() {
-
 }
 
 func (r *Router) router() {
-
 }
