@@ -5,6 +5,7 @@ go 1.16
 require (
 	git.internal.yunify.com/qxp/misc v0.0.0-20211230072102-f37610800c2f
 	github.com/dapr/go-sdk v1.3.1
+	github.com/Shopify/sarama v1.30.1
 	github.com/gin-gonic/gin v1.7.7
 	github.com/go-logr/logr v1.2.2
 	github.com/go-redis/redis/v8 v8.11.4
