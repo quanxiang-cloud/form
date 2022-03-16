@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"net"
@@ -82,11 +81,17 @@ func main() {
 
 	e.Any("*", poly.proxy(), poly.auth)
 
-	e.Any("api/v1/form/:appID/table/:tableID/*", form.proxy(), form.auth)
+	formG := e.Group("/api/v1/form")
+	{
+		formG.Any("/:appID/home/form/:tableID/:action", form.proxy(), form.auth)
+		formG.Any("/permission/perGroup/update", func(c echo.Context) error {
+			c.String(http.StatusOK, "hello")
+			return nil
+		})
+	}
 
-	logger.Logger.Info("start...")
+	logger.Logger.Info(e.Start(port))
 	// Start server
-	e.Start(port)
 }
 
 const (
@@ -125,6 +130,7 @@ func (f *Form) auth(next echo.HandlerFunc) echo.HandlerFunc {
 		res, err := f.fa.Auth(c.Request().Context(), &auth.FormAuthReq{
 			AppID:   c.Param(_appID),
 			TableID: c.Param(_tableID),
+			Action:  c.Param(_action),
 			Path:    c.Request().URL.Path,
 		})
 		if err != nil {
@@ -132,7 +138,8 @@ func (f *Form) auth(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 
 		if !res.IsPermit {
-			return errors.New("no permit")
+			c.Response().Writer.WriteHeader(http.StatusForbidden)
+			return nil
 		}
 
 		return next(c)
