@@ -81,10 +81,13 @@ func permitRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 		manager.POST("/role/addOwner", permits.AddToRole)
 		manager.POST("/role/deleteOwner", permits.DeleteOwner)
 		manager.POST("/role/delete", permits.DeleteRole)
+		manager.POST("/role/userRoleMatch", permits.UserRoleMatch)
+
 		//
 		manager.POST("/apiPermit/create", permits.CratePermit)
 		manager.POST("/apiPermit/update", permits.UpdatePermit)
 		manager.POST("/apiPermit/get", permits.GetPermit)
+
 	}
 	home := r[homePath].Group("/permission")
 	{

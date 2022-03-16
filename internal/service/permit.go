@@ -66,6 +66,11 @@ type FindGrantRoleReq struct {
 }
 
 type FindGrantRoleResp struct {
+	List []GrantRole `json:"list"`
+}
+
+type GrantRole struct {
+	ID string `json:"id"`
 }
 
 func (p *permit) FindGrantRole(ctx context.Context, req *FindGrantRoleReq) (*FindGrantRoleResp, error) {
@@ -170,8 +175,12 @@ func (p *permit) UpdateRole(ctx context.Context, req *UpdateRoleReq) (*UpdateRol
 }
 
 type GetRoleReq struct {
+	ID string `json:"id"`
 }
 type GetRoleResp struct {
+	Types models.RoleType `json:"type"`
+	ID    string          `json:"id"`
+	Name  string          `json:"name"`
 }
 
 func (p *permit) GetRole(ctx context.Context, req *GetRoleReq) (*GetRoleResp, error) {

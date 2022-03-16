@@ -128,3 +128,25 @@ func (p *Permit) SaveUserPerMatch(c *gin.Context) {
 	}
 	resp.Format(p.permit.SaveUserPerMatch(ctx, req)).Context(c)
 }
+
+func (p *Permit) UserRoleMatch(c *gin.Context) {
+
+	req := &service.FindGrantRoleReq{}
+	ctx := header.MutateContext(c)
+	if err := c.ShouldBind(req); err != nil {
+		logger.Logger.Errorw("should bind", header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	match, err := p.permit.FindGrantRole(ctx, req)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+	}
+	if len(match.List) == 0 {
+		c.AbortWithError(http.StatusForbidden, err)
+	}
+	reqRole := &service.GetRoleReq{
+		ID: match.List[0].ID,
+	}
+	resp.Format(p.permit.GetRole(ctx, reqRole)).Context(c)
+}
