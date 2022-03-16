@@ -10,6 +10,7 @@ import (
 
 	error2 "github.com/quanxiang-cloud/cabin/error"
 	"github.com/quanxiang-cloud/cabin/logger"
+	"github.com/quanxiang-cloud/cabin/tailormade/client"
 	redis2 "github.com/quanxiang-cloud/cabin/tailormade/db/redis"
 	"github.com/quanxiang-cloud/cabin/tailormade/header"
 	"github.com/quanxiang-cloud/form/internal/auth/filters"
@@ -36,7 +37,7 @@ type FormAuth interface {
 
 type formAuth struct {
 	redis   models.LimitsRepo
-	lowcode *lowcode.Lowcode
+	lowcode lowcode.Form
 	permit  *consensus.Permit
 }
 
@@ -48,14 +49,15 @@ func NewFormAuth(conf *config.Config) (FormAuth, error) {
 
 	return &formAuth{
 		redis:   redis.NewLimitRepo(redisClient),
-		lowcode: lowcode.NewLowcode(),
+		lowcode: lowcode.NewForm(client.Config{}),
 	}, nil
 }
 
 type FormAuthReq struct {
 	AppID  string      `json:"appID,omitempty"`
-	Path   string      `json:"path,omitempty"`
 	UserID string      `json:"userID,omitempty"`
+	DepID  string      `json:"depID,omitempty"`
+	Path   string      `json:"path,omitempty"`
 	Entity interface{} `json:"entity,omitempty"`
 }
 
@@ -151,8 +153,15 @@ func (f *formAuth) getCacheMatch(ctx context.Context, req *FormAuthReq) (*models
 		break
 	}
 
-	f.lowcode.GetCacheMatchRole()
-	return nil, nil
+	resp, err := f.lowcode.GetCacheMatchRole(ctx, req.UserID, req.DepID, req.AppID)
+	if err != nil || resp == nil {
+		return nil, err
+	}
+
+	return &models.PermitMatch{
+		RoleID: resp.RoleID,
+		Types:  models.RoleType(resp.Types),
+	}, nil
 }
 
 func (f *formAuth) getCachePermit(ctx context.Context, roleID string, req *FormAuthReq) (*models.Limits, error) {
@@ -184,7 +193,33 @@ func (f *formAuth) getCachePermit(ctx context.Context, roleID string, req *FormA
 		break
 	}
 
-	f.lowcode.GetRoleMatchPermit()
+	resp, err := f.lowcode.GetRoleMatchPermit(ctx, roleID)
+	if err != nil || resp == nil {
+		return nil, err
+	}
 
-	return nil, nil
+	limits := make([]*models.Limits, len(resp.List))
+	var getPermit *models.Limits
+	for index, value := range resp.List {
+		per := &models.Limits{
+			Path:      value.Path,
+			Condition: value.Condition,
+			Params:    value.Params,
+			Response:  value.Response,
+		}
+		if value.Path == req.Path {
+			getPermit = per
+		}
+		limits[index] = per
+	}
+	err = f.redis.CreatePermit(ctx, roleID, limits...)
+	if err != nil {
+		logger.Logger.Errorw("create permit err", roleID, err.Error())
+	}
+
+	if getPermit == nil {
+		return nil, error2.New(code.ErrNotPermit)
+	}
+
+	return getPermit, nil
 }

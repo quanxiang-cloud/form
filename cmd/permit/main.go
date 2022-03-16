@@ -86,7 +86,7 @@ func main() {
 
 	formG := e.Group("/api/v1/form")
 	{
-		formG.Any("/:appID/home/form/:tableID/:action", form.proxy(), form.auth)
+		formG.Any("/:appID/home/form/:tableID/:action", form.proxy(), form.auth, form.condition)
 		formG.Any("/permission/perGroup/update", func(c echo.Context) error {
 			c.String(http.StatusOK, "hello")
 			return nil
@@ -99,6 +99,7 @@ func main() {
 
 const (
 	_userID = "User-Id"
+	_depID  = "Department-Id"
 	_appID  = "appID"
 	_action = "action"
 )
@@ -136,6 +137,7 @@ func (f *Form) auth(next echo.HandlerFunc) echo.HandlerFunc {
 		formAuthReq := &auth.FormAuthReq{
 			AppID:  c.Param(_appID),
 			UserID: c.Request().Header.Get(_userID),
+			DepID:  c.Request().Header.Get(_depID),
 			Path:   c.Request().URL.Path,
 		}
 
@@ -157,6 +159,12 @@ func (f *Form) auth(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 
 		c.Request().Body = io.NopCloser(bytes.NewReader(reqData))
+		return next(c)
+	}
+}
+
+func (f *Form) condition(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
 		return next(c)
 	}
 }
