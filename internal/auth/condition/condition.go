@@ -191,7 +191,7 @@ func (c *Condition) parseParam(param interface{}) error {
 				return nil
 			}
 
-			elem := elemVal.Index(index).CanInterface()
+			elem := elemVal.Index(index).Interface()
 			err := c.parse(elem)
 			if err != nil {
 				return err

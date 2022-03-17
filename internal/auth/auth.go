@@ -48,11 +48,11 @@ func newAuth(conf *config.Config) (*auth, error) {
 }
 
 type ReqParam struct {
-	AppID  string      `json:"appID,omitempty"`
-	UserID string      `json:"userID,omitempty"`
-	DepID  string      `json:"depID,omitempty"`
-	Path   string      `json:"path,omitempty"`
-	Entity interface{} `json:"entity,omitempty"`
+	AppID  string `param:"appID" query:"appID" header:"appID" form:"appID" json:"appID" xml:"appID"`
+	UserID string `param:"userID" query:"userID" header:"User-Id" form:"userID" json:"userID" xml:"userID"`
+	DepID  string `param:"depID" query:"depID" header:"Department-Id" form:"depID" json:"depID" xml:"depID"`
+	Path   string `param:"path" query:"path" header:"path" form:"path" json:"path" xml:"path"`
+	Body   map[string]interface{}
 }
 
 type RespParam struct {
