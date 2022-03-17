@@ -5,6 +5,7 @@ import "gorm.io/gorm"
 type RoleGrant struct {
 	ID        string
 	RoleID    string
+	AppID     string
 	Owner     string
 	OwnerName string
 	Types     int
@@ -15,6 +16,7 @@ type RoleGrantQuery struct {
 	RoleID  string
 	RoleIDs []string
 	Owners  []string
+	AppID   string
 }
 
 // RoleRantRepo RoleRantRepo
