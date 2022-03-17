@@ -7,11 +7,9 @@ import (
 	"io"
 	"net/http"
 
-	error2 "github.com/quanxiang-cloud/cabin/error"
 	"github.com/quanxiang-cloud/cabin/logger"
 	"github.com/quanxiang-cloud/form/internal/auth/filters"
 	"github.com/quanxiang-cloud/form/internal/service/consensus"
-	"github.com/quanxiang-cloud/form/pkg/misc/code"
 	"github.com/quanxiang-cloud/form/pkg/misc/config"
 )
 
@@ -40,7 +38,7 @@ func (f *formAuth) Auth(ctx context.Context, req *ReqParam) (bool, error) {
 
 	// access judgment
 	if !filters.Pre(req.Entity, resp.Permit.Params) {
-		return false, error2.New(code.ErrNotPermit)
+		return false, nil
 	}
 
 	f.permit = resp.Permit

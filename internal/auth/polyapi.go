@@ -23,6 +23,7 @@ func (p *polyAuth) Auth(ctx context.Context, req *ReqParam) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+
 	if resp == nil {
 		return false, nil
 	}
