@@ -65,28 +65,74 @@ type permit struct {
 }
 
 type FindPermitReq struct {
+	RoleID string `json:"roleID"`
 }
 
 type FindPermitResp struct {
+	List []*Permits `json:"list"`
+}
+
+type Permits struct {
+	ID        string             `json:"id"`
+	RoleID    string             `json:"roleID"`
+	Path      string             `json:"path"`
+	Params    models.FiledPermit `json:"params"`
+	Response  models.FiledPermit `json:"response"`
+	Condition *models.Condition  `json:"condition"`
 }
 
 func (p *permit) FindPermit(ctx context.Context, req *FindPermitReq) (*FindPermitResp, error) {
-	panic("implement me")
+	permits, err := p.permitRepo.Find(p.db, &models.PermitQuery{
+		RoleID: req.RoleID,
+	})
+	if err != nil {
+		return nil, err
+	}
+	resp := &FindPermitResp{
+		List: make([]*Permits, len(permits)),
+	}
+	for index, value := range permits {
+		resp.List[index] = &Permits{
+			ID:        value.ID,
+			RoleID:    value.RoleID,
+			Path:      value.Path,
+			Params:    value.Params,
+			Condition: value.Condition,
+		}
+	}
+	return resp, nil
 }
 
 type FindGrantRoleReq struct {
+	Owners []string `json:"owners"`
+	AppID  string   `json:"appID"`
 }
 
 type FindGrantRoleResp struct {
-	List []GrantRole `json:"list"`
+	List []*GrantRoles `json:"list"`
 }
 
-type GrantRole struct {
-	ID string `json:"id"`
+type GrantRoles struct {
+	RoleID string `json:"roleID"`
 }
 
 func (p *permit) FindGrantRole(ctx context.Context, req *FindGrantRoleReq) (*FindGrantRoleResp, error) {
-	return nil, nil
+	//
+	grantRole, err := p.roleGrantRepo.Find(p.db, &models.RoleGrantQuery{Owners: req.Owners})
+
+	if err != nil {
+		return nil, err
+	}
+	resp := &FindGrantRoleResp{
+		List: make([]*GrantRoles, len(grantRole)),
+	}
+
+	for index, value := range grantRole {
+		resp.List[index] = &GrantRoles{
+			RoleID: value.RoleID,
+		}
+	}
+	return resp, nil
 }
 
 type SaveUserPerMatchReq struct {
@@ -212,6 +258,7 @@ func (p *permit) FindRole(ctx context.Context, req *FindRoleReq) (*FindRoleResp,
 type AddOwnerToRoleReq struct {
 	Authorizes []*Owners `json:"authorizes"`
 	RoleID     string    `json:"roleID"`
+	AppID      string    `json:"app_id"`
 }
 type Owners struct {
 	Owner     string `json:"owner"`
@@ -231,6 +278,7 @@ func (p *permit) AddOwnerToRole(ctx context.Context, req *AddOwnerToRoleReq) (*A
 			Owner:     value.Owner,
 			OwnerName: value.OwnerName,
 			Types:     value.Types,
+			AppID:     req.AppID,
 			CreatedAt: time2.NowUnix(),
 		}
 	}
@@ -503,7 +551,7 @@ type GetPermitResp struct {
 	Path      string             `json:"path"`
 	Params    models.FiledPermit `json:"params"`
 	Response  models.FiledPermit `json:"response"`
-	Condition interface{}        `json:"condition"`
+	Condition *models.Condition  `json:"condition"`
 }
 
 func (p *permit) GetPermit(ctx context.Context, req *GetPermitReq) (*GetPermitResp, error) {

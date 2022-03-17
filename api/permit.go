@@ -130,7 +130,6 @@ func (p *Permit) SaveUserPerMatch(c *gin.Context) {
 }
 
 func (p *Permit) UserRoleMatch(c *gin.Context) {
-
 	req := &service.FindGrantRoleReq{}
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
@@ -146,7 +145,7 @@ func (p *Permit) UserRoleMatch(c *gin.Context) {
 		c.AbortWithError(http.StatusForbidden, err)
 	}
 	reqRole := &service.GetRoleReq{
-		ID: match.List[0].ID,
+		ID: match.List[0].RoleID,
 	}
 	resp.Format(p.permit.GetRole(ctx, reqRole)).Context(c)
 }

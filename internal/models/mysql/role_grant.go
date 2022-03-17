@@ -24,6 +24,9 @@ func (t *roleGrantRepo) Find(db *gorm.DB, query *models.RoleGrantQuery) ([]*mode
 	if len(query.Owners) != 0 {
 		ql = ql.Where("owner in ? ", query.Owners)
 	}
+	if query.AppID != "" {
+		ql = ql.Where("app_id = ?", query.AppID)
+	}
 	ql = ql.Order("created_at DESC")
 	roleGrant := make([]*models.RoleGrant, 0)
 	err := ql.Find(&roleGrant).Error
