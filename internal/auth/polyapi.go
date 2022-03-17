@@ -2,24 +2,26 @@ package auth
 
 import (
 	"context"
+	"net/http"
+
+	"github.com/quanxiang-cloud/form/pkg/misc/config"
 )
 
-type PolyAuth interface {
-	Auth(context.Context, *PolyAuthReq) (*PolyAuthResp, error)
-}
-type polyAuth struct{}
-
-func NewPolyAuth() PolyAuth {
-	return &polyAuth{}
+type polyAuth struct {
+	auth *auth
 }
 
-type PolyAuthReq struct{}
-
-type PolyAuthResp struct {
-	IsPermit bool
+func NewPolyAuth(conf *config.Config) (Auth, error) {
+	auth, err := newAuth(conf)
+	return &polyAuth{
+		auth: auth,
+	}, err
 }
 
-func (p *polyAuth) Auth(context.Context, *PolyAuthReq) (*PolyAuthResp, error) {
-	// TODO: implement poly auth
-	return &PolyAuthResp{IsPermit: true}, nil
+func (p *polyAuth) Auth(ctx context.Context, req *AuthReq) (*AuthResp, error) {
+	return p.auth.Auth(ctx, req)
+}
+
+func (p *polyAuth) Filter(*http.Response, string) error {
+	return nil
 }
