@@ -18,8 +18,16 @@ func NewPolyAuth(conf *config.Config) (Auth, error) {
 	}, err
 }
 
-func (p *polyAuth) Auth(ctx context.Context, req *AuthReq) (*AuthResp, error) {
-	return p.auth.Auth(ctx, req)
+func (p *polyAuth) Auth(ctx context.Context, req *ReqParam) (bool, error) {
+	resp, err := p.auth.Auth(ctx, req)
+	if err != nil {
+		return false, err
+	}
+	if resp == nil {
+		return false, nil
+	}
+
+	return true, nil
 }
 
 func (p *polyAuth) Filter(*http.Response, string) error {

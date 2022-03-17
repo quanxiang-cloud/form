@@ -10,7 +10,6 @@ import (
 	"github.com/quanxiang-cloud/cabin/tailormade/client"
 	redis2 "github.com/quanxiang-cloud/cabin/tailormade/db/redis"
 	"github.com/quanxiang-cloud/cabin/tailormade/header"
-	"github.com/quanxiang-cloud/form/internal/auth/filters"
 	"github.com/quanxiang-cloud/form/internal/auth/lowcode"
 	"github.com/quanxiang-cloud/form/internal/models"
 	"github.com/quanxiang-cloud/form/internal/models/redis"
@@ -27,14 +26,13 @@ const (
 )
 
 type Auth interface {
-	Auth(context.Context, *AuthReq) (*AuthResp, error)
+	Auth(context.Context, *ReqParam) (bool, error)
 	Filter(*http.Response, string) error
 }
 
 type auth struct {
 	redis   models.LimitsRepo
 	lowcode lowcode.Form
-	permit  *consensus.Permit
 }
 
 func newAuth(conf *config.Config) (*auth, error) {
@@ -49,7 +47,7 @@ func newAuth(conf *config.Config) (*auth, error) {
 	}, nil
 }
 
-type AuthReq struct {
+type ReqParam struct {
 	AppID  string      `json:"appID,omitempty"`
 	UserID string      `json:"userID,omitempty"`
 	DepID  string      `json:"depID,omitempty"`
@@ -57,43 +55,39 @@ type AuthReq struct {
 	Entity interface{} `json:"entity,omitempty"`
 }
 
-type AuthResp struct {
-	IsPermit bool `json:"isPermit,omitempty"`
+type RespParam struct {
+	Match  *models.PermitMatch
+	Permit *consensus.Permit
 }
 
-func (a *auth) Auth(ctx context.Context, req *AuthReq) (*AuthResp, error) {
-	return &AuthResp{true}, nil
+func (a *auth) Auth(ctx context.Context, req *ReqParam) (*RespParam, error) {
 	// get the role information owned by the user
 	match, err := a.getCacheMatch(ctx, req)
 	if err != nil || match == nil {
-		return &AuthResp{}, err
+		return nil, err
 	}
 
 	if match.Types == models.InitType {
-		return &AuthResp{true}, nil
+		return nil, nil
 	}
 
 	permits, err := a.getCachePermit(ctx, match.RoleID, req)
 	if err != nil {
-		return &AuthResp{}, err
+		return nil, err
 	}
 
-	// access judgment
-	if !filters.Pre(req.Entity, permits.Params) {
-		return &AuthResp{}, error2.New(code.ErrNotPermit)
-	}
-
-	a.permit = &consensus.Permit{
-		Params:    permits.Params,
-		Response:  permits.Response,
-		Condition: permits.Condition,
-		Types:     match.Types,
-	}
-
-	return &AuthResp{true}, nil
+	return &RespParam{
+		Match: match,
+		Permit: &consensus.Permit{
+			Params:    permits.Params,
+			Response:  permits.Response,
+			Condition: permits.Condition,
+			Types:     match.Types,
+		},
+	}, nil
 }
 
-func (a *auth) getCacheMatch(ctx context.Context, req *AuthReq) (*models.PermitMatch, error) {
+func (a *auth) getCacheMatch(ctx context.Context, req *ReqParam) (*models.PermitMatch, error) {
 	// relese lock
 	defer a.redis.UnLock(ctx, lockPerMatch)
 	for i := 0; i < 5; i++ {
@@ -129,7 +123,7 @@ func (a *auth) getCacheMatch(ctx context.Context, req *AuthReq) (*models.PermitM
 	}, nil
 }
 
-func (a *auth) getCachePermit(ctx context.Context, roleID string, req *AuthReq) (*models.Limits, error) {
+func (a *auth) getCachePermit(ctx context.Context, roleID string, req *ReqParam) (*models.Limits, error) {
 	// relese lock
 	defer a.redis.UnLock(ctx, lockPermission)
 	for i := 0; i < 5; i++ {
