@@ -1,0 +1,43 @@
+# port 端口
+port: :40001
+
+#  -------------------- log --------------------
+# comply with zap log specification
+log:
+  level: -1
+  development: false
+  sampling:
+    initial: 100
+    thereafter: 100
+  outputPath:
+    - stderr
+  errorOutputPath:
+    - stderr
+
+
+# --------------------- endpoint -------------
+endpoint:
+  poly: "http://polyapi:80"
+  form: "http://localhost:80"
+
+
+# --------------------- transport -----------------
+transport:
+  timeout: 20s
+  keepAlive: 20s
+  maxIdleConns: 10
+  idleConnTimeout: 20s
+  tlsHandshakeTimeout: 10s
+  expectContinueTimeout: 1s
+
+
+
+# -------------------- service --------------------
+redis:
+  addrs:
+    - 192.168.200.18:6379
+    - 192.168.200.19:6379
+    - 192.168.200.20:6379
+  username:
+  password:
+

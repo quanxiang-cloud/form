@@ -1,10 +1,11 @@
 package config
 
 import (
+	"io/ioutil"
+	"time"
+
 	"github.com/quanxiang-cloud/cabin/logger"
 	"github.com/quanxiang-cloud/cabin/tailormade/client"
-	"io/ioutil"
-
 	"github.com/quanxiang-cloud/cabin/tailormade/db/kafka"
 	mysql2 "github.com/quanxiang-cloud/cabin/tailormade/db/mysql"
 	redis2 "github.com/quanxiang-cloud/cabin/tailormade/db/redis"
@@ -29,11 +30,27 @@ type Config struct {
 	Redis       redis2.Config `yaml:"redis"`
 	Kafka       kafka.Config  `yaml:"kafka"`
 	SwaggerPath string        `yaml:"swaggerPath"`
+	Endpoint    Endpoint      `yaml:"endpoint"`
+	Transport   Transport     `yaml:"transport"`
 }
 
 // Service service config
 type Service struct {
 	DB string `yaml:"db"`
+}
+
+type Endpoint struct {
+	Poly string `yaml:"poly"`
+	Form string `yaml:"form"`
+}
+
+type Transport struct {
+	Timeout               time.Duration `yaml:"timeout"`
+	KeepAlive             time.Duration `yaml:"keepAlive"`
+	MaxIdleConns          int           `yaml:"maxIdleConns"`
+	IdleConnTimeout       time.Duration `yaml:"idleConnTimeout"`
+	TLSHandshakeTimeout   time.Duration `yaml:"tlsHandshakeTimeout"`
+	ExpectContinueTimeout time.Duration `yaml:"expectContinueTimeout"`
 }
 
 // NewConfig 获取配置配置

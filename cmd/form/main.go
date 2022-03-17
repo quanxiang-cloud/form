@@ -7,7 +7,7 @@ import (
 	"syscall"
 
 	"github.com/quanxiang-cloud/cabin/logger"
-	"github.com/quanxiang-cloud/form/api"
+	api "github.com/quanxiang-cloud/form/api/form"
 	"github.com/quanxiang-cloud/form/pkg/misc/config"
 )
 
