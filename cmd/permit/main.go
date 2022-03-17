@@ -15,8 +15,8 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/quanxiang-cloud/cabin/logger"
-
 	"github.com/quanxiang-cloud/form/internal/auth"
+	"github.com/quanxiang-cloud/form/internal/auth/condition"
 	"github.com/quanxiang-cloud/form/pkg/misc/config"
 )
 
@@ -74,7 +74,7 @@ func main() {
 		panic(err)
 	}
 
-	poly, err := NewPoly(polyEndpoint)
+	poly, err := NewPoly(polyEndpoint, conf)
 	if err != nil {
 		panic(err)
 	}
@@ -86,14 +86,15 @@ func main() {
 
 	formG := e.Group("/api/v1/form")
 	{
-		formG.Any("/:appID/home/form/:tableID/:action", form.proxy(), form.auth, form.condition)
+		formG.Any("/:appID/home/form/:tableID/:action", form.proxy(), form.condition)
 		formG.Any("/permission/perGroup/update", func(c echo.Context) error {
 			c.String(http.StatusOK, "hello")
 			return nil
 		})
 	}
 
-	logger.Logger.Info(e.Start(port))
+	e.Start(port)
+	// logger.Logger.Info()
 	// Start server
 }
 
@@ -105,8 +106,9 @@ const (
 )
 
 type Form struct {
-	url *url.URL
-	fa  auth.FormAuth
+	url  *url.URL
+	fa   auth.Auth
+	cond *condition.Condition
 }
 
 func NewForm(endpoint string, conf *config.Config) (*Form, error) {
@@ -119,10 +121,12 @@ func NewForm(endpoint string, conf *config.Config) (*Form, error) {
 	if err != nil {
 		return nil, err
 	}
+	cond := condition.NewCondition()
 
 	return &Form{
-		url: url,
-		fa:  fa,
+		url:  url,
+		fa:   fa,
+		cond: cond,
 	}, nil
 }
 
@@ -134,7 +138,7 @@ func (f *Form) auth(next echo.HandlerFunc) echo.HandlerFunc {
 			return err
 		}
 
-		formAuthReq := &auth.FormAuthReq{
+		formAuthReq := &auth.AuthReq{
 			AppID:  c.Param(_appID),
 			UserID: c.Request().Header.Get(_userID),
 			DepID:  c.Request().Header.Get(_depID),
@@ -159,12 +163,41 @@ func (f *Form) auth(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 
 		c.Request().Body = io.NopCloser(bytes.NewReader(reqData))
+		c.Request().ContentLength = int64(len(reqData))
 		return next(c)
 	}
 }
 
 func (f *Form) condition(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
+		reqData, err := io.ReadAll(c.Request().Body)
+		if err != nil {
+			logger.Logger.WithName("condition").Errorw("read request body error", "error", err)
+			return err
+		}
+
+		condReq := &condition.CondReq{
+			UserID:   c.Request().Header.Get(_userID),
+			BodyData: make(map[string]interface{}),
+		}
+
+		err = json.Unmarshal(reqData, &condReq.BodyData)
+		if err != nil {
+			return err
+		}
+
+		err = f.cond.Do(c.Request().Context(), condReq)
+		if err != nil {
+			return err
+		}
+
+		data, err := json.Marshal(condReq.BodyData)
+		if err != nil {
+			return err
+		}
+
+		c.Request().Body = io.NopCloser(bytes.NewReader(data))
+		c.Request().ContentLength = int64(len(data))
 		return next(c)
 	}
 }
@@ -174,7 +207,8 @@ func (f *Form) proxy() echo.HandlerFunc {
 		proxy := httputil.NewSingleHostReverseProxy(f.url)
 		proxy.Transport = transport
 		proxy.ModifyResponse = func(resp *http.Response) error {
-			return f.fa.Filter(resp, c.Param(_action))
+			return nil
+			// return f.fa.Filter(resp, c.Param(_action))
 		}
 
 		proxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
@@ -191,20 +225,20 @@ func (f *Form) proxy() echo.HandlerFunc {
 
 type Poly struct {
 	url  *url.URL
-	poly auth.PolyAuth
+	poly auth.Auth
 }
 
-func NewPoly(endpoint string) (*Poly, error) {
+func NewPoly(endpoint string, conf *config.Config) (*Poly, error) {
 	url, err := url.ParseRequestURI(endpoint)
 	if err != nil {
 		return nil, err
 	}
 
-	poly := auth.NewPolyAuth()
+	poly, err := auth.NewPolyAuth(conf)
 	return &Poly{
 		url:  url,
 		poly: poly,
-	}, nil
+	}, err
 }
 
 func (p *Poly) auth(next echo.HandlerFunc) echo.HandlerFunc {
