@@ -7,14 +7,17 @@ import (
 	"io"
 	"net/http"
 
+	error2 "github.com/quanxiang-cloud/cabin/error"
 	"github.com/quanxiang-cloud/cabin/logger"
 	"github.com/quanxiang-cloud/form/internal/auth/filters"
 	"github.com/quanxiang-cloud/form/internal/service/consensus"
+	"github.com/quanxiang-cloud/form/pkg/misc/code"
 	"github.com/quanxiang-cloud/form/pkg/misc/config"
 )
 
 type formAuth struct {
-	auth *auth
+	auth   *auth
+	permit *consensus.Permit
 }
 
 func NewFormAuth(conf *config.Config) (Auth, error) {
@@ -25,8 +28,23 @@ func NewFormAuth(conf *config.Config) (Auth, error) {
 	}, err
 }
 
-func (f *formAuth) Auth(ctx context.Context, req *AuthReq) (*AuthResp, error) {
-	return f.Auth(ctx, req)
+func (f *formAuth) Auth(ctx context.Context, req *ReqParam) (bool, error) {
+	resp, err := f.auth.Auth(ctx, req)
+	if err != nil {
+		return false, err
+	}
+
+	if resp == nil {
+		return false, nil
+	}
+
+	// access judgment
+	if !filters.Pre(req.Entity, resp.Permit.Params) {
+		return false, error2.New(code.ErrNotPermit)
+	}
+
+	f.permit = resp.Permit
+	return true, nil
 }
 
 func (f *formAuth) Filter(resp *http.Response, method string) error {
@@ -49,7 +67,7 @@ func (f *formAuth) Filter(resp *http.Response, method string) error {
 	case "search":
 		entity = conResp.ListResp.Entities
 	}
-	filters.Post(entity, f.auth.permit.Response)
+	filters.Post(entity, f.permit.Response)
 
 	data, err := json.Marshal(entity)
 	if err != nil {

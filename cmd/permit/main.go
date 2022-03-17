@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"flag"
-	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -138,7 +137,7 @@ func (f *Form) auth(next echo.HandlerFunc) echo.HandlerFunc {
 			return err
 		}
 
-		formAuthReq := &auth.AuthReq{
+		formAuthReq := &auth.ReqParam{
 			AppID:  c.Param(_appID),
 			UserID: c.Request().Header.Get(_userID),
 			DepID:  c.Request().Header.Get(_depID),
@@ -151,13 +150,13 @@ func (f *Form) auth(next echo.HandlerFunc) echo.HandlerFunc {
 			return err
 		}
 
-		res, err := f.fa.Auth(c.Request().Context(), formAuthReq)
+		havePermit, err := f.fa.Auth(c.Request().Context(), formAuthReq)
 		if err != nil {
 			logger.Logger.Errorw("auth error", "error", err)
 			return err
 		}
 
-		if !res.IsPermit {
+		if !havePermit {
 			c.Response().Writer.WriteHeader(http.StatusForbidden)
 			return nil
 		}
@@ -172,7 +171,7 @@ func (f *Form) condition(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		reqData, err := io.ReadAll(c.Request().Body)
 		if err != nil {
-			logger.Logger.WithName("condition").Errorw("read request body error", "error", err)
+			logger.Logger.Errorw("read request body error", "error", err)
 			return err
 		}
 
@@ -207,8 +206,7 @@ func (f *Form) proxy() echo.HandlerFunc {
 		proxy := httputil.NewSingleHostReverseProxy(f.url)
 		proxy.Transport = transport
 		proxy.ModifyResponse = func(resp *http.Response) error {
-			return nil
-			// return f.fa.Filter(resp, c.Param(_action))
+			return f.fa.Filter(resp, c.Param(_action))
 		}
 
 		proxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
@@ -243,13 +241,59 @@ func NewPoly(endpoint string, conf *config.Config) (*Poly, error) {
 
 func (p *Poly) auth(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		fmt.Println("a ...interface{}")
+		reqData, err := io.ReadAll(c.Request().Body)
+		if err != nil {
+			logger.Logger.Errorw("read request body error", "error", err)
+			return err
+		}
+
+		formAuthReq := &auth.ReqParam{
+			AppID:  c.Param(_appID),
+			UserID: c.Request().Header.Get(_userID),
+			DepID:  c.Request().Header.Get(_depID),
+			Path:   c.Request().URL.Path,
+		}
+
+		err = json.Unmarshal(reqData, formAuthReq)
+		if err != nil {
+			logger.Logger.Errorw("unmarshal request body error", "error", err)
+			return err
+		}
+
+		havePermit, err := p.poly.Auth(c.Request().Context(), formAuthReq)
+		if err != nil {
+			logger.Logger.Errorw("auth error", "error", err)
+			return err
+		}
+
+		if !havePermit {
+			c.Response().Writer.WriteHeader(http.StatusForbidden)
+			return nil
+		}
+
+		c.Request().Body = io.NopCloser(bytes.NewReader(reqData))
+		c.Request().ContentLength = int64(len(reqData))
+
 		return next(c)
 	}
 }
 
 func (p *Poly) proxy() echo.HandlerFunc {
 	return func(c echo.Context) error {
+		proxy := httputil.NewSingleHostReverseProxy(p.url)
+		proxy.Transport = transport
+		proxy.ModifyResponse = func(resp *http.Response) error {
+			return p.poly.Filter(resp, c.Param(_action))
+		}
+
+		proxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
+			logger.Logger.Errorf("Got error while modifying response: %v \n", err)
+			return
+		}
+
+		r := c.Request()
+		r.Host = p.url.Host
+		proxy.ServeHTTP(c.Response().Writer, r)
 		return nil
 	}
 }

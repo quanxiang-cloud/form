@@ -7,6 +7,15 @@ import (
 	"github.com/quanxiang-cloud/form/internal/service/types"
 )
 
+const (
+	_query     = "query"
+	_condition = "condition"
+	_bool      = "bool"
+	_must      = "must"
+	_terms     = "terms"
+	_match     = "match"
+)
+
 type Condition struct {
 	parsers map[string]Parser
 }
@@ -30,11 +39,11 @@ func (c *Condition) Do(ctx context.Context, req *CondReq) error {
 	}
 
 	dataes := make([]interface{}, 0, 2)
-	if val, ok := req.BodyData["query"]; ok {
+	if val, ok := req.BodyData[_query]; ok {
 		dataes = append(dataes, val)
 	}
 
-	condition := req.BodyData["condition"]
+	condition := req.BodyData[_condition]
 	err = c.parseCondition(condition)
 	if err != nil {
 		return err
@@ -45,12 +54,12 @@ func (c *Condition) Do(ctx context.Context, req *CondReq) error {
 	}
 
 	query := types.Query{
-		"bool": types.M{
-			"must": dataes,
+		_bool: types.M{
+			_must: dataes,
 		},
 	}
 
-	req.BodyData["query"] = query
+	req.BodyData[_query] = query
 	return nil
 }
 
@@ -91,11 +100,13 @@ func (u *user) SetValue(ctx context.Context, c *Condition, req *CondReq) error {
 }
 
 func (u *user) Parse(key string, valueSet interface{}) {
-	m := valueSet.(map[string]interface{})
-	m["match"] = types.M{
-		key: u.value,
+	m, ok := valueSet.(map[string]interface{})
+	if ok {
+		m[_match] = types.M{
+			key: u.value,
+		}
+		delete(m, u.GetTag())
 	}
-	delete(m, u.GetTag())
 }
 
 type subordinate struct {
@@ -112,13 +123,14 @@ func (s *subordinate) SetValue(ctx context.Context, c *Condition, req *CondReq) 
 }
 
 func (s *subordinate) Parse(key string, valueSet interface{}) {
-	m := valueSet.(map[string]interface{})
+	m, ok := valueSet.(map[string]interface{})
+	if ok {
+		m[_terms] = types.M{
+			key: s.value,
+		}
 
-	m["terms"] = types.M{
-		key: s.value,
+		delete(m, s.GetTag())
 	}
-
-	delete(m, s.GetTag())
 }
 
 func (c *Condition) parseCondition(condition interface{}) error {
@@ -128,7 +140,7 @@ func (c *Condition) parseCondition(condition interface{}) error {
 
 	switch condType := reflect.TypeOf(condition); condType.Kind() {
 	case reflect.Ptr:
-		c.parseCondition(reflect.ValueOf(condition).Elem().Interface())
+		return c.parseCondition(reflect.ValueOf(condition).Elem().Interface())
 	case reflect.Map:
 		condValue := reflect.ValueOf(condition)
 		if len(condValue.MapKeys()) == 0 {
@@ -140,25 +152,25 @@ func (c *Condition) parseCondition(condition interface{}) error {
 			return nil
 		}
 
-		return c.parseBool(bool2)
+		return c.parseBool(bool2.Interface())
 	}
 	return nil
 }
 
-func (c *Condition) parseBool(bool2 reflect.Value) error {
-	switch paramType := reflect.TypeOf(bool2.Interface()); paramType.Kind() {
+func (c *Condition) parseBool(bool2 interface{}) error {
+	switch paramType := reflect.TypeOf(bool2); paramType.Kind() {
+	case reflect.Ptr:
+		return c.parseBool(reflect.ValueOf(bool2).Elem().Interface())
 	case reflect.Map:
-		paramVal := reflect.ValueOf(bool2.Interface())
-
-		keys := paramVal.MapKeys()
-
-		for _, key := range keys {
+		paramVal := reflect.ValueOf(bool2)
+		for _, key := range paramVal.MapKeys() {
 
 			if !paramVal.MapIndex(key).CanInterface() {
 				return nil
 			}
 
-			err := c.parseParam(paramVal, key)
+			param := paramVal.MapIndex(key).Interface()
+			err := c.parseParam(param)
 			if err != nil {
 				return err
 			}
@@ -168,16 +180,19 @@ func (c *Condition) parseBool(bool2 reflect.Value) error {
 	return nil
 }
 
-func (c *Condition) parseParam(paramVal, key reflect.Value) error {
-	switch elemType := reflect.TypeOf(paramVal.MapIndex(key).Interface()); elemType.Kind() {
+func (c *Condition) parseParam(param interface{}) error {
+	switch elemType := reflect.TypeOf(param); elemType.Kind() {
+	case reflect.Ptr:
+		return c.parseParam(reflect.ValueOf(param).Elem().Interface())
 	case reflect.Slice, reflect.Array:
-		elemVal := reflect.ValueOf(paramVal.MapIndex(key).Interface())
+		elemVal := reflect.ValueOf(param)
 		for index := 0; index < elemVal.Len(); index++ {
 			if !elemVal.Index(index).CanInterface() {
 				return nil
 			}
 
-			err := c.parse(elemVal, index)
+			elem := elemVal.Index(index).CanInterface()
+			err := c.parse(elem)
 			if err != nil {
 				return err
 			}
@@ -186,18 +201,20 @@ func (c *Condition) parseParam(paramVal, key reflect.Value) error {
 	return nil
 }
 
-func (c *Condition) parse(elemVal reflect.Value, index int) error {
-	switch _parseType := reflect.TypeOf(elemVal.Index(index).Interface()); _parseType.Kind() {
+func (c *Condition) parse(elem interface{}) error {
+	switch _parseType := reflect.TypeOf(elem); _parseType.Kind() {
+	case reflect.Ptr:
+		return c.parse(reflect.ValueOf(elem).Elem().Interface())
 	case reflect.Map:
-		parseVal := reflect.ValueOf(elemVal.Index(index).Interface())
+		parseVal := reflect.ValueOf(elem)
 
 		if len(parseVal.MapKeys()) == 0 {
 			return nil
 		}
 
 		parseKey := parseVal.MapKeys()[0]
-		if parseKey.String() == "bool" {
-			return c.parseCondition(elemVal.Index(index).Interface())
+		if parseKey.String() == _bool {
+			return c.parseCondition(elem)
 		}
 
 		data := parseVal.MapIndex(parseKey)
