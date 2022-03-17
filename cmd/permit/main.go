@@ -86,15 +86,9 @@ func main() {
 	formG := e.Group("/api/v1/form")
 	{
 		formG.Any("/:appID/home/form/:tableID/:action", form.proxy(), form.condition)
-		formG.Any("/permission/perGroup/update", func(c echo.Context) error {
-			c.String(http.StatusOK, "hello")
-			return nil
-		})
 	}
 
 	e.Start(port)
-	// logger.Logger.Info()
-	// Start server
 }
 
 const (
