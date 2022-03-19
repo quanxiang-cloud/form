@@ -34,7 +34,7 @@ const (
 type Schema map[string]interface{}
 
 // GenSwagger GenSwagger
-func GenSwagger(conf *config.Config, schema Schema, tableName, appID, tableID string) (string, error) {
+func GenSwagger(conf *config.Config, schema map[string]interface{}, tableName, appID, tableID string) (string, error) {
 	template, err := template.ParseFiles(conf.SwaggerPath)
 	if err != nil {
 		return "", err

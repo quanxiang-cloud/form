@@ -1,8 +1,6 @@
 package models
 
 import (
-	"database/sql/driver"
-	"encoding/json"
 	"gorm.io/gorm"
 )
 
@@ -16,11 +14,12 @@ const (
 
 // TableSchema TableSchema
 type TableSchema struct {
-	ID       string
-	AppID    string
-	TableID  string
-	Title    string
+	ID      string
+	AppID   string
+	TableID string
+
 	FieldLen int64
+	Title    string
 
 	Description string
 	Source      SourceType
@@ -30,22 +29,12 @@ type TableSchema struct {
 	CreatorName string
 	EditorID    string
 	EditorName  string
-	Schema      TableSchemas
+	Schema      WebSchema
 }
-
-type TableSchemas map[string]interface{}
 
 type TableSchemaQuery struct {
-}
-
-// Value 实现方法
-func (p TableSchemas) Value() (driver.Value, error) {
-	return json.Marshal(p)
-}
-
-// Scan 实现方法
-func (p *TableSchemas) Scan(data interface{}) error {
-	return json.Unmarshal(data.([]byte), &p)
+	TableID string
+	AppID   string
 }
 
 type TableSchemeRepo interface {

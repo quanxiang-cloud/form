@@ -2,6 +2,7 @@ package config
 
 import (
 	"github.com/quanxiang-cloud/cabin/logger"
+	"github.com/quanxiang-cloud/cabin/tailormade/client"
 	"io/ioutil"
 
 	"github.com/quanxiang-cloud/cabin/tailormade/db/kafka"
@@ -18,6 +19,7 @@ var DefaultPath = "./configs/config.yml"
 
 // Config 配置文件
 type Config struct {
+	InternalNet client.Config `yaml:"internalNet"`
 	PortInner   string        `yaml:"portInner"`
 	Port        string        `yaml:"port"`
 	Model       string        `yaml:"model"`

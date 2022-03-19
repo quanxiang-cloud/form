@@ -69,7 +69,7 @@ CREATE TABLE `table_schema` (
    `description` VARCHAR(100)    COMMENT 'description',
    `source`      TINYINT(1)      COMMENT 'source',
    `created_at`  BIGINT(20) 	 COMMENT 'create time',
-   `update_at`   BIGINT(20) 	 COMMENT 'update time',
+   `updated_at`   BIGINT(20) 	 COMMENT 'update time',
    `creator_id`    VARCHAR(36) COMMENT 'creator id',
    `creator_name`   VARCHAR(16) COMMENT 'creator name',
    `editor_id`    VARCHAR(36) COMMENT 'editor id',
@@ -78,4 +78,19 @@ CREATE TABLE `table_schema` (
    UNIQUE KEY `idx_global_name` (`app_id`, `table_id`),
    PRIMARY KEY  (`id`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+
+DROP TABLE IF EXISTS `table_relation`;
+CREATE TABLE `table_relation` (
+     `id` 		 VARCHAR(64) 	COMMENT ' id',
+     `app_id` 	 VARCHAR(64) 	NOT NULL COMMENT 'table is which app',
+     `table_id`    VARCHAR(64)    NOT NULL COMMENT 'tableID',
+     `field_name`  VARCHAR(64)  COMMENT 'field name' ,
+     `sub_table_id`  VARCHAR(64)   COMMENT 'sub table id' ,
+     `sub_table_type` VARCHAR(64) 	COMMENT 'sub table type',
+     `filter` 	    VARCHAR(255)  	COMMENT 'filter',
+     PRIMARY KEY  (`id`)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 

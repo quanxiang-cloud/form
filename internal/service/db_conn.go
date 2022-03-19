@@ -12,7 +12,7 @@ var (
 	mysqlDBInst *gorm.DB
 )
 
-func createMysqlConn(conf *config.Config) (*gorm.DB, error) {
+func CreateMysqlConn(conf *config.Config) (*gorm.DB, error) {
 	if mysqlDBInst == nil {
 		db, err := mysql2.New(conf.Mysql, logger.Logger)
 		if err != nil {

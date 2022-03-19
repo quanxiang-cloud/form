@@ -7,8 +7,8 @@ import (
 )
 
 type DeleteRoleReq struct {
-	RoleID string `json:"id"`
-	AppID  string `json:"appID"`
+	RoleID string `json:"-"`
+	AppID  string `json:"-"`
 }
 type DeleteRoleResp struct {
 }

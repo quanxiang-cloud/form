@@ -25,7 +25,15 @@ func (t *permitRepo) Find(db *gorm.DB, query *models.PermitQuery) ([]*models.Per
 }
 
 func (t *permitRepo) Delete(db *gorm.DB, query *models.PermitQuery) error {
-	return nil
+	resp := make([]models.Permit, 0)
+	ql := db.Table(t.TableName())
+	if query.RoleID != "" {
+		ql = ql.Where("role_id = ? ", query.RoleID)
+	}
+	if query.ID != "" {
+		ql = ql.Where("id = ?", query.ID)
+	}
+	return ql.Delete(resp).Error
 }
 
 func (t *permitRepo) Update(db *gorm.DB, id string, permit *models.Permit) error {

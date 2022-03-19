@@ -35,9 +35,7 @@ type Permit interface {
 
 	FindRole(ctx context.Context, req *FindRoleReq) (*FindRoleResp, error)
 
-	AddOwnerToRole(ctx context.Context, req *AddOwnerToRoleReq) (*AddOwnerToRoleResp, error)
-
-	DeleteOwnerToRole(ctx context.Context, req *DeleteOwnerReq) (*DeleteOwnerResp, error)
+	AssignRoleGrant(ctx context.Context, req *AssignRoleGrantReq) (*AssignRoleGrantResp, error)
 
 	FindGrantRole(ctx context.Context, req *FindGrantRoleReq) (*FindGrantRoleResp, error)
 
@@ -106,6 +104,7 @@ func (p *permit) FindPermit(ctx context.Context, req *FindPermitReq) (*FindPermi
 type FindGrantRoleReq struct {
 	Owners []string `json:"owners"`
 	AppID  string   `json:"appID"`
+	RoleID string   `json:"roleID"`
 }
 
 type FindGrantRoleResp struct {
@@ -113,13 +112,19 @@ type FindGrantRoleResp struct {
 }
 
 type GrantRoles struct {
-	RoleID string `json:"roleID"`
+	RoleID    string `json:"roleID"`
+	Owner     string `json:"owner"`
+	OwnerName string `json:"ownerName"`
+	Types     int    `json:"types"`
 }
 
 func (p *permit) FindGrantRole(ctx context.Context, req *FindGrantRoleReq) (*FindGrantRoleResp, error) {
 	//
-	grantRole, err := p.roleGrantRepo.Find(p.db, &models.RoleGrantQuery{Owners: req.Owners})
-
+	grantRole, err := p.roleGrantRepo.Find(p.db, &models.RoleGrantQuery{
+		Owners: req.Owners,
+		AppID:  req.AppID,
+		RoleID: req.RoleID,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +163,7 @@ func (p *permit) SaveUserPerMatch(ctx context.Context, req *SaveUserPerMatchReq)
 }
 
 func NewPermit(conf *config2.Config) (Permit, error) {
-	db, err := createMysqlConn(conf)
+	db, err := CreateMysqlConn(conf)
 	if err != nil {
 		return nil, err
 	}
@@ -236,42 +241,76 @@ type GetRoleReq struct {
 	ID string `json:"id"`
 }
 type GetRoleResp struct {
+	Types       models.RoleType `json:"type"`
+	ID          string          `json:"id"`
+	Name        string          `json:"name"`
+	Description string          `json:"description"`
+}
+
+func (p *permit) GetRole(ctx context.Context, req *GetRoleReq) (*GetRoleResp, error) {
+	permits, err := p.roleRepo.Get(p.db, req.ID)
+	if err != nil {
+		return nil, err
+	}
+	return &GetRoleResp{
+		Types:       permits.Types,
+		Name:        permits.Name,
+		Description: permits.Description,
+	}, nil
+
+}
+
+type FindRoleReq struct {
+	AppID string `json:"appID"`
+}
+
+type FindRoleResp struct {
+	List []*roleVo `json:"list"`
+}
+
+type roleVo struct {
 	Types models.RoleType `json:"type"`
 	ID    string          `json:"id"`
 	Name  string          `json:"name"`
 }
 
-func (p *permit) GetRole(ctx context.Context, req *GetRoleReq) (*GetRoleResp, error) {
-	return nil, nil
-}
-
-type FindRoleReq struct {
-}
-
-type FindRoleResp struct {
-}
-
 func (p *permit) FindRole(ctx context.Context, req *FindRoleReq) (*FindRoleResp, error) {
-	return nil, nil
+	list, err := p.roleRepo.Find(p.db, &models.RoleQuery{
+		AppID: req.AppID,
+	})
+	if err != nil {
+		return nil, err
+	}
+	resp := &FindRoleResp{
+		List: make([]*roleVo, len(list)),
+	}
+	for index, value := range list {
+		resp.List[index] = &roleVo{
+			ID:    value.ID,
+			Name:  value.Name,
+			Types: value.Types,
+		}
+	}
+	return resp, nil
 }
 
-type AddOwnerToRoleReq struct {
-	Authorizes []*Owners `json:"authorizes"`
-	RoleID     string    `json:"roleID"`
-	AppID      string    `json:"app_id"`
+type AssignRoleGrantReq struct {
+	Add     []*Owners `json:"add"`
+	RoleID  string    `json:"roleID"`
+	AppID   string    `json:"appID"`
+	Removes []string  `json:"removes"`
 }
 type Owners struct {
 	Owner     string `json:"owner"`
 	OwnerName string `json:"ownerName"`
 	Types     int    `json:"types"`
 }
-
-type AddOwnerToRoleResp struct {
+type AssignRoleGrantResp struct {
 }
 
-func (p *permit) AddOwnerToRole(ctx context.Context, req *AddOwnerToRoleReq) (*AddOwnerToRoleResp, error) {
-	roleGrants := make([]*models.RoleGrant, len(req.Authorizes))
-	for index, value := range req.Authorizes {
+func (p *permit) AssignRoleGrant(ctx context.Context, req *AssignRoleGrantReq) (*AssignRoleGrantResp, error) {
+	roleGrants := make([]*models.RoleGrant, len(req.Add))
+	for index, value := range req.Add {
 		roleGrants[index] = &models.RoleGrant{
 			ID:        id2.HexUUID(true),
 			RoleID:    req.RoleID,
@@ -279,34 +318,21 @@ func (p *permit) AddOwnerToRole(ctx context.Context, req *AddOwnerToRoleReq) (*A
 			OwnerName: value.OwnerName,
 			Types:     value.Types,
 			AppID:     req.AppID,
-			CreatedAt: time2.NowUnix(),
+			CreatedAt: time2.NowUnix() + int64(index),
 		}
 	}
 	err := p.roleGrantRepo.BatchCreate(p.db, roleGrants...)
 	if err != nil {
 		return nil, err
 	}
-	return &AddOwnerToRoleResp{}, nil
-
-}
-
-type DeleteOwnerReq struct {
-	Removes []string `json:"removes"`
-	RoleID  string   `json:"roleID"`
-}
-
-type DeleteOwnerResp struct {
-}
-
-func (p *permit) DeleteOwnerToRole(ctx context.Context, req *DeleteOwnerReq) (*DeleteOwnerResp, error) {
-	err := p.roleGrantRepo.Delete(p.db, &models.RoleGrantQuery{
+	err = p.roleGrantRepo.Delete(p.db, &models.RoleGrantQuery{
 		RoleID: req.RoleID,
 		Owners: req.Removes,
 	})
 	if err != nil {
 		return nil, err
 	}
-	return &DeleteOwnerResp{}, nil
+	return &AssignRoleGrantResp{}, nil
 }
 
 type CreatePerReq struct {
@@ -381,13 +407,20 @@ func (p *permit) modifyRedis(ctx context.Context, permits *models.Permit) {
 }
 
 type DeletePerReq struct {
+	ID string `json:"id"`
 }
 
 type DeletePerResp struct {
 }
 
 func (p *permit) DeletePermit(ctx context.Context, req *DeletePerReq) (*DeletePerResp, error) {
-	return nil, nil
+	err := p.permitRepo.Delete(p.db, &models.PermitQuery{
+		ID: req.ID,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &DeletePerResp{}, nil
 }
 
 type GetPerInCacheReq struct {
@@ -548,10 +581,10 @@ type GetPermitReq struct {
 type GetPermitResp struct {
 	ID        string             `json:"id"`
 	RoleID    string             `json:"roleID"`
-	Path      string             `json:"path"`
-	Params    models.FiledPermit `json:"params"`
-	Response  models.FiledPermit `json:"response"`
-	Condition *models.Condition  `json:"condition"`
+	Path      string             `json:"path,omitempty"`
+	Params    models.FiledPermit `json:"params,omitempty"`
+	Response  models.FiledPermit `json:"response,omitempty"`
+	Condition *models.Condition  `json:"condition,omitempty"`
 }
 
 func (p *permit) GetPermit(ctx context.Context, req *GetPermitReq) (*GetPermitResp, error) {

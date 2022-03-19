@@ -36,6 +36,7 @@ var routers = []router{
 	cometRouter,
 	innerRouter,
 	permitRouter,
+	tableRouter,
 }
 
 // NewRouter enable routing
@@ -50,9 +51,9 @@ func NewRouter(c *config2.Config) (*Router, error) {
 	}
 
 	r := map[string]*gin.RouterGroup{
-		managerPath:  engine.Group("/api/v1/form/:appID/m"),
-		homePath:     engine.Group("/api/v1/form/:appID/home"),
-		internalPath: engineInner.Group("/api/v1/form/:appID/internal"),
+		managerPath:  engine.Group("/api/v1/form1/:appID/m"),
+		homePath:     engine.Group("/api/v1/form1:appID/home"),
+		internalPath: engineInner.Group("/api/v1/form1/:appID/internal"),
 	}
 	for _, f := range routers {
 		err = f(c, r)
@@ -73,19 +74,28 @@ func permitRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 	if err != nil {
 		return err
 	}
-	manager := r[managerPath].Group("/permit")
-
+	role := r[managerPath].Group("/apiRole")
 	{
-		manager.POST("/role/create", permits.CreateRole) //  创建权限组
-		manager.POST("/role/update", permits.UpdateRole) //  更新权限组
-		manager.POST("/role/addOwner", permits.AddToRole)
-		manager.POST("/role/deleteOwner", permits.DeleteOwner)
-		manager.POST("/role/userRoleMatch", permits.UserRoleMatch)
-		manager.POST("/role/delete", permits.DeleteRole)
-		manager.POST("/apiPermit/create", permits.CratePermit)
-		manager.POST("/apiPermit/update", permits.UpdatePermit)
-		manager.POST("/apiPermit/get", permits.GetPermit)
-		manager.POST("/apiPermit/find", permits.FindPermit)
+
+		role.POST("/create", permits.CreateRole)     //  创建角色
+		role.POST("/update", permits.UpdateRole)     //  更新角色
+		role.POST("/get/:id", permits.GetRole)       // 获取单条角色
+		role.POST("/delete/:id", permits.DeleteRole) // 删除对应的角色
+		role.POST("/find", permits.FindRole)         // 获取角色列表
+
+		role.POST("/userRoleMatch", permits.UserRoleMatch)
+
+		role.POST("/grant/list/:roleID", permits.FindGrantRole)     // 获取某个角色对应的人或者部门
+		role.POST("/grant/assign/:roleID", permits.AssignRoleGrant) // 给某个角色加人 、减人
+
+	}
+	apiPermit := r[managerPath].Group("/apiPermit")
+	{
+		apiPermit.POST("/create", permits.CratePermit)      // 创建权限
+		apiPermit.POST("/update/:id", permits.UpdatePermit) // 更新权限
+		apiPermit.POST("/get", permits.GetPermit)           // 获取权限
+		apiPermit.POST("/delete/:id", permits.DeletePermit) // 删除权限
+		apiPermit.POST("/find", permits.FindPermit)         // 获取权限
 
 	}
 	home := r[homePath].Group("/permission")
@@ -97,7 +107,7 @@ func permitRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 }
 
 func cometRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
-	cometHome := r[homePath].Group("/form/:tableName")
+	cometHome := r[homePath].Group("form/:tableName")
 	{
 		g, err := form.NewRefs(c)
 		if err != nil {
@@ -107,6 +117,28 @@ func cometRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 		cometHome.POST("/:action", action(g))
 	}
 	return nil
+}
+
+func tableRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
+	table, err := NewTable(c)
+	if err != nil {
+		return err
+	}
+	manager := r[managerPath].Group("/table")
+	{
+		manager.POST("/create", table.CrateTable)
+		manager.POST("/getByID", table.GetTable)
+		manager.POST("/delete", table.DeleteTable)
+		manager.POST("/createBlank", table.CreateBlank)
+
+		manager.POST("/search", table.FindTable)
+	}
+	managerConfig := r[managerPath].Group("/config")
+	{
+		managerConfig.POST("/create", table.UpdateConfig)
+	}
+	return nil
+
 }
 
 func innerRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {

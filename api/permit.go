@@ -52,30 +52,10 @@ func (p *Permit) UpdateRole(c *gin.Context) {
 	resp.Format(p.permit.UpdateRole(ctx, req)).Context(c)
 }
 
-func (p *Permit) AddToRole(c *gin.Context) {
-	req := &service.AddOwnerToRoleReq{}
-	ctx := header.MutateContext(c)
-	if err := c.ShouldBind(req); err != nil {
-		logger.Logger.Errorw("should bind", header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
-		c.AbortWithError(http.StatusBadRequest, err)
-		return
-	}
-	resp.Format(p.permit.AddOwnerToRole(ctx, req)).Context(c)
-}
-
-func (p *Permit) DeleteOwner(c *gin.Context) {
-	req := &service.DeleteOwnerReq{}
-	ctx := header.MutateContext(c)
-	if err := c.ShouldBind(req); err != nil {
-		logger.Logger.Errorw("should bind", header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
-		c.AbortWithError(http.StatusInternalServerError, err)
-		return
-	}
-	resp.Format(p.permit.DeleteOwnerToRole(ctx, req)).Context(c)
-}
-
 func (p *Permit) DeleteRole(c *gin.Context) {
-	req := &service.DeleteRoleReq{}
+	req := &service.DeleteRoleReq{
+		RoleID: c.Param("id"),
+	}
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
 		logger.Logger.Errorw("should bind", header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
@@ -97,7 +77,9 @@ func (p *Permit) CratePermit(c *gin.Context) {
 }
 
 func (p *Permit) UpdatePermit(c *gin.Context) {
-	req := &service.UpdatePerReq{}
+	req := &service.UpdatePerReq{
+		ID: c.Param("id"),
+	}
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
 		logger.Logger.Errorw("should bind", header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
@@ -159,4 +141,73 @@ func (p *Permit) FindPermit(c *gin.Context) {
 		return
 	}
 	resp.Format(p.permit.FindPermit(ctx, req)).Context(c)
+}
+
+func (p *Permit) FindRole(c *gin.Context) {
+	req := &service.FindRoleReq{
+		AppID: c.Param(_appID),
+	}
+	ctx := header.MutateContext(c)
+	if err := c.ShouldBind(req); err != nil {
+		logger.Logger.Errorw("should bind", header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	resp.Format(p.permit.FindRole(ctx, req)).Context(c)
+}
+
+func (p *Permit) GetRole(c *gin.Context) {
+	req := &service.GetRoleReq{
+		ID: c.Param("id"),
+	}
+	ctx := header.MutateContext(c)
+	if err := c.ShouldBind(req); err != nil {
+		logger.Logger.Errorw("should bind", header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	resp.Format(p.permit.GetRole(ctx, req)).Context(c)
+
+}
+
+func (p *Permit) FindGrantRole(c *gin.Context) {
+	req := &service.FindGrantRoleReq{
+		AppID:  c.Param(_appID),
+		RoleID: c.Param("roleID"),
+	}
+	ctx := header.MutateContext(c)
+	if err := c.ShouldBind(req); err != nil {
+		logger.Logger.Errorw("should bind", header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	resp.Format(p.permit.FindGrantRole(ctx, req)).Context(c)
+}
+
+func (p *Permit) AssignRoleGrant(c *gin.Context) {
+	req := &service.AssignRoleGrantReq{
+		AppID:  c.Param(_appID),
+		RoleID: c.Param("roleID"),
+	}
+	ctx := header.MutateContext(c)
+	if err := c.ShouldBind(req); err != nil {
+		logger.Logger.Errorw("should bind", header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	resp.Format(p.permit.AssignRoleGrant(ctx, req)).Context(c)
+}
+
+func (p *Permit) DeletePermit(c *gin.Context) {
+	req := &service.DeletePerReq{
+
+		ID: c.Param("id"),
+	}
+	ctx := header.MutateContext(c)
+	if err := c.ShouldBind(req); err != nil {
+		logger.Logger.Errorw("should bind", header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	resp.Format(p.permit.DeletePermit(ctx, req)).Context(c)
 }
