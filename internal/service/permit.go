@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"time"
+
 	"git.internal.yunify.com/qxp/misc/logger"
 	error2 "github.com/quanxiang-cloud/cabin/error"
 	id2 "github.com/quanxiang-cloud/cabin/id"
@@ -14,7 +16,6 @@ import (
 	"github.com/quanxiang-cloud/form/pkg/misc/code"
 	config2 "github.com/quanxiang-cloud/form/pkg/misc/config"
 	"gorm.io/gorm"
-	"time"
 )
 
 const (
@@ -113,9 +114,9 @@ type FindGrantRoleResp struct {
 
 type GrantRoles struct {
 	RoleID    string `json:"roleID"`
-	Owner     string `json:"owner"`
-	OwnerName string `json:"ownerName"`
-	Types     int    `json:"types"`
+	Owner     string `json:"id"`
+	OwnerName string `json:"name"`
+	Types     int    `json:"type"`
 }
 
 func (p *permit) FindGrantRole(ctx context.Context, req *FindGrantRoleReq) (*FindGrantRoleResp, error) {
@@ -129,13 +130,16 @@ func (p *permit) FindGrantRole(ctx context.Context, req *FindGrantRoleReq) (*Fin
 		return nil, err
 	}
 	resp := &FindGrantRoleResp{
-		List: make([]*GrantRoles, len(grantRole)),
+		List: make([]*GrantRoles, 0, len(grantRole)),
 	}
 
-	for index, value := range grantRole {
-		resp.List[index] = &GrantRoles{
-			RoleID: value.RoleID,
-		}
+	for _, value := range grantRole {
+		resp.List = append(resp.List, &GrantRoles{
+			RoleID:    value.RoleID,
+			Owner:     value.Owner,
+			OwnerName: value.OwnerName,
+			Types:     value.Types,
+		})
 	}
 	return resp, nil
 }
@@ -146,8 +150,7 @@ type SaveUserPerMatchReq struct {
 	AppID    string
 }
 
-type SaveUserPerMatchResp struct {
-}
+type SaveUserPerMatchResp struct{}
 
 func (p *permit) SaveUserPerMatch(ctx context.Context, req *SaveUserPerMatchReq) (*SaveUserPerMatchResp, error) {
 	match := &models.PermitMatch{
@@ -223,8 +226,7 @@ type UpdateRoleReq struct {
 	Description string `json:"description"`
 }
 
-type UpdateRoleResp struct {
-}
+type UpdateRoleResp struct{}
 
 func (p *permit) UpdateRole(ctx context.Context, req *UpdateRoleReq) (*UpdateRoleResp, error) {
 	err := p.roleRepo.Update(p.db, req.ID, &models.Role{
@@ -257,7 +259,6 @@ func (p *permit) GetRole(ctx context.Context, req *GetRoleReq) (*GetRoleResp, er
 		Name:        permits.Name,
 		Description: permits.Description,
 	}, nil
-
 }
 
 type FindRoleReq struct {
@@ -301,12 +302,12 @@ type AssignRoleGrantReq struct {
 	Removes []string  `json:"removes"`
 }
 type Owners struct {
-	Owner     string `json:"owner"`
-	OwnerName string `json:"ownerName"`
-	Types     int    `json:"types"`
+	Owner     string `json:"id"`
+	OwnerName string `json:"name"`
+	Types     int    `json:"type"`
 }
-type AssignRoleGrantResp struct {
-}
+
+type AssignRoleGrantResp struct{}
 
 func (p *permit) AssignRoleGrant(ctx context.Context, req *AssignRoleGrantReq) (*AssignRoleGrantResp, error) {
 	roleGrants := make([]*models.RoleGrant, len(req.Add))
@@ -324,6 +325,10 @@ func (p *permit) AssignRoleGrant(ctx context.Context, req *AssignRoleGrantReq) (
 	err := p.roleGrantRepo.BatchCreate(p.db, roleGrants...)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(req.Removes) == 0 {
+		return &AssignRoleGrantResp{}, nil
 	}
 	err = p.roleGrantRepo.Delete(p.db, &models.RoleGrantQuery{
 		RoleID: req.RoleID,
@@ -345,8 +350,7 @@ type CreatePerReq struct {
 	Condition *models.Condition  `json:"condition"`
 }
 
-type CreatePerResp struct {
-}
+type CreatePerResp struct{}
 
 func (p *permit) CreatePermit(ctx context.Context, req *CreatePerReq) (*CreatePerResp, error) {
 	permits := &models.Permit{
@@ -375,8 +379,7 @@ type UpdatePerReq struct {
 	Condition *models.Condition  `json:"condition"`
 }
 
-type UpdatePerResp struct {
-}
+type UpdatePerResp struct{}
 
 func (p *permit) UpdatePermit(ctx context.Context, req *UpdatePerReq) (*UpdatePerResp, error) {
 	err := p.permitRepo.Update(p.db, req.ID, &models.Permit{
@@ -410,8 +413,7 @@ type DeletePerReq struct {
 	ID string `json:"id"`
 }
 
-type DeletePerResp struct {
-}
+type DeletePerResp struct{}
 
 func (p *permit) DeletePermit(ctx context.Context, req *DeletePerReq) (*DeletePerResp, error) {
 	err := p.permitRepo.Delete(p.db, &models.PermitQuery{
@@ -462,7 +464,6 @@ func (p *permit) GetPerInCache(ctx context.Context, req *GetPerInCacheReq) (*Get
 		Condition: permits.Condition,
 		Types:     match.Types,
 	}, err
-
 }
 
 // 那就是在管理端维护，缓存。
