@@ -2,9 +2,15 @@ package condition
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
 	"reflect"
 
+	"github.com/quanxiang-cloud/form/internal/permit"
+	"github.com/quanxiang-cloud/form/internal/permit/proxy"
 	"github.com/quanxiang-cloud/form/internal/service/types"
+	"github.com/quanxiang-cloud/form/pkg/misc/config"
 )
 
 const (
@@ -17,53 +23,69 @@ const (
 )
 
 type Condition struct {
+	next    permit.Form
 	parsers map[string]Parser
 }
 
-func NewCondition() *Condition {
+func NewCondition(conf *config.Config) (*Condition, error) {
+	next, err := proxy.NewProxy(conf)
+	if err != nil {
+		return nil, err
+	}
 	return &Condition{
 		parsers: make(map[string]Parser),
+		next:    next,
+	}, nil
+}
+
+func (c *Condition) Guard(ctx context.Context, req *permit.GuardReq) (*permit.GuardResp, error) {
+	var (
+		query     = req.Body[_query]
+		condition = req.Body[_condition]
+	)
+
+	if req.Request.Method == http.MethodGet {
+		query = req.Get.Query
+		condition = req.Get.Condition
 	}
-}
 
-type CondReq struct {
-	UserID   string `json:"userID"`
-	BodyData map[string]interface{}
-}
-
-// Do Do
-func (c *Condition) Do(ctx context.Context, req *CondReq) error {
-	err := c.SetParsers(ctx, req)
+	err := c.setParseValue(ctx, req)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	dataes := make([]interface{}, 0, 2)
-	if val, ok := req.BodyData[_query]; ok {
-		dataes = append(dataes, val)
-	}
-
-	condition := req.BodyData[_condition]
-	err = c.parseCondition(condition)
-	if err != nil {
-		return err
+	if query != nil {
+		dataes = append(dataes, query)
 	}
 
 	if condition != nil {
+		err = c.parseCondition(condition)
+		if err != nil {
+			return nil, err
+		}
 		dataes = append(dataes, condition)
 	}
 
-	query := types.Query{
+	newQuery := permit.Query{
 		_bool: types.M{
 			_must: dataes,
 		},
 	}
 
-	req.BodyData[_query] = query
-	return nil
+	b, _ := json.Marshal(newQuery)
+	fmt.Println(string(b))
+
+	if req.Request.Method == http.MethodGet {
+		req.Get.Query = newQuery
+	} else {
+		req.Body[_query] = newQuery
+	}
+
+	return c.next.Guard(ctx, req)
 }
 
-func (c *Condition) SetParsers(ctx context.Context, req *CondReq) error {
+func (c *Condition) setParseValue(ctx context.Context, req *permit.GuardReq) error {
 	for _, parse := range parsers {
 		err := parse.SetValue(ctx, c, req)
 		if err != nil {
@@ -82,7 +104,7 @@ var parsers = []Parser{
 
 type Parser interface {
 	GetTag() string
-	SetValue(context.Context, *Condition, *CondReq) error
+	SetValue(context.Context, *Condition, *permit.GuardReq) error
 	Parse(string, interface{})
 }
 
@@ -94,8 +116,8 @@ func (u *user) GetTag() string {
 	return "$user"
 }
 
-func (u *user) SetValue(ctx context.Context, c *Condition, req *CondReq) error {
-	u.value = req.UserID
+func (u *user) SetValue(ctx context.Context, c *Condition, req *permit.GuardReq) error {
+	u.value = req.Header.UserID
 	return nil
 }
 
@@ -117,7 +139,7 @@ func (s *subordinate) GetTag() string {
 	return "$subordinate"
 }
 
-func (s *subordinate) SetValue(ctx context.Context, c *Condition, req *CondReq) error {
+func (s *subordinate) SetValue(ctx context.Context, c *Condition, req *permit.GuardReq) error {
 	// TODO set subordinate value
 	return nil
 }
@@ -146,13 +168,29 @@ func (c *Condition) parseCondition(condition interface{}) error {
 		if len(condValue.MapKeys()) == 0 {
 			return nil
 		}
-
-		bool2 := condValue.MapIndex(condValue.MapKeys()[0])
-		if !bool2.CanInterface() {
+		if !condValue.CanInterface() {
 			return nil
 		}
 
-		return c.parseBool(bool2.Interface())
+		for _, key := range condValue.MapKeys() {
+			fmt.Println(key.String())
+			if key.String() != _bool {
+				err := c.parse(condValue.Interface())
+				if err != nil {
+					return err
+				}
+			} else {
+				bool2 := condValue.MapIndex(key)
+				if !bool2.CanInterface() {
+					return nil
+				}
+				err := c.parseBool(bool2.Interface())
+				if err != nil {
+					return err
+				}
+			}
+
+		}
 	}
 	return nil
 }
@@ -212,18 +250,28 @@ func (c *Condition) parse(elem interface{}) error {
 			return nil
 		}
 
-		parseKey := parseVal.MapKeys()[0]
-		if parseKey.String() == _bool {
-			return c.parseCondition(elem)
+		// parseKey := parseVal.MapKeys()[0]
+		// if parseKey.String() == _bool {
+		// 	return c.parseCondition(elem)
+		// }
+
+		for _, key := range parseVal.MapKeys() {
+			fmt.Println(key.String())
+			if key.String() != _bool {
+				data := parseVal.MapIndex(key)
+
+				parser, ok := c.parsers[key.String()]
+				if !ok {
+					return nil
+				}
+				parser.Parse(data.Elem().String(), parseVal.Interface())
+			} else {
+				if err := c.parseCondition(elem); err != nil {
+					return err
+				}
+			}
 		}
 
-		data := parseVal.MapIndex(parseKey)
-
-		parser, ok := c.parsers[parseKey.String()]
-		if !ok {
-			return nil
-		}
-		parser.Parse(data.Elem().String(), parseVal.Interface())
 	}
 	return nil
 }

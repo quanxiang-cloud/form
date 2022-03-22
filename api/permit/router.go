@@ -1,10 +1,9 @@
 package router
 
 import (
-	"fmt"
-
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/quanxiang-cloud/form/internal/permit/auth"
 	config2 "github.com/quanxiang-cloud/form/pkg/misc/config"
 )
 
@@ -60,27 +59,27 @@ func (r *Router) Run() error {
 }
 
 func polyRouter(c *config2.Config, r map[string]*echo.Group) error {
-	_, err := NewPoly(c)
+	auth, err := auth.NewAuth(c)
 	if err != nil {
 		return err
 	}
 
 	group := r[ployPath]
-	group.Any("*", func(c echo.Context) error {
-		fmt.Println("poly")
-		return nil
-	})
-
+	{
+		group.Any("*", ProxyPoly(auth))
+	}
 	return nil
 }
 
 func formRouter(c *config2.Config, r map[string]*echo.Group) error {
-	form, err := NewForm(c)
+	auth, err := auth.NewAuth(c)
 	if err != nil {
 		return err
 	}
 
 	group := r[formPath]
-	group.Any("/:appID/home/form/:tableID/:action", form.Forward)
+	{
+		group.Any("/:appID/home/form/:tableID/:action", ProxyForm(auth))
+	}
 	return nil
 }

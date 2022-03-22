@@ -10,9 +10,12 @@ import (
 	"github.com/quanxiang-cloud/cabin/tailormade/client"
 	redis2 "github.com/quanxiang-cloud/cabin/tailormade/db/redis"
 	"github.com/quanxiang-cloud/cabin/tailormade/header"
-	"github.com/quanxiang-cloud/form/internal/auth/lowcode"
 	"github.com/quanxiang-cloud/form/internal/models"
 	"github.com/quanxiang-cloud/form/internal/models/redis"
+	"github.com/quanxiang-cloud/form/internal/permit"
+	"github.com/quanxiang-cloud/form/internal/permit/condition"
+	filters "github.com/quanxiang-cloud/form/internal/permit/filter"
+	"github.com/quanxiang-cloud/form/internal/permit/lowcode"
 	"github.com/quanxiang-cloud/form/internal/service/consensus"
 	"github.com/quanxiang-cloud/form/pkg/misc/code"
 	"github.com/quanxiang-cloud/form/pkg/misc/config"
@@ -23,77 +26,102 @@ const (
 	lockPerMatch   = "lockPerMatch"
 	lockTimeout    = time.Duration(30) * time.Second // 30秒
 	timeSleep      = time.Millisecond * 500          // 0.5 秒
+	_entity        = "entity"
 )
 
-type Auth interface {
-	Auth(context.Context, *ReqParam) (bool, error)
-	Filter(*http.Response, string) error
-}
-
-type auth struct {
+type Auth struct {
+	next    permit.Form
 	redis   models.LimitsRepo
 	lowcode lowcode.Form
 }
 
-func newAuth(conf *config.Config) (*auth, error) {
+func NewAuth(conf *config.Config) (*Auth, error) {
 	redisClient, err := redis2.NewClient(conf.Redis)
 	if err != nil {
 		return nil, err
 	}
 
-	return &auth{
+	next, err := condition.NewCondition(conf)
+	if err != nil {
+		return nil, err
+	}
+	return &Auth{
 		redis:   redis.NewLimitRepo(redisClient),
 		lowcode: lowcode.NewForm(client.Config{}),
+		next:    next,
 	}, nil
 }
 
-type ReqParam struct {
-	AppID  string `param:"appID" query:"appID" header:"appID" form:"appID" json:"appID" xml:"appID"`
-	UserID string `param:"userID" query:"userID" header:"User-Id" form:"userID" json:"userID" xml:"userID"`
-	DepID  string `param:"depID" query:"depID" header:"Department-Id" form:"depID" json:"depID" xml:"depID"`
-	Path   string `param:"path" query:"path" header:"path" form:"path" json:"path" xml:"path"`
-	Body   map[string]interface{}
-}
-
-type RespParam struct {
-	Match  *models.PermitMatch
-	Permit *consensus.Permit
-}
-
-func (a *auth) Auth(ctx context.Context, req *ReqParam) (*RespParam, error) {
-	// get the role information owned by the user
-	match, err := a.getCacheMatch(ctx, req)
-	if err != nil || match == nil {
-		return nil, err
-	}
-
-	if match.Types == models.InitType {
-		return nil, nil
-	}
-
-	permits, err := a.getCachePermit(ctx, match.RoleID, req)
+func (a *Auth) Guard(ctx context.Context, req *permit.GuardReq) (*permit.GuardResp, error) {
+	pass, err := a.auth(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 
-	return &RespParam{
-		Match: match,
-		Permit: &consensus.Permit{
-			Params:    permits.Params,
-			Response:  permits.Response,
-			Condition: permits.Condition,
-			Types:     match.Types,
-		},
-	}, nil
+	// no permit
+	if !pass {
+		return nil, nil
+	}
+
+	entity := req.Body[_entity]
+	if req.Request.Method == http.MethodGet {
+		entity = req.Get.Entity
+	}
+
+	// input parameter judgment
+	if !filters.Pre(entity, req.Permit.Params) {
+		return nil, nil
+	}
+
+	return a.next.Guard(ctx, req)
 }
 
-func (a *auth) getCacheMatch(ctx context.Context, req *ReqParam) (*models.PermitMatch, error) {
+func (a *Auth) Defender(ctx context.Context, req *permit.GuardReq) (*permit.GuardResp, error) {
+	pass, err := a.auth(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	if !pass {
+		return nil, nil
+	}
+
+	return nil, nil
+}
+
+func (a *Auth) auth(ctx context.Context, req *permit.GuardReq) (bool, error) {
+	// get the role information owned by the user
+	match, err := a.getCacheMatch(ctx, req)
+	if err != nil || match == nil {
+		return false, err
+	}
+
+	if match.Types == models.InitType {
+		return false, nil
+	}
+
+	permits, err := a.getCachePermit(ctx, match.RoleID, req)
+	if err != nil {
+		return false, err
+	}
+
+	req.Permit = &consensus.Permit{
+		Params:    permits.Params,
+		Response:  permits.Response,
+		Condition: permits.Condition,
+		Types:     match.Types,
+	}
+
+	return true, nil
+}
+
+func (a *Auth) getCacheMatch(ctx context.Context, req *permit.GuardReq) (*models.PermitMatch, error) {
 	// relese lock
 	defer a.redis.UnLock(ctx, lockPerMatch)
 	for i := 0; i < 5; i++ {
-		perMatch, err := a.redis.GetPerMatch(ctx, req.UserID, req.AppID)
+		perMatch, err := a.redis.GetPerMatch(ctx, req.Header.UserID, req.Param.AppID)
 		if err != nil {
-			logger.Logger.Errorw(req.UserID, header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
+			logger.Logger.Errorw(req.Header.UserID, header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
 			return nil, err
 		}
 		if perMatch != nil {
@@ -112,7 +140,7 @@ func (a *auth) getCacheMatch(ctx context.Context, req *ReqParam) (*models.Permit
 		break
 	}
 
-	resp, err := a.lowcode.GetCacheMatchRole(ctx, req.UserID, req.DepID, req.AppID)
+	resp, err := a.lowcode.GetCacheMatchRole(ctx, req.Header.UserID, req.Header.DepID, req.Param.AppID)
 	if err != nil || resp == nil {
 		return nil, err
 	}
@@ -123,14 +151,14 @@ func (a *auth) getCacheMatch(ctx context.Context, req *ReqParam) (*models.Permit
 	}, nil
 }
 
-func (a *auth) getCachePermit(ctx context.Context, roleID string, req *ReqParam) (*models.Limits, error) {
+func (a *Auth) getCachePermit(ctx context.Context, roleID string, req *permit.GuardReq) (*models.Limits, error) {
 	// relese lock
 	defer a.redis.UnLock(ctx, lockPermission)
 	for i := 0; i < 5; i++ {
 		exist := a.redis.ExistsKey(ctx, roleID)
 		if exist {
 			// judge path
-			getPermit, err := a.redis.GetPermit(ctx, roleID, req.Path)
+			getPermit, err := a.redis.GetPermit(ctx, roleID, req.Request.URL.Path)
 			if err != nil {
 				return nil, err
 			}
@@ -166,7 +194,7 @@ func (a *auth) getCachePermit(ctx context.Context, roleID string, req *ReqParam)
 			Params:    value.Params,
 			Response:  value.Response,
 		}
-		if value.Path == req.Path {
+		if value.Path == req.Request.URL.Path {
 			getPermit = per
 		}
 		limits[index] = per
