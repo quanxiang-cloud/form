@@ -94,7 +94,8 @@ func permitRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 		apiPermit.POST("/create", permits.CratePermit)      // 创建权限
 		apiPermit.POST("/update/:id", permits.UpdatePermit) // 更新权限
 		apiPermit.POST("/get", permits.GetPermit)           // 获取权限
-		apiPermit.POST("/delete/:id", permits.DeletePermit) // 删除权限
+		apiPermit.POST("/list", permits.ListPermit)         // 获取权限
+		apiPermit.POST("/delete", permits.DeletePermit)     // 删除权限
 		apiPermit.POST("/find", permits.FindPermit)         // 获取权限
 
 	}
@@ -130,7 +131,6 @@ func tableRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 		manager.POST("/getByID", table.GetTable)
 		manager.POST("/delete", table.DeleteTable)
 		manager.POST("/createBlank", table.CreateBlank)
-
 		manager.POST("/search", table.FindTable)
 	}
 	managerConfig := r[managerPath].Group("/config")

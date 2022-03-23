@@ -199,10 +199,7 @@ func (p *Permit) AssignRoleGrant(c *gin.Context) {
 }
 
 func (p *Permit) DeletePermit(c *gin.Context) {
-	req := &service.DeletePerReq{
-
-		ID: c.Param("id"),
-	}
+	req := &service.DeletePerReq{}
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
 		logger.Logger.Errorw("should bind", header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
@@ -210,4 +207,28 @@ func (p *Permit) DeletePermit(c *gin.Context) {
 		return
 	}
 	resp.Format(p.permit.DeletePermit(ctx, req)).Context(c)
+}
+
+func (p *Permit) ListPermit(c *gin.Context) {
+	ctx := header.MutateContext(c)
+	var batch []service.GetPermitReq
+	if err := c.ShouldBind(&batch); err != nil {
+		logger.Logger.Errorw("should bind", header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
+		resp.Format(nil, err).Context(c, http.StatusBadRequest)
+		return
+	}
+
+	list := make([]*service.GetPermitResp, len(batch))
+	for index, get := range batch {
+		r, err := p.permit.GetPermit(c, &get)
+		if err != nil {
+			logger.Logger.Errorw("get ", header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
+			list[index] = &service.GetPermitResp{}
+			continue
+		}
+		list[index] = r
+	}
+	resp.Format(map[string]interface{}{
+		"list": list,
+	}, nil).Context(c)
 }

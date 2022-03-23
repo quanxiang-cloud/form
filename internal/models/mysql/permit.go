@@ -33,6 +33,9 @@ func (t *permitRepo) Delete(db *gorm.DB, query *models.PermitQuery) error {
 	if query.ID != "" {
 		ql = ql.Where("id = ?", query.ID)
 	}
+	if query.Path != "" {
+		ql = ql.Where("path = ?", query.Path)
+	}
 	return ql.Delete(resp).Error
 }
 

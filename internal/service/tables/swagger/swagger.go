@@ -217,7 +217,6 @@ func isLayoutComponent(value interface{}) bool {
 		return false
 	}
 	return false
-
 }
 
 // GenXName GenXName

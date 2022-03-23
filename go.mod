@@ -11,7 +11,6 @@ require (
 	github.com/labstack/echo/v4 v4.7.1
 	github.com/quanxiang-cloud/cabin v0.0.4
 	github.com/quanxiang-cloud/structor v0.0.0-00010101000000-000000000000
-	github.com/stretchr/testify v1.7.0
 	go.mongodb.org/mongo-driver v1.8.1
 	google.golang.org/grpc v1.40.0
 	google.golang.org/protobuf v1.27.1

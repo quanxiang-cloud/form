@@ -8,12 +8,12 @@ import (
 func getMapToMap(schema map[string]interface{}, key string) (map[string]interface{}, error) {
 	value, ok := schema[key]
 	if !ok {
-		return nil, nil
+		return nil, error2.NewError(code.ErrParameter)
 	}
 	if v, ok := value.(map[string]interface{}); ok {
 		return v, nil
 	}
-	return nil, nil
+	return nil, error2.NewError(code.ErrParameter)
 }
 
 // getMapToString getMapToString
@@ -34,4 +34,15 @@ func getAsMap(v interface{}) (map[string]interface{}, error) {
 		return m, nil
 	}
 	return nil, error2.NewError(code.ErrParameter)
+}
+
+func getMapToBool(schema map[string]interface{}, key string) (bool, error) {
+	value, ok := schema[key]
+	if !ok {
+		return false, error2.NewError(code.ErrParameter)
+	}
+	if v, ok := value.(bool); ok {
+		return v, nil
+	}
+	return false, error2.NewError(code.ErrParameter)
 }

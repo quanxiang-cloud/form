@@ -41,6 +41,7 @@ func (p *FiledPermit) Scan(data interface{}) error {
 type PermitQuery struct {
 	ID     string
 	RoleID string
+	Path   string
 }
 
 // PermitRepo PermitRepo

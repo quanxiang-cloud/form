@@ -410,14 +410,16 @@ func (p *permit) modifyRedis(ctx context.Context, permits *models.Permit) {
 }
 
 type DeletePerReq struct {
-	ID string `json:"id"`
+	roleID string `json:"roleID"`
+	Path   string `json:"path"`
 }
 
 type DeletePerResp struct{}
 
 func (p *permit) DeletePermit(ctx context.Context, req *DeletePerReq) (*DeletePerResp, error) {
 	err := p.permitRepo.Delete(p.db, &models.PermitQuery{
-		ID: req.ID,
+		RoleID: req.roleID,
+		Path:   req.Path,
 	})
 	if err != nil {
 		return nil, err
