@@ -1,91 +1,31 @@
-package condition
+package treasure
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
 	"reflect"
 
 	"github.com/quanxiang-cloud/form/internal/permit"
-	"github.com/quanxiang-cloud/form/internal/permit/proxy"
 	"github.com/quanxiang-cloud/form/internal/service/types"
-	"github.com/quanxiang-cloud/form/pkg/misc/config"
 )
 
 const (
-	_query     = "query"
-	_condition = "condition"
-	_bool      = "bool"
-	_must      = "must"
-	_terms     = "terms"
-	_match     = "match"
+	_bool  = "bool"
+	_terms = "terms"
+	_match = "match"
 )
 
 type Condition struct {
-	next    permit.Form
 	parsers map[string]Parser
 }
 
-func NewCondition(conf *config.Config) (*Condition, error) {
-	next, err := proxy.NewProxy(conf)
-	if err != nil {
-		return nil, err
-	}
+func NewCondition() *Condition {
 	return &Condition{
 		parsers: make(map[string]Parser),
-		next:    next,
-	}, nil
+	}
 }
 
-func (c *Condition) Guard(ctx context.Context, req *permit.GuardReq) (*permit.GuardResp, error) {
-	var (
-		query     = req.Body[_query]
-		condition = req.Body[_condition]
-	)
-
-	if req.Request.Method == http.MethodGet {
-		query = req.Get.Query
-		condition = req.Get.Condition
-	}
-
-	err := c.setParseValue(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-
-	dataes := make([]interface{}, 0, 2)
-	if query != nil {
-		dataes = append(dataes, query)
-	}
-
-	if condition != nil {
-		err = c.parseCondition(condition)
-		if err != nil {
-			return nil, err
-		}
-		dataes = append(dataes, condition)
-	}
-
-	newQuery := permit.Query{
-		_bool: types.M{
-			_must: dataes,
-		},
-	}
-
-	b, _ := json.Marshal(newQuery)
-	fmt.Println(string(b))
-
-	if req.Request.Method == http.MethodGet {
-		req.Get.Query = newQuery
-	} else {
-		req.Body[_query] = newQuery
-	}
-
-	return c.next.Guard(ctx, req)
-}
-
-func (c *Condition) setParseValue(ctx context.Context, req *permit.GuardReq) error {
+func (c *Condition) SetParseValue(ctx context.Context, req *permit.Request) error {
 	for _, parse := range parsers {
 		err := parse.SetValue(ctx, c, req)
 		if err != nil {
@@ -104,7 +44,7 @@ var parsers = []Parser{
 
 type Parser interface {
 	GetTag() string
-	SetValue(context.Context, *Condition, *permit.GuardReq) error
+	SetValue(context.Context, *Condition, *permit.Request) error
 	Parse(string, interface{})
 }
 
@@ -116,8 +56,8 @@ func (u *user) GetTag() string {
 	return "$user"
 }
 
-func (u *user) SetValue(ctx context.Context, c *Condition, req *permit.GuardReq) error {
-	u.value = req.Header.UserID
+func (u *user) SetValue(ctx context.Context, c *Condition, req *permit.Request) error {
+	u.value = req.UserID
 	return nil
 }
 
@@ -139,7 +79,7 @@ func (s *subordinate) GetTag() string {
 	return "$subordinate"
 }
 
-func (s *subordinate) SetValue(ctx context.Context, c *Condition, req *permit.GuardReq) error {
+func (s *subordinate) SetValue(ctx context.Context, c *Condition, req *permit.Request) error {
 	// TODO set subordinate value
 	return nil
 }
@@ -150,19 +90,18 @@ func (s *subordinate) Parse(key string, valueSet interface{}) {
 		m[_terms] = types.M{
 			key: s.value,
 		}
-
 		delete(m, s.GetTag())
 	}
 }
 
-func (c *Condition) parseCondition(condition interface{}) error {
+func (c *Condition) ParseCondition(condition interface{}) error {
 	if condition == nil {
 		return nil
 	}
 
 	switch condType := reflect.TypeOf(condition); condType.Kind() {
 	case reflect.Ptr:
-		return c.parseCondition(reflect.ValueOf(condition).Elem().Interface())
+		return c.ParseCondition(reflect.ValueOf(condition).Elem().Interface())
 	case reflect.Map:
 		condValue := reflect.ValueOf(condition)
 		if len(condValue.MapKeys()) == 0 {
@@ -250,11 +189,6 @@ func (c *Condition) parse(elem interface{}) error {
 			return nil
 		}
 
-		// parseKey := parseVal.MapKeys()[0]
-		// if parseKey.String() == _bool {
-		// 	return c.parseCondition(elem)
-		// }
-
 		for _, key := range parseVal.MapKeys() {
 			fmt.Println(key.String())
 			if key.String() != _bool {
@@ -266,7 +200,7 @@ func (c *Condition) parse(elem interface{}) error {
 				}
 				parser.Parse(data.Elem().String(), parseVal.Interface())
 			} else {
-				if err := c.parseCondition(elem); err != nil {
+				if err := c.ParseCondition(elem); err != nil {
 					return err
 				}
 			}

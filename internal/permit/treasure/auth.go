@@ -1,22 +1,19 @@
-package auth
+package treasure
 
 import (
 	"context"
-	"net/http"
 	"time"
 
+	"git.internal.yunify.com/qxp/misc/logger"
 	error2 "github.com/quanxiang-cloud/cabin/error"
-	"github.com/quanxiang-cloud/cabin/logger"
 	"github.com/quanxiang-cloud/cabin/tailormade/client"
 	redis2 "github.com/quanxiang-cloud/cabin/tailormade/db/redis"
 	"github.com/quanxiang-cloud/cabin/tailormade/header"
 	"github.com/quanxiang-cloud/form/internal/models"
 	"github.com/quanxiang-cloud/form/internal/models/redis"
 	"github.com/quanxiang-cloud/form/internal/permit"
-	"github.com/quanxiang-cloud/form/internal/permit/condition"
-	filters "github.com/quanxiang-cloud/form/internal/permit/filter"
-	"github.com/quanxiang-cloud/form/internal/permit/lowcode"
 	"github.com/quanxiang-cloud/form/internal/service/consensus"
+	"github.com/quanxiang-cloud/form/pkg/misc/client/lowcode"
 	"github.com/quanxiang-cloud/form/pkg/misc/code"
 	"github.com/quanxiang-cloud/form/pkg/misc/config"
 )
@@ -26,13 +23,11 @@ const (
 	lockPerMatch   = "lockPerMatch"
 	lockTimeout    = time.Duration(30) * time.Second // 30秒
 	timeSleep      = time.Millisecond * 500          // 0.5 秒
-	_entity        = "entity"
 )
 
 type Auth struct {
-	next    permit.Form
-	redis   models.LimitsRepo
-	lowcode lowcode.Form
+	redis models.LimitsRepo
+	form  *lowcode.Form
 }
 
 func NewAuth(conf *config.Config) (*Auth, error) {
@@ -41,87 +36,41 @@ func NewAuth(conf *config.Config) (*Auth, error) {
 		return nil, err
 	}
 
-	next, err := condition.NewCondition(conf)
-	if err != nil {
-		return nil, err
-	}
 	return &Auth{
-		redis:   redis.NewLimitRepo(redisClient),
-		lowcode: lowcode.NewForm(client.Config{}),
-		next:    next,
+		redis: redis.NewLimitRepo(redisClient),
+		form:  lowcode.NewForm(client.Config{}),
 	}, nil
 }
 
-func (a *Auth) Guard(ctx context.Context, req *permit.GuardReq) (*permit.GuardResp, error) {
-	pass, err := a.auth(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-
-	// no permit
-	if !pass {
-		return nil, nil
-	}
-
-	entity := req.Body[_entity]
-	if req.Request.Method == http.MethodGet {
-		entity = req.Get.Entity
-	}
-
-	// input parameter judgment
-	if !filters.Pre(entity, req.Permit.Params) {
-		return nil, nil
-	}
-
-	return a.next.Guard(ctx, req)
-}
-
-func (a *Auth) Defender(ctx context.Context, req *permit.GuardReq) (*permit.GuardResp, error) {
-	pass, err := a.auth(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-
-	if !pass {
-		return nil, nil
-	}
-
-	return nil, nil
-}
-
-func (a *Auth) auth(ctx context.Context, req *permit.GuardReq) (bool, error) {
+func (a *Auth) Auth(ctx context.Context, req *permit.Request) (*consensus.Permit, error) {
 	// get the role information owned by the user
 	match, err := a.getCacheMatch(ctx, req)
 	if err != nil || match == nil {
-		return false, err
+		return nil, err
 	}
 
 	if match.Types == models.InitType {
-		return false, nil
+		return nil, nil
 	}
 
 	permits, err := a.getCachePermit(ctx, match.RoleID, req)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 
-	req.Permit = &consensus.Permit{
+	return &consensus.Permit{
 		Params:    permits.Params,
 		Response:  permits.Response,
 		Condition: permits.Condition,
 		Types:     match.Types,
-	}
-
-	return true, nil
+	}, nil
 }
 
-func (a *Auth) getCacheMatch(ctx context.Context, req *permit.GuardReq) (*models.PermitMatch, error) {
-	// relese lock
-	defer a.redis.UnLock(ctx, lockPerMatch)
+func (a *Auth) getCacheMatch(ctx context.Context, req *permit.Request) (*models.PermitMatch, error) {
 	for i := 0; i < 5; i++ {
-		perMatch, err := a.redis.GetPerMatch(ctx, req.Header.UserID, req.Param.AppID)
+		perMatch, err := a.redis.GetPerMatch(ctx, req.UserID, req.AppID)
 		if err != nil {
-			logger.Logger.Errorw(req.Header.UserID, header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
+			logger.Logger.Errorw(req.UserID, header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
 			return nil, err
 		}
 		if perMatch != nil {
@@ -139,8 +88,9 @@ func (a *Auth) getCacheMatch(ctx context.Context, req *permit.GuardReq) (*models
 		}
 		break
 	}
-
-	resp, err := a.lowcode.GetCacheMatchRole(ctx, req.Header.UserID, req.Header.DepID, req.Param.AppID)
+	// relese lock
+	defer a.redis.UnLock(ctx, lockPerMatch)
+	resp, err := a.form.GetCacheMatchRole(ctx, req.UserID, req.DepID, req.AppID)
 	if err != nil || resp == nil {
 		return nil, err
 	}
@@ -151,9 +101,7 @@ func (a *Auth) getCacheMatch(ctx context.Context, req *permit.GuardReq) (*models
 	}, nil
 }
 
-func (a *Auth) getCachePermit(ctx context.Context, roleID string, req *permit.GuardReq) (*models.Limits, error) {
-	// relese lock
-	defer a.redis.UnLock(ctx, lockPermission)
+func (a *Auth) getCachePermit(ctx context.Context, roleID string, req *permit.Request) (*models.Limits, error) {
 	for i := 0; i < 5; i++ {
 		exist := a.redis.ExistsKey(ctx, roleID)
 		if exist {
@@ -179,8 +127,10 @@ func (a *Auth) getCachePermit(ctx context.Context, roleID string, req *permit.Gu
 		}
 		break
 	}
+	// relese lock
+	defer a.redis.UnLock(ctx, lockPermission)
 
-	resp, err := a.lowcode.GetRoleMatchPermit(ctx, roleID)
+	resp, err := a.form.GetRoleMatchPermit(ctx, roleID)
 	if err != nil || resp == nil {
 		return nil, err
 	}

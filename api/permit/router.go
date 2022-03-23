@@ -3,7 +3,8 @@ package router
 import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/quanxiang-cloud/form/internal/permit/auth"
+	guard "github.com/quanxiang-cloud/form/internal/permit/form"
+	defender "github.com/quanxiang-cloud/form/internal/permit/poly"
 	config2 "github.com/quanxiang-cloud/form/pkg/misc/config"
 )
 
@@ -59,27 +60,27 @@ func (r *Router) Run() error {
 }
 
 func polyRouter(c *config2.Config, r map[string]*echo.Group) error {
-	auth, err := auth.NewAuth(c)
+	cor, err := defender.NewParam(c)
 	if err != nil {
 		return err
 	}
 
 	group := r[ployPath]
 	{
-		group.Any("*", ProxyPoly(auth))
+		group.Any("*", ProxyPoly(cor))
 	}
 	return nil
 }
 
 func formRouter(c *config2.Config, r map[string]*echo.Group) error {
-	auth, err := auth.NewAuth(c)
+	cor, err := guard.NewAuth(c)
 	if err != nil {
 		return err
 	}
 
 	group := r[formPath]
 	{
-		group.Any("/:appID/home/form/:tableID/:action", ProxyForm(auth))
+		group.Any("/:appID/home/form/:tableID/:action", ProxyForm(cor))
 	}
 	return nil
 }
