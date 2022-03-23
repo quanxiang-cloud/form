@@ -2,50 +2,35 @@ package permit
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 
 	"github.com/quanxiang-cloud/form/internal/service/consensus"
 )
 
-type Poly interface {
-	Defender(context.Context, *GuardReq) (*GuardResp, error)
+type Permit interface {
+	Do(context.Context, *Request) (*Response, error)
 }
 
-type Form interface {
-	Guard(context.Context, *GuardReq) (*GuardResp, error)
-}
-
-type GuardReq struct {
+type Request struct {
 	Request *http.Request
 	Writer  http.ResponseWriter
-	Header  Header
-	Param   Param
-	Get     Get
-	Body    Query
-	Permit  *consensus.Permit
+
+	Universal
+	FormReq
 }
 
-type GuardResp struct{}
+type Response struct{}
 
-type Header struct {
+type Universal struct {
+	AppID  string `param:"appID"`
 	UserID string `header:"User-Id"`
 	DepID  string `header:"Department-Id"`
 }
 
-type Param struct {
-	AppID  string `param:"appID"`
+type FormReq struct {
 	Action string `param:"action"`
+	Body   Body
+	Permit *consensus.Permit
 }
 
-type Get struct {
-	Query     Query `query:"query"`
-	Condition Query `query:"condition"`
-	Entity    Query `query:"entity"`
-}
-
-type Query map[string]interface{}
-
-func (q *Query) UnmarshalParam(param string) error {
-	return json.Unmarshal([]byte(param), q)
-}
+type Body map[string]interface{}

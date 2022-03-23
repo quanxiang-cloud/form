@@ -1,4 +1,4 @@
-package filter
+package treasure
 
 import (
 	"reflect"

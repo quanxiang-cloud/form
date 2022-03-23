@@ -1,4 +1,4 @@
-package proxy
+package guard
 
 import (
 	"bytes"
@@ -14,16 +14,16 @@ import (
 
 	"git.internal.yunify.com/qxp/misc/logger"
 	"github.com/quanxiang-cloud/form/internal/permit"
+	"github.com/quanxiang-cloud/form/internal/permit/treasure"
 	"github.com/quanxiang-cloud/form/internal/service/consensus"
 	"github.com/quanxiang-cloud/form/pkg/misc/config"
 )
 
-const _query = "query"
-
 type Proxy struct {
-	next      permit.Form
 	url       *url.URL
 	transport http.RoundTripper
+
+	next permit.Permit
 }
 
 func NewProxy(conf *config.Config) (*Proxy, error) {
@@ -49,7 +49,7 @@ func NewProxy(conf *config.Config) (*Proxy, error) {
 	}, nil
 }
 
-func (p *Proxy) Guard(ctx context.Context, req *permit.GuardReq) (*permit.GuardResp, error) {
+func (p *Proxy) Do(ctx context.Context, req *permit.Request) (*permit.Response, error) {
 	proxy := httputil.NewSingleHostReverseProxy(p.url)
 	proxy.Transport = p.transport
 	proxy.ModifyResponse = func(resp *http.Response) error {
@@ -63,27 +63,17 @@ func (p *Proxy) Guard(ctx context.Context, req *permit.GuardReq) (*permit.GuardR
 
 	r := req.Request
 	r.Host = p.url.Host
-	if r.Method == http.MethodPost || r.Method == http.MethodPut || r.Method == http.MethodPatch {
-		data, err := json.Marshal(req.Body)
-		if err != nil {
-			logger.Logger.Errorf("entity json marshal failed: %s", err.Error())
-			return nil, err
-		}
-
-		r.Body = io.NopCloser(bytes.NewReader(data))
-		r.ContentLength = int64(len(data))
-	} else {
-		value, err := json.Marshal(req.Get.Query)
-		if err != nil {
-			return nil, err
-		}
-
-		r.URL.Query().Add(_query, string(value))
+	data, err := json.Marshal(req.Body)
+	if err != nil {
+		logger.Logger.Errorf("entity json marshal failed: %s", err.Error())
+		return nil, err
 	}
+	r.Body = io.NopCloser(bytes.NewReader(data))
+	r.ContentLength = int64(len(data))
 
 	proxy.ServeHTTP(req.Writer, r)
 
-	return nil, nil
+	return &permit.Response{}, nil
 }
 
 const (
@@ -91,7 +81,7 @@ const (
 	mimeApplicationJSON = "application/json"
 )
 
-func (p *Proxy) filter(resp *http.Response, req *permit.GuardReq) error {
+func (p *Proxy) filter(resp *http.Response, req *permit.Request) error {
 	ctype := resp.Header.Get(contentType)
 	if !strings.HasPrefix(ctype, mimeApplicationJSON) {
 		return fmt.Errorf("response data content-type is not %s", mimeApplicationJSON)
@@ -101,31 +91,33 @@ func (p *Proxy) filter(resp *http.Response, req *permit.GuardReq) error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 
 	conResp := &consensus.Response{}
 	err = json.Unmarshal(respDate, conResp)
 	if err != nil {
 		return err
 	}
-	//
-	//var entity interface{}
-	//switch req.Param.Action {
-	//case "get":
-	//	entity = conResp.GetResp.Entity
-	//case "search":
-	//	entity = conResp.ListResp.Entities
-	//}
-	//filter.Post(entity, req.Permit.Response)
-	//
-	//data, err := json.Marshal(entity)
-	//if err != nil {
-	//	logger.Logger.Errorf("entity json marshal failed: %s", err.Error())
-	//	return err
-	//}
-	//
-	//resp.Body = io.NopCloser(bytes.NewReader(data))
-	//resp.ContentLength = int64(len(data))
-	resp.Body = io.NopCloser(bytes.NewReader(respDate))
-	resp.ContentLength = int64(len(respDate))
+
+	var entity interface{}
+	switch req.Action {
+	case "get":
+		entity = conResp.GetResp.Entity
+	case "search":
+		entity = conResp.ListResp.Entities
+	}
+
+	treasure.Post(entity, req.Permit.Response)
+
+	data, err := json.Marshal(entity)
+	if err != nil {
+		logger.Logger.Errorf("entity json marshal failed: %s", err.Error())
+		return err
+	}
+
+	resp.Body = io.NopCloser(bytes.NewReader(data))
+	resp.ContentLength = int64(len(data))
+	// resp.Body = io.NopCloser(bytes.NewReader(respDate))
+	// resp.ContentLength = int64(len(respDate))
 	return nil
 }

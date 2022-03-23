@@ -6,9 +6,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/quanxiang-cloud/form/internal/models"
-
 	"github.com/quanxiang-cloud/cabin/tailormade/client"
+	"github.com/quanxiang-cloud/form/internal/models"
 )
 
 var (
@@ -25,17 +24,12 @@ func init() {
 	roleMatchPermitURL = fmt.Sprintf(roleMatchPermitURL, formHost)
 }
 
-type Form interface {
-	GetCacheMatchRole(context.Context, string, string, string) (*GetMatchRoleResp, error)
-	GetRoleMatchPermit(context.Context, string) (*FindPermitResp, error)
-}
-
-type form struct {
+type Form struct {
 	client http.Client
 }
 
-func NewForm(conf client.Config) Form {
-	return &form{
+func NewForm(conf client.Config) *Form {
+	return &Form{
 		client: client.New(conf),
 	}
 }
@@ -45,7 +39,7 @@ type GetMatchRoleResp struct {
 	Types  int    `json:"types"`
 }
 
-func (f *form) GetCacheMatchRole(ctx context.Context, userID, depID, appID string) (*GetMatchRoleResp, error) {
+func (f *Form) GetCacheMatchRole(ctx context.Context, userID, depID, appID string) (*GetMatchRoleResp, error) {
 	var resp *GetMatchRoleResp
 	err := client.POST(ctx, &f.client, cacheMatchRoleURL, struct {
 		UserID string `json:"userID"`
@@ -78,7 +72,7 @@ type permit struct {
 	Condition *models.Condition  `json:"condition"`
 }
 
-func (f *form) GetRoleMatchPermit(ctx context.Context, roleID string) (*FindPermitResp, error) {
+func (f *Form) GetRoleMatchPermit(ctx context.Context, roleID string) (*FindPermitResp, error) {
 	var resp *FindPermitResp
 	err := client.POST(ctx, &f.client, cacheMatchRoleURL, struct {
 		RoleID string `json:"roleID"`
