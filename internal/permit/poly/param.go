@@ -25,19 +25,19 @@ func NewParam(config *config.Config) (*Param, error) {
 }
 
 const (
-	minApiLength = 8
+	minAPILength = 8
 	faas         = "faas"
 )
 
 func (p *Param) Do(ctx context.Context, req *permit.Request) (*permit.Response, error) {
 	pathArr := strings.Split(req.Request.URL.Path, "/")
 
-	if len(pathArr) < minApiLength {
+	if len(pathArr) < minAPILength {
 		return nil, fmt.Errorf("illegal api path")
 	}
 
-	if pathArr[minApiLength-2] != faas {
-		req.AppID = pathArr[minApiLength-1]
+	if pathArr[minAPILength-2] != faas {
+		req.AppID = pathArr[minAPILength-1]
 	}
 
 	return p.next.Do(ctx, req)
