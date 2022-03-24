@@ -138,7 +138,6 @@ func tableRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 		managerConfig.POST("/create", table.UpdateConfig)
 	}
 	return nil
-
 }
 
 func innerRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {

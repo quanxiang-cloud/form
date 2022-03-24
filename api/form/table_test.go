@@ -2,8 +2,9 @@ package api
 
 import (
 	"fmt"
-	id2 "github.com/quanxiang-cloud/cabin/id"
 	"testing"
+
+	id2 "github.com/quanxiang-cloud/cabin/id"
 )
 
 func TestName(t *testing.T) {
