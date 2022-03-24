@@ -51,9 +51,9 @@ func NewRouter(c *config2.Config) (*Router, error) {
 	}
 
 	r := map[string]*gin.RouterGroup{
-		managerPath:  engine.Group("/api/v1/form1/:appID/m"),
-		homePath:     engine.Group("/api/v1/form1:appID/home"),
-		internalPath: engineInner.Group("/api/v1/form1/:appID/internal"),
+		managerPath:  engine.Group("/api/v1/form/:appID/m"),
+		homePath:     engine.Group("/api/v1/form/:appID/home"),
+		internalPath: engineInner.Group("/api/v1/form/:appID/internal"),
 	}
 	for _, f := range routers {
 		err = f(c, r)
@@ -108,7 +108,7 @@ func permitRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 }
 
 func cometRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
-	cometHome := r[homePath].Group("form/:tableName")
+	cometHome := r[homePath].Group("/form/:tableName")
 	{
 		g, err := form.NewRefs(c)
 		if err != nil {

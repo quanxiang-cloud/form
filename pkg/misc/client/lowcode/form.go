@@ -35,20 +35,28 @@ func NewForm(conf client.Config) *Form {
 
 type GetMatchRoleResp struct {
 	RoleID string `json:"roleID"`
-	Types  int    `json:"types"`
+	Types  models.RoleType    `json:"types"`
 }
 
 func (f *Form) GetCacheMatchRole(ctx context.Context, userID, depID, appID string) (*GetMatchRoleResp, error) {
 	resp := &GetMatchRoleResp{}
 	cacheMatchRoleURL := fmt.Sprintf(cacheMatchRoleURL, formHost, appID)
+
+	owners := make([]string ,0)
+
+	if userID != ""{
+		owners = append(owners,userID)
+	}
+	if depID != "" {
+		owners = append(owners,depID)
+	}
 	err := client.POST(ctx, &f.client, cacheMatchRoleURL, struct {
-		UserID string `json:"userID"`
-		DepID  string `json:"depID"`
+
+		Owners  []string `json:"owners"`
 		AppID  string `json:"appID"`
 	}{
-		UserID: userID,
-		DepID:  depID,
-		AppID:  appID,
+		Owners: owners,
+		AppID: appID,
 	}, resp)
 	if err != nil {
 		return nil, err
@@ -66,6 +74,7 @@ type FindPermitResp struct {
 }
 type permit struct {
 	ID        string             `json:"id"`
+	RoleID    string             `json:"roleID"`
 	Path      string             `json:"path"`
 	Params    models.FiledPermit `json:"params"`
 	Response  models.FiledPermit `json:"response"`

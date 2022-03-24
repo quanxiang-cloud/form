@@ -14,18 +14,17 @@ type limitRepo struct {
 }
 
 func (p *limitRepo) ExistsKey(ctx context.Context, key string) bool {
-	exists := p.c.Exists(ctx, key)
+	exists := p.c.Exists(ctx, p.PerKey()+key)
 	return exists.Val() > 0
 }
 
 func (p *limitRepo) CreatePermit(ctx context.Context, roleID string, limits ...*models.Limits) error {
-	key := p.PerKey() + roleID
 	for _, value := range limits {
 		entityJSON, err := json.Marshal(value)
 		if err != nil {
 			return nil
 		}
-		p.c.HSet(ctx, key+value.Path, entityJSON)
+		p.c.HSet(ctx, p.PerKey()+roleID, value.Path, entityJSON)
 	}
 	return nil
 }

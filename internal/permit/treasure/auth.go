@@ -2,6 +2,7 @@ package treasure
 
 import (
 	"context"
+	"github.com/quanxiang-cloud/cabin/tailormade/client"
 	"time"
 
 	"git.internal.yunify.com/qxp/misc/logger"
@@ -37,21 +38,21 @@ func NewAuth(conf *config.Config) (*Auth, error) {
 
 	return &Auth{
 		redis: redis.NewLimitRepo(redisClient),
-		form:  lowcode.NewForm(conf.InternalNet),
+
+		form: lowcode.NewForm(client.Config{
+			Timeout: time.Second * 100,
+		}),
 	}, nil
 }
 
 func (a *Auth) Auth(ctx context.Context, req *permit.Request) (*consensus.Permit, error) {
-	// get the role information owned by the user
 	match, err := a.getCacheMatch(ctx, req)
 	if err != nil || match == nil {
 		return nil, err
 	}
-
-	if match.Types == models.InitType {
+	if match.RoleID == models.RoleInit {
 		return nil, nil
 	}
-
 	permits, err := a.getCachePermit(ctx, match.RoleID, req)
 	if err != nil {
 		return nil, err
@@ -61,13 +62,12 @@ func (a *Auth) Auth(ctx context.Context, req *permit.Request) (*consensus.Permit
 		Params:    permits.Params,
 		Response:  permits.Response,
 		Condition: permits.Condition,
-		Types:     match.Types,
 	}, nil
 }
 
 func (a *Auth) getCacheMatch(ctx context.Context, req *permit.Request) (*models.PermitMatch, error) {
 	for i := 0; i < 5; i++ {
-		perMatch, err := a.redis.GetPerMatch(ctx, req.UserID, req.AppID)
+		perMatch, err := a.redis.GetPerMatch(ctx, req.AppID, req.UserID)
 		if err != nil {
 			logger.Logger.Errorw(req.UserID, header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
 			return nil, err
@@ -87,16 +87,26 @@ func (a *Auth) getCacheMatch(ctx context.Context, req *permit.Request) (*models.
 		}
 		break
 	}
-	// relese lock
 	defer a.redis.UnLock(ctx, lockPerMatch)
 	resp, err := a.form.GetCacheMatchRole(ctx, req.UserID, req.DepID, req.AppID)
 	if err != nil || resp == nil {
 		return nil, err
 	}
-
+	perMatch := &models.PermitMatch{
+		RoleID: resp.RoleID,
+		UserID: req.UserID,
+		AppID:  req.AppID,
+	}
+	if resp.Types == models.InitType{
+		perMatch.RoleID = models.RoleInit
+		resp.RoleID = models.RoleInit
+	}
+	err = a.redis.CreatePerMatch(ctx, perMatch)
+	if err != nil {
+		logger.Logger.Errorw("create per match")
+	}
 	return &models.PermitMatch{
 		RoleID: resp.RoleID,
-		Types:  models.RoleType(resp.Types),
 	}, nil
 }
 

@@ -2,10 +2,10 @@ package guard
 
 import (
 	"context"
+	"github.com/quanxiang-cloud/form/internal/service/types"
 
 	"github.com/quanxiang-cloud/form/internal/permit"
 	"github.com/quanxiang-cloud/form/internal/permit/treasure"
-	"github.com/quanxiang-cloud/form/internal/service/types"
 	"github.com/quanxiang-cloud/form/pkg/misc/config"
 )
 
@@ -60,6 +60,7 @@ func (c *Condition) Do(ctx context.Context, req *permit.Request) (*permit.Respon
 			},
 		}
 	}
+
 
 	return c.next.Do(ctx, req)
 }
