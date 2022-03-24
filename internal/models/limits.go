@@ -5,6 +5,10 @@ import (
 	"time"
 )
 
+const (
+	RoleInit = "initType"
+)
+
 type Limits struct {
 	Path      string
 	Name      string
@@ -18,7 +22,6 @@ type PermitMatch struct {
 	RoleID string
 	UserID string
 	AppID  string
-	Types  RoleType
 }
 
 type LimitsRepo interface {

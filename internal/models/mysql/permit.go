@@ -21,7 +21,15 @@ func (t *permitRepo) Get(db *gorm.DB, roleID, path string) (*models.Permit, erro
 }
 
 func (t *permitRepo) Find(db *gorm.DB, query *models.PermitQuery) ([]*models.Permit, error) {
-	return nil, nil
+	ql := db.Table(t.TableName())
+
+	if query.RoleID != "" {
+		ql = ql.Where("role_id = ?", query.RoleID)
+	}
+	ql = ql.Order("created_at DESC")
+	permits := make([]*models.Permit, 0)
+	err := ql.Find(&permits).Error
+	return permits, err
 }
 
 func (t *permitRepo) Delete(db *gorm.DB, query *models.PermitQuery) error {
