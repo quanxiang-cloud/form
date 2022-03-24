@@ -130,7 +130,7 @@ func (a *Auth) getCachePermit(ctx context.Context, roleID string, req *permit.Re
 	// relese lock
 	defer a.redis.UnLock(ctx, lockPermission)
 
-	resp, err := a.form.GetRoleMatchPermit(ctx, roleID)
+	resp, err := a.form.GetRoleMatchPermit(ctx, req.AppID, roleID)
 	if err != nil || resp == nil {
 		return nil, err
 	}
