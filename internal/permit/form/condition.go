@@ -61,6 +61,5 @@ func (c *Condition) Do(ctx context.Context, req *permit.Request) (*permit.Respon
 		}
 	}
 
-
 	return c.next.Do(ctx, req)
 }
