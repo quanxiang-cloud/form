@@ -19,7 +19,7 @@ var (
 func init() {
 	formHost = os.Getenv("FORM_HOST")
 	if formHost == "" {
-		formHost = "http://127.0.0.1:81"
+		formHost = "http://form"
 	}
 }
 
@@ -42,7 +42,7 @@ func (f *Form) GetCacheMatchRole(ctx context.Context, userID, depID, appID strin
 	resp := &GetMatchRoleResp{}
 	cacheMatchRoleURL := fmt.Sprintf(cacheMatchRoleURL, formHost, appID)
 
-	owners := make([]string, 0)
+	owners := make([]string, 0, 2)
 
 	if userID != "" {
 		owners = append(owners, userID)

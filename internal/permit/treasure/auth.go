@@ -2,7 +2,6 @@ package treasure
 
 import (
 	"context"
-	"github.com/quanxiang-cloud/cabin/tailormade/client"
 	"time"
 
 	"git.internal.yunify.com/qxp/misc/logger"
@@ -38,10 +37,7 @@ func NewAuth(conf *config.Config) (*Auth, error) {
 
 	return &Auth{
 		redis: redis.NewLimitRepo(redisClient),
-
-		form: lowcode.NewForm(client.Config{
-			Timeout: time.Second * 100,
-		}),
+		form:  lowcode.NewForm(conf.InternalNet),
 	}, nil
 }
 

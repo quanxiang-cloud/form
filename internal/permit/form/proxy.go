@@ -82,6 +82,10 @@ const (
 )
 
 func (p *Proxy) filter(resp *http.Response, req *permit.Request) error {
+	if resp.StatusCode != http.StatusOK {
+		return nil
+	}
+
 	ctype := resp.Header.Get(contentType)
 	if !strings.HasPrefix(ctype, mimeApplicationJSON) {
 		return fmt.Errorf("response data content-type is not %s", mimeApplicationJSON)
@@ -117,7 +121,5 @@ func (p *Proxy) filter(resp *http.Response, req *permit.Request) error {
 
 	resp.Body = io.NopCloser(bytes.NewReader(data))
 	resp.ContentLength = int64(len(data))
-	// resp.Body = io.NopCloser(bytes.NewReader(respDate))
-	// resp.ContentLength = int64(len(respDate))
 	return nil
 }

@@ -37,8 +37,9 @@ func action(ctr consensus.Guidance) gin.HandlerFunc {
 			c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
+		do, err := ctr.Do(header.MutateContext(c), bus)
 
-		resp.Format(ctr.Do(header.MutateContext(c), bus)).Context(c)
+		resp.Format(do, err).Context(c)
 	}
 }
 
