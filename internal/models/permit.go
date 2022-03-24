@@ -3,6 +3,7 @@ package models
 import (
 	"database/sql/driver"
 	"encoding/json"
+
 	"gorm.io/gorm"
 )
 
@@ -13,7 +14,7 @@ type Permit struct {
 	Path        string
 	Params      FiledPermit
 	Response    FiledPermit
-	Condition   *Condition
+	Condition   Condition
 	CreatedAt   int64
 	CreatorID   string
 	CreatorName string

@@ -3,10 +3,10 @@ package redis
 import (
 	"context"
 	"encoding/json"
-	"github.com/quanxiang-cloud/form/internal/models"
 	"time"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/quanxiang-cloud/form/internal/models"
 )
 
 type limitRepo struct {
@@ -51,7 +51,6 @@ func (p *limitRepo) GetPermit(ctx context.Context, roleID, path string) (*models
 }
 
 func (p *limitRepo) DeletePermit(ctx context.Context, roleID string) error {
-
 	return p.c.Del(ctx, p.PerKey()+roleID).Err()
 }
 
@@ -96,18 +95,21 @@ func (p *limitRepo) PermitExpire(ctx context.Context, key string, ttl time.Durat
 	return p.c.Expire(ctx, p.PerKey()+key, ttl).Err()
 }
 
-//NewLimitRepo NewLimitRepo
+// NewLimitRepo NewLimitRepo
 func NewLimitRepo(c *redis.ClusterClient) models.LimitsRepo {
 	return &limitRepo{
 		c: c,
 	}
 }
+
 func (p *limitRepo) PerKey() string {
 	return redisKey + ":perInfo:"
 }
+
 func (p *limitRepo) PerMatchKey() string {
 	return redisKey + ":perMatch:"
 }
+
 func (p *limitRepo) LockKey() string {
 	return redisKey + ":lock:"
 }

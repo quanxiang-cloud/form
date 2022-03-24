@@ -10,10 +10,10 @@ type Limits struct {
 	Name      string
 	Params    FiledPermit
 	Response  FiledPermit
-	Condition *Condition
+	Condition Condition
 }
 
-//PermitMatch PermitMatch
+// PermitMatch PermitMatch
 type PermitMatch struct {
 	RoleID string
 	UserID string
@@ -36,7 +36,7 @@ type LimitsRepo interface {
 	UnLock(ctx context.Context, key string) error
 	// PerMatchExpire 给某个键设置过期时间
 	PerMatchExpire(ctx context.Context, key string, ttl time.Duration) error
-	//PermitExpire PermitExpire
+	// PermitExpire PermitExpire
 	PermitExpire(ctx context.Context, key string, ttl time.Duration) error
 
 	ExistsKey(ctx context.Context, key string) bool

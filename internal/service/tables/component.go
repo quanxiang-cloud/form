@@ -3,13 +3,14 @@ package tables
 import (
 	"context"
 	"encoding/json"
+	"reflect"
+
 	redis2 "github.com/quanxiang-cloud/cabin/tailormade/db/redis"
 	"github.com/quanxiang-cloud/form/internal/models"
 	"github.com/quanxiang-cloud/form/internal/models/redis"
 	"github.com/quanxiang-cloud/form/internal/service/types"
 	"github.com/quanxiang-cloud/form/pkg/misc/config"
 	"github.com/quanxiang-cloud/form/pkg/misc/utils"
-	"reflect"
 )
 
 const (

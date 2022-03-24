@@ -77,7 +77,7 @@ type Permits struct {
 	Path      string             `json:"path"`
 	Params    models.FiledPermit `json:"params"`
 	Response  models.FiledPermit `json:"response"`
-	Condition *models.Condition  `json:"condition"`
+	Condition models.Condition   `json:"condition"`
 }
 
 func (p *permit) FindPermit(ctx context.Context, req *FindPermitReq) (*FindPermitResp, error) {
@@ -347,7 +347,7 @@ type CreatePerReq struct {
 	RoleID    string             `json:"roleID"`
 	UserID    string             `json:"userID"`
 	UserName  string             `json:"userName"`
-	Condition *models.Condition  `json:"condition"`
+	Condition models.Condition   `json:"condition"`
 }
 
 type CreatePerResp struct{}
@@ -376,7 +376,7 @@ type UpdatePerReq struct {
 	ID        string             `json:"id"`
 	Params    models.FiledPermit `json:"params"`
 	Response  models.FiledPermit `json:"response"`
-	Condition *models.Condition  `json:"condition"`
+	Condition models.Condition   `json:"condition"`
 }
 
 type UpdatePerResp struct{}
@@ -437,7 +437,7 @@ type GetPerInCacheReq struct {
 type GetPerInCacheResp struct {
 	Params    models.FiledPermit
 	Response  models.FiledPermit
-	Condition *models.Condition
+	Condition models.Condition
 	Types     models.RoleType
 }
 
@@ -587,7 +587,7 @@ type GetPermitResp struct {
 	Path      string             `json:"path,omitempty"`
 	Params    models.FiledPermit `json:"params,omitempty"`
 	Response  models.FiledPermit `json:"response,omitempty"`
-	Condition *models.Condition  `json:"condition,omitempty"`
+	Condition models.Condition   `json:"condition,omitempty"`
 }
 
 func (p *permit) GetPermit(ctx context.Context, req *GetPermitReq) (*GetPermitResp, error) {

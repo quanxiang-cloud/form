@@ -51,7 +51,7 @@ type Permit struct {
 	Name      string
 	Params    models.FiledPermit
 	Response  models.FiledPermit
-	Condition *models.Condition
+	Condition models.Condition
 	Types     models.RoleType
 }
 

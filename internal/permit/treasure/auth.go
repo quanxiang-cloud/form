@@ -6,7 +6,6 @@ import (
 
 	"git.internal.yunify.com/qxp/misc/logger"
 	error2 "github.com/quanxiang-cloud/cabin/error"
-	"github.com/quanxiang-cloud/cabin/tailormade/client"
 	redis2 "github.com/quanxiang-cloud/cabin/tailormade/db/redis"
 	"github.com/quanxiang-cloud/cabin/tailormade/header"
 	"github.com/quanxiang-cloud/form/internal/models"
@@ -38,7 +37,7 @@ func NewAuth(conf *config.Config) (*Auth, error) {
 
 	return &Auth{
 		redis: redis.NewLimitRepo(redisClient),
-		form:  lowcode.NewForm(client.Config{}),
+		form:  lowcode.NewForm(conf.InternalNet),
 	}, nil
 }
 

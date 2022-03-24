@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"git.internal.yunify.com/qxp/misc/error2"
-	"github.com/quanxiang-cloud/form/pkg/misc/code"
-	"github.com/quanxiang-cloud/form/pkg/misc/config"
 	"reflect"
 	"strings"
 	"text/template"
+
+	"git.internal.yunify.com/qxp/misc/error2"
+	"github.com/quanxiang-cloud/form/pkg/misc/code"
+	"github.com/quanxiang-cloud/form/pkg/misc/config"
 )
 
 const (

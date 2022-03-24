@@ -2,7 +2,6 @@ package guard
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/quanxiang-cloud/form/internal/permit"
 	"github.com/quanxiang-cloud/form/internal/permit/treasure"
@@ -34,10 +33,7 @@ func NewCondition(conf *config.Config) (*Condition, error) {
 }
 
 func (c *Condition) Do(ctx context.Context, req *permit.Request) (*permit.Response, error) {
-	var (
-		query     = req.Body[_query]
-		condition = req.Body[_condition]
-	)
+	query := req.Body[_query]
 
 	err := c.cond.SetParseValue(ctx, req)
 	if err != nil {
@@ -45,11 +41,10 @@ func (c *Condition) Do(ctx context.Context, req *permit.Request) (*permit.Respon
 	}
 
 	dataes := make([]interface{}, 0, 2)
-	if query == nil {
-		return nil, fmt.Errorf("must have query dsl")
+	if query != nil {
+		dataes = append(dataes, query)
 	}
-	dataes = append(dataes, query)
-
+	condition := req.Permit.Condition
 	if condition != nil {
 		err = c.cond.ParseCondition(condition)
 		if err != nil {
@@ -58,10 +53,12 @@ func (c *Condition) Do(ctx context.Context, req *permit.Request) (*permit.Respon
 		dataes = append(dataes, condition)
 	}
 
-	req.Body[_query] = permit.Body{
-		_bool: types.M{
-			_must: dataes,
-		},
+	if len(dataes) != 0 {
+		req.Body[_query] = permit.Body{
+			_bool: types.M{
+				_must: dataes,
+			},
+		}
 	}
 
 	return c.next.Do(ctx, req)
