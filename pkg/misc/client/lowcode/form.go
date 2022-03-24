@@ -11,8 +11,8 @@ import (
 )
 
 var (
-	cacheMatchRoleURL  = "%s/api/v1/form/permit/role/userRoleMatch"
-	roleMatchPermitURL = "%s/api/v1/form/permit/apiPermit/find"
+	cacheMatchRoleURL  = "%s/api/v1/form/%s/m/apiRole/userRoleMatch"
+	roleMatchPermitURL = "%s/api/v1/form/%s/m/apiPermit/find"
 )
 
 func init() {
@@ -41,6 +41,7 @@ type GetMatchRoleResp struct {
 
 func (f *Form) GetCacheMatchRole(ctx context.Context, userID, depID, appID string) (*GetMatchRoleResp, error) {
 	var resp *GetMatchRoleResp
+	cacheMatchRoleURL := fmt.Sprintf(cacheMatchRoleURL, appID)
 	err := client.POST(ctx, &f.client, cacheMatchRoleURL, struct {
 		UserID string `json:"userID"`
 		DepID  string `json:"depID"`
@@ -72,9 +73,10 @@ type permit struct {
 	Condition *models.Condition  `json:"condition"`
 }
 
-func (f *Form) GetRoleMatchPermit(ctx context.Context, roleID string) (*FindPermitResp, error) {
+func (f *Form) GetRoleMatchPermit(ctx context.Context, appID, roleID string) (*FindPermitResp, error) {
 	var resp *FindPermitResp
-	err := client.POST(ctx, &f.client, cacheMatchRoleURL, struct {
+	roleMatchPermitURL := fmt.Sprintf(roleMatchPermitURL, appID)
+	err := client.POST(ctx, &f.client, roleMatchPermitURL, struct {
 		RoleID string `json:"roleID"`
 	}{
 		RoleID: roleID,
