@@ -2,7 +2,6 @@ package defender
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/quanxiang-cloud/form/internal/permit"
@@ -26,17 +25,12 @@ func NewParam(config *config.Config) (*Param, error) {
 
 const (
 	minAPILength = 8
-	faas         = "faas"
 )
 
 func (p *Param) Do(ctx context.Context, req *permit.Request) (*permit.Response, error) {
 	pathArr := strings.Split(req.Request.URL.Path, "/")
 
-	if len(pathArr) < minAPILength {
-		return nil, fmt.Errorf("illegal api path")
-	}
-
-	if pathArr[minAPILength-2] != faas {
+	if len(pathArr) > minAPILength {
 		req.AppID = pathArr[minAPILength-1]
 	}
 

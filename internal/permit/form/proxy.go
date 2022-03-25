@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"strings"
 
+	error2 "github.com/quanxiang-cloud/cabin/error"
 	"github.com/quanxiang-cloud/cabin/logger"
 	cabinr "github.com/quanxiang-cloud/cabin/tailormade/resp"
 	"github.com/quanxiang-cloud/form/internal/permit"
@@ -105,6 +106,10 @@ func (p *Proxy) filter(resp *http.Response, req *permit.Request) error {
 	err = json.Unmarshal(respDate, cabinResp)
 	if err != nil {
 		return err
+	}
+
+	if cabinResp.Code != error2.Success {
+		return nil
 	}
 
 	switch req.Action {
