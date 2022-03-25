@@ -12,7 +12,8 @@ import (
 	"net/url"
 	"strings"
 
-	"git.internal.yunify.com/qxp/misc/logger"
+	"github.com/quanxiang-cloud/cabin/logger"
+	cabinr "github.com/quanxiang-cloud/cabin/tailormade/resp"
 	"github.com/quanxiang-cloud/form/internal/permit"
 	"github.com/quanxiang-cloud/form/internal/permit/treasure"
 	"github.com/quanxiang-cloud/form/internal/service/consensus"
@@ -57,7 +58,8 @@ func (p *Proxy) Do(ctx context.Context, req *permit.Request) (*permit.Response, 
 	}
 
 	proxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
-		logger.Logger.Errorf("Got error while modifying response: %v \n", err)
+		logger.Logger.Errorf("Got error while modifying response: %v \n", err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -68,9 +70,9 @@ func (p *Proxy) Do(ctx context.Context, req *permit.Request) (*permit.Response, 
 		logger.Logger.Errorf("entity json marshal failed: %s", err.Error())
 		return nil, err
 	}
+
 	r.Body = io.NopCloser(bytes.NewReader(data))
 	r.ContentLength = int64(len(data))
-
 	proxy.ServeHTTP(req.Writer, r)
 
 	return &permit.Response{}, nil
@@ -96,24 +98,23 @@ func (p *Proxy) filter(resp *http.Response, req *permit.Request) error {
 		return err
 	}
 	defer resp.Body.Close()
-
+	cabinResp := new(cabinr.Resp)
 	conResp := &consensus.Response{}
-	err = json.Unmarshal(respDate, conResp)
+	cabinResp.Data = conResp
+
+	err = json.Unmarshal(respDate, cabinResp)
 	if err != nil {
 		return err
 	}
 
-	var entity interface{}
 	switch req.Action {
 	case "get":
-		entity = conResp.GetResp.Entity
+		treasure.Post(conResp.GetResp.Entity, req.Permit.Response)
 	case "search":
-		entity = conResp.ListResp.Entities
+		treasure.Post(conResp.ListResp.Entities, req.Permit.Response)
 	}
 
-	treasure.Post(entity, req.Permit.Response)
-
-	data, err := json.Marshal(entity)
+	data, err := json.Marshal(cabinResp)
 	if err != nil {
 		logger.Logger.Errorf("entity json marshal failed: %s", err.Error())
 		return err

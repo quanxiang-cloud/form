@@ -2,7 +2,6 @@ package router
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -30,8 +29,6 @@ func ProxyForm(form permit.Permit) echo.HandlerFunc {
 			c.NoContent(http.StatusForbidden)
 			return nil
 		}
-
-		fmt.Println(resp)
 
 		return nil
 	}
