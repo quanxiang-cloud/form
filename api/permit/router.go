@@ -67,7 +67,7 @@ func polyRouter(c *config2.Config, r map[string]*echo.Group) error {
 
 	group := r[ployPath]
 	{
-		group.Any("*", ProxyPoly(cor))
+		group.Any("/api/v1/poly", ProxyPoly(cor))
 	}
 	return nil
 }
