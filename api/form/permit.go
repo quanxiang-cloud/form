@@ -211,25 +211,12 @@ func (p *Permit) DeletePermit(c *gin.Context) {
 }
 
 func (p *Permit) ListPermit(c *gin.Context) {
+	req := &service.ListPermitReq{}
 	ctx := header.MutateContext(c)
-	var batch []service.GetPermitReq
-	if err := c.ShouldBind(&batch); err != nil {
+	if err := c.ShouldBind(req); err != nil {
 		logger.Logger.Errorw("should bind", header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
-		resp.Format(nil, err).Context(c, http.StatusBadRequest)
+		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
-
-	list := make([]*service.GetPermitResp, len(batch))
-	for index, get := range batch {
-		r, err := p.permit.GetPermit(c, &get)
-		if err != nil {
-			logger.Logger.Errorw("get ", header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
-			list[index] = &service.GetPermitResp{}
-			continue
-		}
-		list[index] = r
-	}
-	resp.Format(map[string]interface{}{
-		"list": list,
-	}, nil).Context(c)
+	resp.Format(p.permit.ListPermit(ctx, req)).Context(c)
 }

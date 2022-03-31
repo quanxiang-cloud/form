@@ -2,14 +2,20 @@ package tables
 
 import (
 	"context"
+	time2 "github.com/quanxiang-cloud/cabin/time"
+	"github.com/quanxiang-cloud/form/internal/service/tables/util"
 
 	id2 "github.com/quanxiang-cloud/cabin/id"
 	"github.com/quanxiang-cloud/form/internal/models"
 	"github.com/quanxiang-cloud/form/internal/models/mysql"
 	"github.com/quanxiang-cloud/form/internal/service"
-	swagger2 "github.com/quanxiang-cloud/form/internal/service/tables/swagger"
 	"github.com/quanxiang-cloud/form/pkg/misc/config"
 	"gorm.io/gorm"
+)
+
+const (
+	_description = "description"
+	_title       = "title"
 )
 
 // 处理web Table de
@@ -71,25 +77,25 @@ type tableSchema struct {
 }
 
 func (t *tableSchema) Do(ctx context.Context, bus *Bus) (*DoResponse, error) {
-	properties, err := getMapToMap(bus.Schema, "properties")
+	properties, err := util.GetMapToMap(bus.Schema, _properties)
 	if err != nil {
 		return nil, err
 	}
 
-	convert, total, err := swagger2.Convert1(properties)
-	description := getMapToString(bus.Schema, "description")
-	title := getMapToString(bus.Schema, "title")
+	schemas, total, err := util.Convert1(properties)
+	description := util.GetMapToString(bus.Schema, _description)
+	title := util.GetMapToString(bus.Schema, _title)
 
 	bus.ConvertSchemas = ConvertSchemas{
 		Title:         title,
 		Description:   description,
 		FieldLen:      total,
-		ConvertSchema: convert,
+		ConvertSchema: schemas,
 	}
 	//
 	tables := &models.TableSchema{
 		Title:       bus.Title,
-		Schema:      bus.Schema,
+		Schema:      bus.ConvertSchema,
 		FieldLen:    bus.FieldLen,
 		Description: bus.Description,
 	}
@@ -99,7 +105,7 @@ func (t *tableSchema) Do(ctx context.Context, bus *Bus) (*DoResponse, error) {
 		tables.Source = bus.Source
 		tables.AppID = bus.AppID
 		tables.TableID = bus.TableID
-		//table.CreatedAt = time.Now()
+		tables.CreatedAt = time2.NowUnix()
 		tables.CreatorName = bus.UserName
 		tables.CreatorID = bus.UserID
 		err = t.tableSchemaRepo.BatchCreate(t.db, tables)

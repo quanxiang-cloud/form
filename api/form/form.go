@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"github.com/quanxiang-cloud/form/internal/service/types"
 	"net/http"
 	"strings"
 
@@ -20,19 +21,11 @@ type profile struct {
 func action(ctr consensus.Guidance) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		bus := &consensus.Bus{}
-		profiles := getProfile(c)
-		bus.UserID = profiles.userID
-		bus.UserName = profiles.userName
-		bus.DepID = profiles.depID
-		bus.Method = c.Param("action")
-		bus.Path = c.Request.RequestURI
-		var err error
-		bus.AppID, bus.TableID, err = checkURL(c)
+		err := initBus(c, bus, c.Param("action"))
 		if err != nil {
 			c.AbortWithError(http.StatusBadRequest, err)
 			return
 		}
-
 		if err = c.ShouldBind(bus); err != nil {
 			c.AbortWithError(http.StatusInternalServerError, err)
 			return
@@ -40,17 +33,6 @@ func action(ctr consensus.Guidance) gin.HandlerFunc {
 		do, err := ctr.Do(header.MutateContext(c), bus)
 
 		resp.Format(do, err).Context(c)
-	}
-}
-
-func getProfile(c *gin.Context) *profile {
-	userID := c.GetHeader(_userID)
-	userName := c.GetHeader(_userName)
-	depIDS := strings.Split(c.GetHeader(_departmentID), ",")
-	return &profile{
-		userID:   userID,
-		userName: userName,
-		depID:    depIDS[len(depIDS)-1],
 	}
 }
 
@@ -63,4 +45,123 @@ func checkURL(c *gin.Context) (appID, tableName string, err error) {
 		return
 	}
 	return
+}
+
+func get(ctr consensus.Guidance) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		bus := &consensus.Bus{}
+		err := initBus(c, bus, "get")
+		if err != nil {
+			c.AbortWithError(http.StatusBadRequest, err)
+			return
+		}
+		bus.Get.Query = types.Query{
+			"term": types.M{
+				"_id": c.Param("id"),
+			},
+		}
+		if err = c.ShouldBind(bus); err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+		do, err := ctr.Do(header.MutateContext(c), bus)
+
+		resp.Format(do, err).Context(c)
+	}
+}
+
+func search(ctr consensus.Guidance) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		bus := &consensus.Bus{}
+		err := initBus(c, bus, "search")
+		if err != nil {
+			c.AbortWithError(http.StatusBadRequest, err)
+			return
+		}
+		if err = c.ShouldBind(bus); err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+		do, err := ctr.Do(header.MutateContext(c), bus)
+		resp.Format(do, err).Context(c)
+	}
+}
+
+func delete(ctr consensus.Guidance) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		bus := &consensus.Bus{}
+		err := initBus(c, bus, "delete")
+		if err != nil {
+			c.AbortWithError(http.StatusBadRequest, err)
+			return
+		}
+		bus.Get.Query = types.Query{
+			"term": types.M{
+				"_id": c.Param("id"),
+			},
+		}
+		if err = c.ShouldBind(bus); err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+		do, err := ctr.Do(header.MutateContext(c), bus)
+
+		resp.Format(do, err).Context(c)
+	}
+}
+
+func update(ctr consensus.Guidance) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		bus := &consensus.Bus{}
+		err := initBus(c, bus, "update")
+		if err != nil {
+			c.AbortWithError(http.StatusBadRequest, err)
+			return
+		}
+		bus.Get.Query = types.Query{
+			"term": types.M{
+				"_id": c.Param("id"),
+			},
+		}
+		if err = c.ShouldBind(bus); err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+		do, err := ctr.Do(header.MutateContext(c), bus)
+
+		resp.Format(do, err).Context(c)
+	}
+}
+
+func create(ctr consensus.Guidance) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		bus := &consensus.Bus{}
+		err := initBus(c, bus, "create")
+		if err != nil {
+			c.AbortWithError(http.StatusBadRequest, err)
+			return
+		}
+		if err = c.ShouldBind(bus); err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+		do, err := ctr.Do(header.MutateContext(c), bus)
+
+		resp.Format(do, err).Context(c)
+	}
+}
+
+func initBus(c *gin.Context, bus *consensus.Bus, method string) error {
+	var err error
+	bus.AppID, bus.TableID, err = checkURL(c)
+	if err != nil {
+		return errors.New("bad path")
+	}
+	bus.Method = method
+	bus.UserID = c.GetHeader(_userID)
+	bus.UserName = c.GetHeader(_userName)
+	depIDS := strings.Split(c.GetHeader(_departmentID), ",")
+	bus.DepID = depIDS[len(depIDS)-1]
+	bus.Path = c.Request.RequestURI
+	return nil
 }

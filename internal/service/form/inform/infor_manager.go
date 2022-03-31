@@ -62,9 +62,9 @@ func (manager *HookManger) Start(ctx context.Context) {
 
 }
 func (manager *HookManger) publish(ctx context.Context, topic string, data interface{}) error {
-	if err := manager.daprClient.PublishEvent(context.Background(), manager.conf.PubSubName, topic, data); err != nil {
-		manager.log.Error(err, "publishEvent", "topic", topic, "pubsubName", manager.conf.PubSubName)
-		return err
-	}
+	//if err := manager.daprClient.PublishEvent(context.Background(), manager.conf.PubSubName, topic, data); err != nil {
+	//	manager.log.Error(err, "publishEvent", "topic", topic, "pubsubName", manager.conf.PubSubName)
+	//	return err
+	//}
 	return nil
 }

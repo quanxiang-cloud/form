@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	id2 "github.com/quanxiang-cloud/cabin/id"
@@ -106,4 +107,14 @@ func (t *Table) UpdateConfig(c *gin.Context) {
 		return
 	}
 	resp.Format(t.table.UpdateConfig(ctx, req)).Context(c)
+}
+
+func getProfile(c *gin.Context) *profile {
+	depIDS := strings.Split(c.GetHeader(_departmentID), ",")
+	return &profile{
+		userID:   c.Param(_userID),
+		userName: c.Param(_userName),
+		depID:    depIDS[len(depIDS)-1],
+	}
+
 }

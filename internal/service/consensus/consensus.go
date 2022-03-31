@@ -28,7 +28,7 @@ type Foundation struct {
 }
 
 type Get struct {
-	Query types.Query `json:"query,omitempty"`
+	Query types.Query `json:"query,omitempty" form:"query"`
 }
 
 type List struct {

@@ -29,20 +29,21 @@ type RegSwaggerResp struct {
 }
 
 // RegSwagger RegSwagger
-func (p *polyapi) RegSwagger(ctx context.Context, host, swag, appID, contents string) (*RegSwaggerResp, error) {
-	namespace := fmt.Sprintf("/system/app/%s/raw/inner/%s/%s", appID, swagger.NameSpace, contents)
+func (p *polyapi) RegSwagger(ctx context.Context, host, swag, appID, tableID, tableName string) (*RegSwaggerResp, error) {
+	namespace := fmt.Sprintf("/system/app/%s/raw/inner/%s/%s", appID, swagger.Service, tableID)
 
 	params := struct {
-		NameSpace string `json:"namespace"`
-		Host      string `json:"host"`
-		Version   string `json:"version"`
-		Swagger   string `json:"swagger"`
+		NameSpace      string `json:"namespace"`
+		Host           string `json:"host"`
+		Version        string `json:"version"`
+		Swagger        string `json:"swagger"`
+		NamespaceTitle string `json:"autoCreateNamespaceTitle"`
 	}{
-
-		Host:      host,
-		Version:   version,
-		Swagger:   swag,
-		NameSpace: namespace,
+		Host:           host,
+		Version:        version,
+		Swagger:        swag,
+		NameSpace:      namespace,
+		NamespaceTitle: tableName,
 	}
 	resp := &RegSwaggerResp{}
 
@@ -55,5 +56,5 @@ func (p *polyapi) RegSwagger(ctx context.Context, host, swag, appID, contents st
 
 // PolyAPI PolyAPI
 type PolyAPI interface {
-	RegSwagger(ctx context.Context, host, swag, appID, contents string) (*RegSwaggerResp, error)
+	RegSwagger(ctx context.Context, host, swag, appID, tableID, tableName string) (*RegSwaggerResp, error)
 }
