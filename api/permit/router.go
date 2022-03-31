@@ -20,7 +20,7 @@ var routers = []router{
 	formRouter,
 }
 
-// Router routing
+// Router routing.
 type Router struct {
 	c *config2.Config
 
@@ -31,7 +31,7 @@ func NewRouter(c *config2.Config) (*Router, error) {
 	engine := newRouter(c)
 
 	r := map[string]*echo.Group{
-		ployPath: engine.Group("*"),
+		ployPath: engine.Group("/api/v1/poly"),
 		formPath: engine.Group("/api/v1/form"),
 	}
 
@@ -67,7 +67,7 @@ func polyRouter(c *config2.Config, r map[string]*echo.Group) error {
 
 	group := r[ployPath]
 	{
-		group.Any("/api/v1/poly/*", ProxyPoly(cor))
+		group.Any("/*", ProxyPoly(cor))
 	}
 	return nil
 }
@@ -77,9 +77,14 @@ func formRouter(c *config2.Config, r map[string]*echo.Group) error {
 	if err != nil {
 		return err
 	}
+	p, err := defender.NewProxy(c)
+	if err != nil {
+		return err
+	}
 
 	group := r[formPath]
 	{
+		group.Any("/*", ProxyForm(p))
 		group.Any("/:appID/home/form/:tableID/:action", ProxyForm(cor))
 	}
 	return nil
