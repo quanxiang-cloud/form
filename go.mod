@@ -17,7 +17,7 @@ require (
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/yaml.v2 v2.4.0
 	gorm.io/gorm v1.22.5
-	k8s.io/kube-openapi v0.0.0-20201113171705-d219536bb9fd
+	k8s.io/kube-openapi v0.0.0-20201113171705-d219536bb9fd // indirect
 )
 
 replace github.com/quanxiang-cloud/structor => ../structor

@@ -6,7 +6,6 @@ import (
 	redis2 "github.com/quanxiang-cloud/cabin/tailormade/db/redis"
 	"github.com/quanxiang-cloud/form/internal/models"
 	"github.com/quanxiang-cloud/form/internal/models/redis"
-	"github.com/quanxiang-cloud/form/internal/service/tables/swagger"
 	"github.com/quanxiang-cloud/form/internal/service/tables/util"
 	"github.com/quanxiang-cloud/form/internal/service/types"
 	"github.com/quanxiang-cloud/form/pkg/misc/config"
@@ -53,7 +52,7 @@ func (c *component) subDo(ctx context.Context, properties types.M, bus *base) {
 	// 判断是否是 数据组件
 
 	for fieldName, fieldValue := range properties {
-		isLayout := swagger.IsLayoutComponent(fieldValue)
+		isLayout := util.IsLayoutComponent(fieldValue)
 		// 判断是否是布局组件
 		if isLayout {
 			//

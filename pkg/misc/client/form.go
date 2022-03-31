@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	target = "structor1:9027"
+	target = "localhost"
 )
 
 type FormAPI struct {
