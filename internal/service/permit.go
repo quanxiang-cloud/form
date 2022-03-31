@@ -2,8 +2,6 @@ package service
 
 import (
 	"context"
-	"time"
-
 	"git.internal.yunify.com/qxp/misc/logger"
 	id2 "github.com/quanxiang-cloud/cabin/id"
 	redis2 "github.com/quanxiang-cloud/cabin/tailormade/db/redis"
@@ -13,13 +11,6 @@ import (
 	"github.com/quanxiang-cloud/form/internal/models/redis"
 	config2 "github.com/quanxiang-cloud/form/pkg/misc/config"
 	"gorm.io/gorm"
-)
-
-const (
-	lockPermission = "lockPermission"
-	lockPerMatch   = "lockPerMatch"
-	lockTimeout    = time.Duration(30) * time.Second // 30秒
-	timeSleep      = time.Millisecond * 500          // 0.5 秒
 )
 
 type Permit interface {
