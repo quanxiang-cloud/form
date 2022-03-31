@@ -17,6 +17,7 @@ const (
 	managerPath  = "manager"
 	homePath     = "home"
 	internalPath = "internal"
+	v2HomePath   = "v2Home"
 )
 
 // Router routing
@@ -51,9 +52,10 @@ func NewRouter(c *config2.Config) (*Router, error) {
 	}
 
 	r := map[string]*gin.RouterGroup{
-		managerPath:  engine.Group("/api/v1/form/:appID/m"),
-		homePath:     engine.Group("/api/v1/form/:appID/home"),
-		internalPath: engineInner.Group("/api/v1/form/:appID/internal"),
+		managerPath:  engine.Group("/api/v1/form1/:appID/m"),
+		homePath:     engine.Group("/api/v1/form1/:appID/home"),
+		v2HomePath:   engine.Group("/api/v2/form1/:appID/home"),
+		internalPath: engineInner.Group("/api/v1/form1/:appID/internal"),
 	}
 	for _, f := range routers {
 		err = f(c, r)
@@ -82,9 +84,7 @@ func permitRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 		role.POST("/get/:id", permits.GetRole)       // 获取单条角色
 		role.POST("/delete/:id", permits.DeleteRole) // 删除对应的角色
 		role.POST("/find", permits.FindRole)         // 获取角色列表
-
 		role.POST("/userRoleMatch", permits.UserRoleMatch)
-
 		role.POST("/grant/list/:roleID", permits.FindGrantRole)     // 获取某个角色对应的人或者部门
 		role.POST("/grant/assign/:roleID", permits.AssignRoleGrant) // 给某个角色加人 、减人
 
@@ -109,13 +109,20 @@ func permitRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 
 func cometRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 	cometHome := r[homePath].Group("/form/:tableName")
-	{
-		g, err := form.NewRefs(c)
-		if err != nil {
-			return err
-		}
+	v2Path := r[v2HomePath].Group("/form/:tableName")
 
-		cometHome.POST("/:action", action(g))
+	guide, err := form.NewRefs(c)
+	if err != nil {
+		return err
+	}
+	{
+		cometHome.POST("/:action", action(guide))
+
+		v2Path.GET("/:id", get(guide))
+		v2Path.DELETE("/:id", delete(guide))
+		v2Path.PUT("/:id", update(guide))
+		v2Path.POST("", create(guide))
+		v2Path.GET("", search(guide))
 	}
 	return nil
 }

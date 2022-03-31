@@ -1,6 +1,8 @@
 package models
 
 import (
+	"database/sql/driver"
+	"encoding/json"
 	"gorm.io/gorm"
 )
 
@@ -29,7 +31,29 @@ type TableSchema struct {
 	CreatorName string
 	EditorID    string
 	EditorName  string
-	Schema      WebSchema
+	Schema      SchemaProperties
+}
+
+type SchemaProperties map[string]SchemaProps
+
+type SchemaProps struct {
+	Title      string           `json:"title"`
+	IsNull     bool             `json:"is_null"`
+	Length     int              `json:"length"`
+	Type       string           `json:"type"`
+	ReadOnly   bool             `json:"read_only"`
+	Items      interface{}      `json:"items,omitempty"`
+	Properties SchemaProperties `json:"properties,omitempty"`
+}
+
+// Value 实现方法
+func (p SchemaProperties) Value() (driver.Value, error) {
+	return json.Marshal(p)
+}
+
+// Scan 实现方法
+func (p *SchemaProperties) Scan(data interface{}) error {
+	return json.Unmarshal(data.([]byte), &p)
 }
 
 type TableSchemaQuery struct {

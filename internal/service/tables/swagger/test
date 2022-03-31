@@ -1,0 +1,17 @@
+//
+
+// param
+  /*    post     put                       get                       search       delete
+  				 {id : string, in:path } , {id : string, in:path },  {in: query} ,{id :path}
+   {key:value}   {key:value}
+  resp
+   code:11           code :11                    code :11                   code :11             code:11
+                    data:{ entity:{},count:1}    data:{entity:{}}       data:{entities:{}}   data:{count:1}
+  data:{
+  	entity:{},
+    count:11
+
+   }
+  */
+//
+// post 和 search 不需要

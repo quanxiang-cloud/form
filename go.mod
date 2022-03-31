@@ -7,6 +7,7 @@ require (
 	github.com/dapr/go-sdk v1.3.1
 	github.com/gin-gonic/gin v1.7.7
 	github.com/go-logr/logr v1.2.2
+	github.com/go-openapi/spec v0.20.4
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/labstack/echo/v4 v4.7.2
 	github.com/quanxiang-cloud/cabin v0.0.4
@@ -16,6 +17,7 @@ require (
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/yaml.v2 v2.4.0
 	gorm.io/gorm v1.22.5
+	k8s.io/kube-openapi v0.0.0-20201113171705-d219536bb9fd
 )
 
 replace github.com/quanxiang-cloud/structor => ../structor

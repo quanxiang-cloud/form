@@ -43,6 +43,7 @@ type PermitQuery struct {
 	ID     string
 	RoleID string
 	Path   string
+	Paths  []string
 }
 
 // PermitRepo PermitRepo

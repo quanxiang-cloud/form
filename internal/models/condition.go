@@ -8,7 +8,7 @@ import (
 type Condition map[string]interface{}
 
 // Value 实现方法
-func (c *Condition) Value() (driver.Value, error) {
+func (c Condition) Value() (driver.Value, error) {
 	return json.Marshal(c)
 }
 

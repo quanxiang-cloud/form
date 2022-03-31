@@ -26,6 +26,9 @@ func (t *permitRepo) Find(db *gorm.DB, query *models.PermitQuery) ([]*models.Per
 	if query.RoleID != "" {
 		ql = ql.Where("role_id = ?", query.RoleID)
 	}
+	if len(query.Paths) != 0 {
+		ql = ql.Where("path in ?", query.Paths)
+	}
 	ql = ql.Order("created_at DESC")
 	permits := make([]*models.Permit, 0)
 	err := ql.Find(&permits).Error

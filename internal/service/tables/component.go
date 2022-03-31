@@ -3,11 +3,11 @@ package tables
 import (
 	"context"
 	"encoding/json"
-	"reflect"
-
 	redis2 "github.com/quanxiang-cloud/cabin/tailormade/db/redis"
 	"github.com/quanxiang-cloud/form/internal/models"
 	"github.com/quanxiang-cloud/form/internal/models/redis"
+	"github.com/quanxiang-cloud/form/internal/service/tables/swagger"
+	"github.com/quanxiang-cloud/form/internal/service/tables/util"
 	"github.com/quanxiang-cloud/form/internal/service/types"
 	"github.com/quanxiang-cloud/form/pkg/misc/config"
 	"github.com/quanxiang-cloud/form/pkg/misc/utils"
@@ -29,7 +29,7 @@ type component struct {
 func (c *component) Do(ctx context.Context, bus *Bus) (*DoResponse, error) {
 	i := bus.Schema[_properties]
 
-	asMap, err := getAsMap(i)
+	asMap, err := util.GetAsMap(i)
 	if err != nil {
 		return nil, err
 	}
@@ -53,26 +53,26 @@ func (c *component) subDo(ctx context.Context, properties types.M, bus *base) {
 	// 判断是否是 数据组件
 
 	for fieldName, fieldValue := range properties {
-		isLayout := isLayoutComponent(fieldValue)
+		isLayout := swagger.IsLayoutComponent(fieldValue)
 		// 判断是否是布局组件
 		if isLayout {
 			//
-			v, err := getAsMap(fieldValue)
+			v, err := util.GetAsMap(fieldValue)
 			if err != nil {
 				continue
 			}
 
-			toMap, err := getMapToMap(v, _properties)
+			toMap, err := util.GetMapToMap(v, _properties)
 			if err != nil {
 				continue
 			}
 			c.subDo(ctx, toMap, bus)
 		}
-		asMap, err := getAsMap(fieldValue)
+		asMap, err := util.GetAsMap(fieldValue)
 		if err != nil {
 			continue
 		}
-		components := getMapToString(asMap, xComponent)
+		components := util.GetMapToString(asMap, xComponent)
 		bus.components = components
 		bus.fieldName = fieldName
 		bus.fieldValue = asMap
@@ -101,11 +101,11 @@ func (c *component) doRelation(ctx context.Context, bus *base) error {
 		return err
 	}
 	// 解决item  判断 子表单 是否带有流水号 递归
-	toMap, err := getMapToMap(bus.fieldValue, items)
+	toMap, err := util.GetMapToMap(bus.fieldValue, items)
 	if err != nil {
 		return nil
 	}
-	mapToMap, err := getMapToMap(toMap, _properties)
+	mapToMap, err := util.GetMapToMap(toMap, _properties)
 	if err != nil {
 		return nil
 	}
@@ -195,26 +195,6 @@ func genComponent(c interface{}, cp *ComponentProp) error {
 		return err
 	}
 	return nil
-}
-
-func isLayoutComponent(value interface{}) bool {
-	switch reflect.TypeOf(value).Kind() {
-	case reflect.Map:
-		v := reflect.ValueOf(value)
-		if value := v.MapIndex(reflect.ValueOf("x-internal")); value.IsValid() {
-			if value.CanInterface() {
-				return isLayoutComponent(value.Interface())
-			}
-		}
-		if value := v.MapIndex(reflect.ValueOf("isLayoutComponent")); value.IsValid() {
-			if _, ok := value.Interface().(bool); ok {
-				return value.Interface().(bool)
-			}
-		}
-	default:
-		return false
-	}
-	return false
 }
 
 func newComponent(conf *config.Config) (Guidance, error) {

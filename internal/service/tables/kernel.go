@@ -20,7 +20,7 @@ type Bus struct {
 }
 
 type ConvertSchemas struct {
-	ConvertSchema models.WebSchema `json:"convertSchema"`
+	ConvertSchema models.SchemaProperties `json:"convertSchema"`
 	Title         string
 	FieldLen      int64
 	Description   string

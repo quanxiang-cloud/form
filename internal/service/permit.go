@@ -48,6 +48,7 @@ type Permit interface {
 	FindPermit(ctx context.Context, req *FindPermitReq) (*FindPermitResp, error)
 
 	SaveUserPerMatch(ctx context.Context, req *SaveUserPerMatchReq) (*SaveUserPerMatchResp, error)
+	ListPermit(ctx context.Context, req *ListPermitReq) (*ListPermitResp, error)
 }
 
 type permit struct {
@@ -56,6 +57,37 @@ type permit struct {
 	roleGrantRepo models.RoleRantRepo
 	permitRepo    models.PermitRepo
 	limitRepo     models.LimitsRepo
+}
+type ListPermitReq struct {
+	RoleID string   `json:"roleID"`
+	Paths  []string `json:"paths"`
+}
+type ListPermitResp map[string]*ListVo
+
+type ListVo struct {
+	Params    models.FiledPermit `json:"params"`
+	Response  models.FiledPermit `json:"response"`
+	Condition models.Condition   `json:"condition"`
+}
+
+func (p *permit) ListPermit(ctx context.Context, req *ListPermitReq) (*ListPermitResp, error) {
+
+	permits, err := p.permitRepo.Find(p.db, &models.PermitQuery{
+		RoleID: req.RoleID,
+		Paths:  req.Paths,
+	})
+	if err != nil {
+		return nil, err
+	}
+	resp := make(ListPermitResp)
+	for _, value := range permits {
+		resp[value.Path] = &ListVo{
+			Params:    value.Params,
+			Response:  value.Response,
+			Condition: value.Condition,
+		}
+	}
+	return &resp, nil
 }
 
 type FindPermitReq struct {
@@ -266,12 +298,14 @@ type FindRoleResp struct {
 }
 
 type roleVo struct {
-	Types models.RoleType `json:"type"`
-	ID    string          `json:"id"`
-	Name  string          `json:"name"`
+	Types       models.RoleType `json:"type"`
+	ID          string          `json:"id"`
+	Name        string          `json:"name"`
+	Description string          `json:"description"`
 }
 
 func (p *permit) FindRole(ctx context.Context, req *FindRoleReq) (*FindRoleResp, error) {
+
 	list, err := p.roleRepo.Find(p.db, &models.RoleQuery{
 		AppID: req.AppID,
 	})
@@ -283,9 +317,10 @@ func (p *permit) FindRole(ctx context.Context, req *FindRoleReq) (*FindRoleResp,
 	}
 	for index, value := range list {
 		resp.List[index] = &roleVo{
-			ID:    value.ID,
-			Name:  value.Name,
-			Types: value.Types,
+			ID:          value.ID,
+			Name:        value.Name,
+			Types:       value.Types,
+			Description: value.Description,
 		}
 	}
 	return resp, nil
