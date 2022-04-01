@@ -41,9 +41,7 @@ func (t *table) Export(ctx context.Context, result *Result) error {
 }
 
 func (t *table) Import(ctx context.Context, result *Result) error {
-	err := import2(ctx, &t.client, t.importURL, ImportReq{
-		Data: result.Tables,
-	})
+	err := import2(ctx, &t.client, t.importURL, result.Tables)
 	if err != nil {
 		logger.Logger.WithName("import table").Errorf("import table failed: %v", err)
 
@@ -83,9 +81,7 @@ func (t *tableRelation) Export(ctx context.Context, result *Result) error {
 }
 
 func (t *tableRelation) Import(ctx context.Context, result *Result) error {
-	err := import2(ctx, &t.client, t.importURL, ImportReq{
-		Data: result.TableRelations,
-	})
+	err := import2(ctx, &t.client, t.importURL, result.TableRelations)
 	if err != nil {
 		logger.Logger.WithName("import tableRelation").Errorf("import tableRelation failed: %v", err)
 
@@ -126,9 +122,7 @@ func (t *tableScheme) Export(ctx context.Context, result *Result) error {
 }
 
 func (t *tableScheme) Import(ctx context.Context, result *Result) error {
-	err := import2(ctx, &t.client, t.importURL, ImportReq{
-		Data: result.Schemas,
-	})
+	err := import2(ctx, &t.client, t.importURL, result.Schemas)
 	if err != nil {
 		logger.Logger.WithName("import tableScheme").Errorf("import tableScheme failed: %v", err)
 
@@ -170,9 +164,7 @@ func (t *permit) Export(ctx context.Context, result *Result) error {
 }
 
 func (t *permit) Import(ctx context.Context, result *Result) error {
-	err := import2(ctx, &t.client, t.importURL, ImportReq{
-		Data: result.Permits,
-	})
+	err := import2(ctx, &t.client, t.importURL, result.Permits)
 	if err != nil {
 		logger.Logger.WithName("import permit").Errorf("import permit failed: %v", err)
 
@@ -215,9 +207,7 @@ func (t *role) Export(ctx context.Context, result *Result) error {
 }
 
 func (t *role) Import(ctx context.Context, result *Result) error {
-	err := import2(ctx, &t.client, t.importURL, ImportReq{
-		Data: result.Roles,
-	})
+	err := import2(ctx, &t.client, t.importURL, result.Roles)
 	if err != nil {
 		logger.Logger.WithName("import role").Errorf("import role failed: %v", err)
 
@@ -264,22 +254,28 @@ func export(ctx context.Context, cli *http.Client, url string, req BackupReq) (O
 	return data, nil
 }
 
-func import2(ctx context.Context, cli *http.Client, url string, req ImportReq) error {
-	var index int
-	if len(req.Data)%maxSize == 0 {
-		index = len(req.Data) / maxSize
+func import2(ctx context.Context, cli *http.Client, url string, data Object) error {
+	var (
+		index int
+		req   ImportReq
+	)
+
+	if len(data)%maxSize == 0 {
+		index = len(data) / maxSize
 	} else {
-		index = len(req.Data)/maxSize + 1
+		index = len(data)/maxSize + 1
 	}
 
 	for i := 0; i < index; i++ {
 		if i == index-1 {
-			req.Data = req.Data[i*maxSize:]
+			req.Data = data[i*maxSize:]
 		} else {
-			req.Data = req.Data[i*maxSize : (i+1)*maxSize]
+			req.Data = data[i*maxSize : (i+1)*maxSize]
 		}
 
-		err := client.POST(ctx, cli, url, req, &ImportResp{})
+		err := client.POST(ctx, cli, url, ImportReq{
+			Data: data,
+		}, &ImportResp{})
 		if err != nil {
 			logger.Logger.WithName("export request").Errorf("send http request failed: %v", err)
 
