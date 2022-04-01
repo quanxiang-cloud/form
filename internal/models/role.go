@@ -3,13 +3,13 @@ package models
 import "gorm.io/gorm"
 
 const (
-	// InitType 默认初始化的权限
+	// InitType 默认初始化的权限.
 	InitType RoleType = 1
-	// CreateType CreateType
+	// CreateType CreateType.
 	CreateType RoleType = 2
 )
 
-// RoleType RoleType
+// RoleType RoleType.
 type RoleType int64
 
 type Role struct {
@@ -31,11 +31,12 @@ type RoleQuery struct {
 	Types   RoleType
 }
 
-// RoleRepo RoleRepo
+// RoleRepo RoleRepo.
 type RoleRepo interface {
 	BatchCreate(db *gorm.DB, role ...*Role) error
 	Get(db *gorm.DB, id string) (*Role, error)
 	Find(db *gorm.DB, query *RoleQuery) ([]*Role, error)
 	Update(db *gorm.DB, id string, role *Role) error
 	Delete(db *gorm.DB, query *RoleQuery) error
+	List(db *gorm.DB, query *RoleQuery, page, size int) ([]*Role, int64, error)
 }

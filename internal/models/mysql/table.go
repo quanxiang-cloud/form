@@ -47,3 +47,27 @@ func (t *tableRepo) Update(db *gorm.DB, appID, tableID string, table *models.Tab
 	return db.Table(t.TableName()).Where("app_id = ? and table_id = ? ", appID, tableID).Updates(
 		setMap).Error
 }
+
+func (t *tableRepo) List(db *gorm.DB, query *models.TableQuery, page, size int) ([]*models.Table, int64, error) {
+	db = db.Table(t.TableName())
+	if query.AppID != "" {
+		db = db.Where("app_id = ?", query.AppID)
+	}
+
+	var (
+		count  int64
+		tables []*models.Table
+	)
+
+	err := db.Count(&count).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	err = db.Order("created_at desc").Offset((page - 1) * size).Limit(size).Find(&tables).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return tables, count, nil
+}

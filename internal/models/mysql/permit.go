@@ -63,6 +63,38 @@ func (t *permitRepo) Update(db *gorm.DB, id string, permit *models.Permit) error
 	return nil
 }
 
+func (t *permitRepo) List(db *gorm.DB, query *models.PermitQuery, page, size int) ([]*models.Permit, int64, error) {
+	db = db.Table(t.TableName())
+	if query.RoleID != "" {
+		db = db.Where("role_id = ?", query.RoleID)
+	}
+
+	if query.Path != "" {
+		db = db.Where("path = ?", query.Path)
+	}
+
+	if len(query.RoleIDs) != 0 {
+		db = db.Where("role_id in ?", query.RoleIDs)
+	}
+
+	var (
+		count   int64
+		permits []*models.Permit
+	)
+
+	err := db.Count(&count).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	err = db.Offset((page - 1) * size).Limit(size).Find(&permits).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return permits, count, nil
+}
+
 func (t *permitRepo) TableName() string {
 	return "permit"
 }

@@ -3,6 +3,7 @@ package models
 import (
 	"database/sql/driver"
 	"encoding/json"
+
 	"gorm.io/gorm"
 )
 
@@ -24,12 +25,12 @@ type TableRelation struct {
 
 type Filters []string
 
-// Value 实现方法
+// Value 实现方法.
 func (p Filters) Value() (driver.Value, error) {
 	return json.Marshal(p)
 }
 
-// Scan 实现方法
+// Scan 实现方法.
 func (p *Filters) Scan(data interface{}) error {
 	return json.Unmarshal(data.([]byte), &p)
 }
@@ -45,4 +46,5 @@ type TableRelationRepo interface {
 	Update(db *gorm.DB, tableID, fieldName string, table *TableRelation) error
 	Delete(db *gorm.DB, query *TableRelationQuery) error
 	Get(db *gorm.DB, tableID, fieldName string) (*TableRelation, error)
+	List(db *gorm.DB, query *TableRelationQuery, page, size int) ([]*TableRelation, int64, error)
 }

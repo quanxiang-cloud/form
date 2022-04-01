@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// Table schema info
+// Table schema info.
 type Table struct {
 	// id pk
 	ID string
@@ -22,28 +22,28 @@ type Table struct {
 	Config Config
 }
 
-//WebSchema WebSchema
+// WebSchema WebSchema.
 type WebSchema map[string]interface{}
 
-// Config Config
+// Config Config.
 type Config map[string]interface{}
 
-// Value 实现方法
+// Value 实现方法.
 func (p WebSchema) Value() (driver.Value, error) {
 	return json.Marshal(p)
 }
 
-// Scan 实现方法
+// Scan 实现方法.
 func (p *WebSchema) Scan(data interface{}) error {
 	return json.Unmarshal(data.([]byte), &p)
 }
 
-// Value 实现方法
+// Value 实现方法.
 func (p Config) Value() (driver.Value, error) {
 	return json.Marshal(p)
 }
 
-// Scan 实现方法
+// Scan 实现方法.
 func (p *Config) Scan(data interface{}) error {
 	return json.Unmarshal(data.([]byte), &p)
 }
@@ -59,4 +59,5 @@ type TableRepo interface {
 	Find(db *gorm.DB, query *TableQuery) ([]*Table, error)
 	Delete(db *gorm.DB, query *TableQuery) error
 	Update(db *gorm.DB, appID, tableID string, table *Table) error
+	List(db *gorm.DB, query *TableQuery, page, size int) ([]*Table, int64, error)
 }
