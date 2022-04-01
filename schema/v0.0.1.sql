@@ -53,6 +53,7 @@ CREATE TABLE `table` (
    `table_id`    VARCHAR(64)    NOT NULL COMMENT 'tableID',
    `schema`      TEXT   COMMENT 'web schema' ,
    `config` 	 TEXT 	COMMENT 'config',
+    `created_at`     BIGINT(20) 	    COMMENT 'create time',
    UNIQUE KEY `idx_global_name` (`app_id`, `table_id`),
    PRIMARY KEY  (`id`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -90,6 +91,7 @@ CREATE TABLE `table_relation` (
      `sub_table_id`  VARCHAR(64)   COMMENT 'sub table id' ,
      `sub_table_type` VARCHAR(64) 	COMMENT 'sub table type',
      `filter` 	    VARCHAR(255)  	COMMENT 'filter',
+     created_at  BIGINT(20) 	    COMMENT 'create time',
      PRIMARY KEY  (`id`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
