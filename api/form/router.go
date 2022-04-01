@@ -20,7 +20,7 @@ const (
 	v2HomePath   = "v2Home"
 )
 
-// Router routing
+// Router routing.
 type Router struct {
 	c *config2.Config
 
@@ -40,7 +40,7 @@ var routers = []router{
 	tableRouter,
 }
 
-// NewRouter enable routing
+// NewRouter enable routing.
 func NewRouter(c *config2.Config) (*Router, error) {
 	engine, err := newRouter(c)
 	if err != nil {
@@ -78,7 +78,6 @@ func permitRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 	}
 	role := r[managerPath].Group("/apiRole")
 	{
-
 		role.POST("/create", permits.CreateRole)     //  创建角色
 		role.POST("/update", permits.UpdateRole)     //  更新角色
 		role.POST("/get/:id", permits.GetRole)       // 获取单条角色
@@ -87,7 +86,6 @@ func permitRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 		role.POST("/userRoleMatch", permits.UserRoleMatch)
 		role.POST("/grant/list/:roleID", permits.FindGrantRole)     // 获取某个角色对应的人或者部门
 		role.POST("/grant/assign/:roleID", permits.AssignRoleGrant) // 给某个角色加人 、减人
-
 	}
 	apiPermit := r[managerPath].Group("/apiPermit")
 	{
@@ -97,7 +95,6 @@ func permitRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 		apiPermit.POST("/list", permits.ListPermit)         // 获取权限
 		apiPermit.POST("/delete", permits.DeletePermit)     // 删除权限
 		apiPermit.POST("/find", permits.FindPermit)         // 获取权限
-
 	}
 	home := r[homePath].Group("/permission")
 	{
@@ -148,6 +145,26 @@ func tableRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 }
 
 func innerRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
+	backup, err := NewBackup(c)
+	if err != nil {
+		return err
+	}
+	bg := r[internalPath].Group("/backup")
+	{
+		bg.POST("/export/table", backup.ExportTable)
+		bg.POST("/export/permit", backup.ExportPermit)
+		bg.POST("/export/role", backup.ExportRole)
+		bg.POST("/export/tableSchema", backup.ExportTableSchema)
+		bg.POST("/export/tableRelation", backup.ExportTableRelation)
+	}
+	{
+		bg.POST("/import/table", backup.ImportTable)
+		bg.POST("/import/permit", backup.ImportPermit)
+		bg.POST("/import/role", backup.ImportRole)
+		bg.POST("/import/tableSchema", backup.ImportTableSchema)
+		bg.POST("/import/tableRelation", backup.ImportTableRelation)
+	}
+
 	return nil
 }
 
@@ -164,13 +181,13 @@ func newRouter(c *config2.Config) (*gin.Engine, error) {
 	return engine, nil
 }
 
-// Run router
+// Run router.
 func (r *Router) Run() {
 	go r.engineInner.Run(r.c.PortInner)
 	r.engine.Run(r.c.Port)
 }
 
-// Close router
+// Close router.
 func (r *Router) Close() {
 }
 

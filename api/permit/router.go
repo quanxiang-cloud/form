@@ -31,7 +31,7 @@ func NewRouter(c *config2.Config) (*Router, error) {
 	engine := newRouter(c)
 
 	r := map[string]*echo.Group{
-		ployPath: engine.Group("/api/v1/poly"),
+		ployPath: engine.Group("/api/v1/polyapi"),
 		formPath: engine.Group("/api/v1/form"),
 	}
 

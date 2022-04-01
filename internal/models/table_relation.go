@@ -30,4 +30,5 @@ type TableRelationRepo interface {
 	Find(db *gorm.DB, query *TableRelationQuery) ([]*TableRelation, error)
 	Update(db *gorm.DB, table *TableRelation) error
 	Delete(db *gorm.DB, query *TableRelationQuery) error
+	List(db *gorm.DB, query *TableRelationQuery, page, size int) ([]*TableRelation, int64, error)
 }

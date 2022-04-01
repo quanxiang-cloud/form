@@ -18,7 +18,6 @@ func (t *roleRepo) Get(db *gorm.DB, id string) (*models.Role, error) {
 		return nil, err
 	}
 	return role, nil
-
 }
 
 func (t *roleRepo) Find(db *gorm.DB, query *models.RoleQuery) ([]*models.Role, error) {
@@ -52,6 +51,28 @@ func (t *roleRepo) Delete(db *gorm.DB, query *models.RoleQuery) error {
 		ql = ql.Where("id = ?", query.ID)
 	}
 	return ql.Delete(resp).Error
+}
+
+func (t *roleRepo) List(db *gorm.DB, query *models.RoleQuery, page, size int) ([]*models.Role, int64, error) {
+	db = db.Table(t.TableName())
+	if query.AppID != "" {
+		db = db.Where("app_id = ?", query.AppID)
+	}
+	var (
+		count int64
+		roles []*models.Role
+	)
+	err := db.Count(&count).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	err = db.Order("created_at DESC").Offset((page - 1) * size).Limit(size).Find(&roles).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return roles, count, nil
 }
 
 func (t *roleRepo) TableName() string {

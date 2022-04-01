@@ -75,10 +75,9 @@ type DeleteTableReq struct {
 	TableID string `json:"tableID"`
 }
 
-type DeleteTableResp struct {
-}
+type DeleteTableResp struct{}
 
-// DeleteTable 不开启事务
+// DeleteTable 不开启事务.
 func (t *table) DeleteTable(ctx context.Context, req *DeleteTableReq) (*DeleteTableResp, error) {
 	err := t.tableRepo.Delete(t.db, &models.TableQuery{
 		TableID: req.TableID,
@@ -94,14 +93,13 @@ func (t *table) DeleteTable(ctx context.Context, req *DeleteTableReq) (*DeleteTa
 		return nil, err
 	}
 	return &DeleteTableResp{}, nil
-
 }
 
 type FindTableReq struct {
 	Title  string            `json:"title"`
 	AppID  string            `json:"appID"`
-	Page   int64             `json:"page"`
-	Size   int64             `json:"size"`
+	Page   int               `json:"page"`
+	Size   int               `json:"size"`
 	Source models.SourceType `json:"source"`
 }
 
@@ -110,7 +108,7 @@ type FindTableResp struct {
 	Total int64      `json:"total"`
 }
 
-// tableVo tableVo
+// tableVo tableVo.
 type tableVo struct {
 	ID          string            `json:"id"`
 	TableID     string            `json:"tableID"`
@@ -157,8 +155,7 @@ type UpdateConfigReq struct {
 	Config  models.Config `json:"config"`
 }
 
-type UpdateConfigResp struct {
-}
+type UpdateConfigResp struct{}
 
 func (t *table) UpdateConfig(ctx context.Context, req *UpdateConfigReq) (*UpdateConfigResp, error) {
 	tables := &models.Table{
@@ -168,7 +165,6 @@ func (t *table) UpdateConfig(ctx context.Context, req *UpdateConfigReq) (*Update
 	}
 
 	err := t.tableRepo.Update(t.db, req.AppID, req.TableID, tables)
-
 	if err != nil {
 		return nil, err
 	}

@@ -28,7 +28,7 @@ func (t *tableSchemaRepo) Get(db *gorm.DB, appID, tableID string) (*models.Table
 	return permitForm, nil
 }
 
-func (t *tableSchemaRepo) Find(db *gorm.DB, query *models.TableSchemaQuery, size int64, page int64) ([]*models.TableSchema, int64, error) {
+func (t *tableSchemaRepo) Find(db *gorm.DB, query *models.TableSchemaQuery, size, page int) ([]*models.TableSchema, int64, error) {
 	return nil, 0, nil
 }
 
@@ -61,4 +61,28 @@ func (t *tableSchemaRepo) Update(db *gorm.DB, appID, tableID string, tableSchema
 	}
 	return db.Table(t.TableName()).Where("app_id = ? and table_id = ? ", appID, tableID).Updates(
 		setMap).Error
+}
+
+func (t *tableSchemaRepo) List(db *gorm.DB, query *models.TableSchemaQuery, size, page int) ([]*models.TableSchema, int64, error) {
+	db = db.Table(t.TableName())
+	if query.AppID != "" {
+		db = db.Where("app_id = ?", query.AppID)
+	}
+
+	var (
+		count  int64
+		tables []*models.TableSchema
+	)
+
+	err := db.Count(&count).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	err = db.Offset((page - 1) * size).Limit(size).Find(&tables).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return tables, count, nil
 }
