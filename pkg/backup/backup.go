@@ -76,7 +76,7 @@ type Result struct {
 
 const (
 	startPage = 1
-	maxSize   = 1
+	maxSize   = 999
 )
 
 func (b *Backup) Export(ctx context.Context, appID string, w io.Writer) error {
