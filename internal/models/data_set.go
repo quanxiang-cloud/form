@@ -1,9 +1,7 @@
 package models
 
 import (
-	"context"
-
-	"go.mongodb.org/mongo-driver/mongo"
+	"gorm.io/gorm"
 )
 
 // DataSet DataSet
@@ -24,9 +22,9 @@ type DataSetQuery struct {
 
 // DataSetRepo 数据层接口
 type DataSetRepo interface {
-	Insert(ctx context.Context, db *mongo.Database, dataset *DataSet) error
-	Update(ctx context.Context, db *mongo.Database, dataset *DataSet) error
-	Delete(ctx context.Context, db *mongo.Database, id string) error
-	GetByID(ctx context.Context, db *mongo.Database, id string) (*DataSet, error)
-	Find(ctx context.Context, db *mongo.Database, query *DataSetQuery) ([]*DataSet, error)
+	Insert(db *gorm.DB, dataset *DataSet) error
+	Update(db *gorm.DB, dataset *DataSet) error
+	Delete(db *gorm.DB, id string) error
+	GetByID(db *gorm.DB, id string) (*DataSet, error)
+	Find(db *gorm.DB, query *DataSetQuery) ([]*DataSet, error)
 }

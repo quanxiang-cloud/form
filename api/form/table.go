@@ -53,7 +53,8 @@ func (t *Table) CrateTable(c *gin.Context) {
 
 func (t *Table) GetTable(c *gin.Context) {
 	req := &table2.GetTableReq{
-		AppID: c.Param(_appID),
+		AppID:   c.Param(_appID),
+		TableID: c.Param("tableName"),
 	}
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {

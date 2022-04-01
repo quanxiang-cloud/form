@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"github.com/quanxiang-cloud/form/internal/models/mysql"
+	"gorm.io/gorm"
 
 	error2 "github.com/quanxiang-cloud/cabin/error"
 	id2 "github.com/quanxiang-cloud/cabin/id"
@@ -10,7 +12,6 @@ import (
 	"github.com/quanxiang-cloud/form/internal/models"
 	"github.com/quanxiang-cloud/form/pkg/misc/code"
 	"github.com/quanxiang-cloud/form/pkg/misc/config"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // DataSet DataSet
@@ -23,22 +24,23 @@ type DataSet interface {
 }
 
 type dataset struct {
-	mongodb     *mongo.Database
+	db          *gorm.DB
 	datasetRepo models.DataSetRepo
 }
 
 // NewDataSet NewDataSet
 func NewDataSet(conf *config.Config) (DataSet, error) {
+
+	db, err := CreateMysqlConn(conf)
+	if err != nil {
+		return nil, err
+	}
 	u := &dataset{
-		//datasetRepo: repo.NewDataSetRepo(),
+		db:          db,
+		datasetRepo: mysql.NewDataSetRepo(),
 	}
 
 	return u, nil
-}
-
-// SetMongo SetMongo
-func (per *dataset) SetMongo(client *mongo.Client, dbName string) {
-	per.mongodb = client.Database(dbName)
 }
 
 // CreateDataSetReq CreateDataSetReq
@@ -56,7 +58,7 @@ type CreateDataSetResp struct {
 
 // CreateDataSet CreateDataSet
 func (per *dataset) CreateDataSet(c context.Context, req *CreateDataSetReq) (*CreateDataSetResp, error) {
-	exist, err := per.datasetRepo.Find(c, per.mongodb, &models.DataSetQuery{Name: req.Name})
+	exist, err := per.datasetRepo.Find(per.db, &models.DataSetQuery{Name: req.Name})
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +73,7 @@ func (per *dataset) CreateDataSet(c context.Context, req *CreateDataSetReq) (*Cr
 		Content:   req.Content,
 		CreatedAt: time2.NowUnix(),
 	}
-	err = per.datasetRepo.Insert(c, per.mongodb, dataset)
+	err = per.datasetRepo.Insert(per.db, dataset)
 	if err != nil {
 		return nil, err
 	}
@@ -96,19 +98,17 @@ type GetDataSetResp struct {
 
 // GetDataSet GetDataSet
 func (per *dataset) GetDataSet(c context.Context, req *GetDataSetReq) (*GetDataSetResp, error) {
-	dataset, err := per.datasetRepo.GetByID(c, per.mongodb, req.ID)
+	datasets, err := per.datasetRepo.GetByID(per.db, req.ID)
 	if err != nil {
 		return nil, err
 	}
-	if dataset == nil {
-		//return nil, error2.NewError(code.ErrNODataSetNameState)
-	}
+
 	resp := &GetDataSetResp{
-		ID:      dataset.ID,
-		Name:    dataset.Name,
-		Tag:     dataset.Tag,
-		Type:    dataset.Type,
-		Content: dataset.Content,
+		ID:      datasets.ID,
+		Name:    datasets.Name,
+		Tag:     datasets.Tag,
+		Type:    datasets.Type,
+		Content: datasets.Content,
 	}
 	return resp, nil
 }
@@ -128,7 +128,7 @@ type UpdateDataSetResp struct {
 
 // UpdateDataSet UpdateDataSet
 func (per *dataset) UpdateDataSet(c context.Context, req *UpdateDataSetReq) (*UpdateDataSetResp, error) {
-	data, err := per.datasetRepo.Find(c, per.mongodb, &models.DataSetQuery{
+	data, err := per.datasetRepo.Find(per.db, &models.DataSetQuery{
 		Name: req.Name,
 	})
 	if err != nil {
@@ -146,7 +146,7 @@ func (per *dataset) UpdateDataSet(c context.Context, req *UpdateDataSetReq) (*Up
 		Type:    req.Type,
 		Content: req.Content,
 	}
-	err = per.datasetRepo.Update(c, per.mongodb, dataset)
+	err = per.datasetRepo.Update(per.db, dataset)
 	if err != nil {
 		return nil, err
 	}
@@ -176,7 +176,7 @@ type DataSetVo struct {
 
 // GetByConditionSet GetByConditionSet
 func (per *dataset) GetByConditionSet(c context.Context, req *GetByConditionSetReq) (*GetByConditionSetResp, error) {
-	arr, err := per.datasetRepo.Find(c, per.mongodb, &models.DataSetQuery{
+	arr, err := per.datasetRepo.Find(per.db, &models.DataSetQuery{
 		Tag:   req.Tag,
 		Name:  req.Name,
 		Types: req.Types,
@@ -214,7 +214,7 @@ type DeleteDataSetResp struct {
 
 // DeleteDataSet DeleteDataSet
 func (per *dataset) DeleteDataSet(c context.Context, req *DeleteDataSetReq) (*DeleteDataSetResp, error) {
-	err := per.datasetRepo.Delete(c, per.mongodb, req.ID)
+	err := per.datasetRepo.Delete(per.db, req.ID)
 	if err != nil {
 		return nil, err
 	}

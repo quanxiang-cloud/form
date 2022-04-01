@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/quanxiang-cloud/form/internal/service/form"
 	config2 "github.com/quanxiang-cloud/form/pkg/misc/config"
+	"net/http"
 )
 
 const (
@@ -26,8 +27,6 @@ type Router struct {
 
 	engine *gin.Engine
 
-	// for the interaction between the process engine and the form,
-	// the port is opened separately, and the verification logic is different
 	engineInner *gin.Engine
 }
 
@@ -38,6 +37,7 @@ var routers = []router{
 	innerRouter,
 	permitRouter,
 	tableRouter,
+	dataSetRouter,
 }
 
 // NewRouter enable routing
@@ -124,6 +124,12 @@ func cometRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 		v2Path.POST("", create(guide))
 		v2Path.GET("", search(guide))
 	}
+	table, err := NewTable(c)
+	if err != nil {
+		return err
+	}
+	// get schema
+	r[homePath].POST("/schema/:tableName", table.GetTable)
 	return nil
 }
 
@@ -162,6 +168,36 @@ func newRouter(c *config2.Config) (*gin.Engine, error) {
 		gin.Recovery())
 
 	return engine, nil
+}
+
+func dataSetRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
+	dataset, err := NewDataSet(c)
+	if err != nil {
+		return err
+	}
+
+	datasetHome := r[homePath].Group("", func(c *gin.Context) {
+		if c.Param("appID") != "dataset" {
+			c.AbortWithStatus(http.StatusNotFound)
+			return
+		}
+	})
+	datasetManager := r[managerPath].Group("", func(c *gin.Context) {
+		if c.Param("appID") != "dataset" {
+			c.AbortWithStatus(http.StatusNotFound)
+			return
+		}
+	})
+	{
+		datasetHome.POST("/get", dataset.GetDataSet)
+		datasetManager.POST("/create", dataset.CreateDataSet)
+		datasetManager.POST("/get", dataset.GetDataSet)
+		datasetManager.POST("/update", dataset.UpdateDataSet)
+		datasetManager.POST("/getByCondition", dataset.GetByConditionSet)
+		datasetManager.POST("/delete", dataset.DeleteDataSet)
+	}
+
+	return nil
 }
 
 // Run router

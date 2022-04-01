@@ -39,6 +39,7 @@ type Permit interface {
 	FindPermit(ctx context.Context, req *FindPermitReq) (*FindPermitResp, error)
 
 	SaveUserPerMatch(ctx context.Context, req *SaveUserPerMatchReq) (*SaveUserPerMatchResp, error)
+
 	ListPermit(ctx context.Context, req *ListPermitReq) (*ListPermitResp, error)
 }
 
