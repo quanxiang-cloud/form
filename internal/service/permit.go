@@ -53,6 +53,7 @@ type permit struct {
 type ListPermitReq struct {
 	RoleID string   `json:"roleID"`
 	Paths  []string `json:"paths"`
+	URIs   []string `json:"uris"`
 }
 type ListPermitResp map[string]*ListVo
 
@@ -63,17 +64,36 @@ type ListVo struct {
 }
 
 func (p *permit) ListPermit(ctx context.Context, req *ListPermitReq) (*ListPermitResp, error) {
+	if len(req.Paths) > 100 {
+		req.Paths = req.Paths[0:100]
+		req.URIs = req.URIs[0:100]
+	}
+	if len(req.URIs) != len(req.Paths) {
+		return nil, nil
+	}
+	temp := make(map[string]string)
 
-	permits, err := p.permitRepo.Find(p.db, &models.PermitQuery{
+	for index, value := range req.URIs {
+		temp[value] = req.URIs[index]
+	}
+	form := IsFormAPI(req.Paths[0])
+	if form {
+		req.Paths = req.URIs
+	}
+	permits, _, err := p.permitRepo.List(p.db, &models.PermitQuery{
 		RoleID: req.RoleID,
 		Paths:  req.Paths,
-	})
+	}, 1, 100)
 	if err != nil {
 		return nil, err
 	}
 	resp := make(ListPermitResp)
 	for _, value := range permits {
-		resp[value.Path] = &ListVo{
+		key := value.Path
+		if form {
+			key = temp[value.Path]
+		}
+		resp[key] = &ListVo{
 			Params:    value.Params,
 			Response:  value.Response,
 			Condition: value.Condition,
@@ -82,12 +102,16 @@ func (p *permit) ListPermit(ctx context.Context, req *ListPermitReq) (*ListPermi
 	return &resp, nil
 }
 
+// FindPermitReq TODO 分页
 type FindPermitReq struct {
 	RoleID string `json:"roleID"`
+	Page   int    `json:"page"`
+	Size   int    `json:"size"`
 }
 
 type FindPermitResp struct {
-	List []*Permits `json:"list"`
+	List  []*Permits `json:"list"`
+	Total int64      `json:"total"`
 }
 
 type Permits struct {
@@ -100,14 +124,15 @@ type Permits struct {
 }
 
 func (p *permit) FindPermit(ctx context.Context, req *FindPermitReq) (*FindPermitResp, error) {
-	permits, err := p.permitRepo.Find(p.db, &models.PermitQuery{
+	permits, total, err := p.permitRepo.List(p.db, &models.PermitQuery{
 		RoleID: req.RoleID,
-	})
+	}, req.Page, req.Size)
 	if err != nil {
 		return nil, err
 	}
 	resp := &FindPermitResp{
-		List: make([]*Permits, len(permits)),
+		List:  make([]*Permits, len(permits)),
+		Total: total,
 	}
 	for index, value := range permits {
 		resp.List[index] = &Permits{
@@ -125,10 +150,13 @@ type FindGrantRoleReq struct {
 	Owners []string `json:"owners"`
 	AppID  string   `json:"appID"`
 	RoleID string   `json:"roleID"`
+	Page   int      `json:"page"`
+	Size   int      `json:"size"`
 }
 
 type FindGrantRoleResp struct {
-	List []*GrantRoles `json:"list"`
+	List  []*GrantRoles `json:"list"`
+	Total int64         `json:"total"`
 }
 
 type GrantRoles struct {
@@ -139,17 +167,17 @@ type GrantRoles struct {
 }
 
 func (p *permit) FindGrantRole(ctx context.Context, req *FindGrantRoleReq) (*FindGrantRoleResp, error) {
-	//
-	grantRole, err := p.roleGrantRepo.Find(p.db, &models.RoleGrantQuery{
+	grantRole, total, err := p.roleGrantRepo.List(p.db, &models.RoleGrantQuery{
 		Owners: req.Owners,
 		AppID:  req.AppID,
 		RoleID: req.RoleID,
-	})
+	}, req.Page, req.Size)
 	if err != nil {
 		return nil, err
 	}
 	resp := &FindGrantRoleResp{
-		List: make([]*GrantRoles, 0, len(grantRole)),
+		List:  make([]*GrantRoles, 0, len(grantRole)),
+		Total: total,
 	}
 
 	for _, value := range grantRole {
@@ -283,10 +311,13 @@ func (p *permit) GetRole(ctx context.Context, req *GetRoleReq) (*GetRoleResp, er
 
 type FindRoleReq struct {
 	AppID string `json:"appID"`
+	Page  int    `json:"page"`
+	Size  int    `json:"size"`
 }
 
 type FindRoleResp struct {
-	List []*roleVo `json:"list"`
+	List  []*roleVo `json:"list"`
+	Total int64     `json:"total"`
 }
 
 type roleVo struct {
@@ -297,15 +328,15 @@ type roleVo struct {
 }
 
 func (p *permit) FindRole(ctx context.Context, req *FindRoleReq) (*FindRoleResp, error) {
-
-	list, err := p.roleRepo.Find(p.db, &models.RoleQuery{
+	list, total, err := p.roleRepo.List(p.db, &models.RoleQuery{
 		AppID: req.AppID,
-	})
+	}, req.Page, req.Size)
 	if err != nil {
 		return nil, err
 	}
 	resp := &FindRoleResp{
-		List: make([]*roleVo, len(list)),
+		Total: total,
+		List:  make([]*roleVo, len(list)),
 	}
 	for index, value := range list {
 		resp.List[index] = &roleVo{
@@ -364,7 +395,9 @@ func (p *permit) AssignRoleGrant(ctx context.Context, req *AssignRoleGrantReq) (
 }
 
 type CreatePerReq struct {
-	Path      string             `json:"path"`
+	AccessPath string `json:"path"`
+	URI        string `json:"uri"`
+
 	Params    models.FiledPermit `json:"params"`
 	Response  models.FiledPermit `json:"response"`
 	RoleID    string             `json:"roleID"`
@@ -376,9 +409,13 @@ type CreatePerReq struct {
 type CreatePerResp struct{}
 
 func (p *permit) CreatePermit(ctx context.Context, req *CreatePerReq) (*CreatePerResp, error) {
+	if IsFormAPI(req.AccessPath) {
+		req.AccessPath = req.URI
+	}
+
 	permits := &models.Permit{
 		ID:          id2.HexUUID(true),
-		Path:        req.Path,
+		Path:        req.AccessPath,
 		Params:      req.Params,
 		Response:    req.Response,
 		RoleID:      req.RoleID,
@@ -435,11 +472,15 @@ func (p *permit) modifyRedis(ctx context.Context, permits *models.Permit) {
 type DeletePerReq struct {
 	roleID string `json:"roleID"`
 	Path   string `json:"path"`
+	URI    string `json:"uri"`
 }
 
 type DeletePerResp struct{}
 
 func (p *permit) DeletePermit(ctx context.Context, req *DeletePerReq) (*DeletePerResp, error) {
+	if IsFormAPI(req.Path) {
+		req.Path = req.URI
+	}
 	err := p.permitRepo.Delete(p.db, &models.PermitQuery{
 		RoleID: req.roleID,
 		Path:   req.Path,
@@ -453,6 +494,7 @@ func (p *permit) DeletePermit(ctx context.Context, req *DeletePerReq) (*DeletePe
 type GetPermitReq struct {
 	RoleID string `json:"roleID"`
 	Path   string `json:"path"`
+	URI    string `json:"uri"`
 }
 
 type GetPermitResp struct {
@@ -465,6 +507,9 @@ type GetPermitResp struct {
 }
 
 func (p *permit) GetPermit(ctx context.Context, req *GetPermitReq) (*GetPermitResp, error) {
+	if IsFormAPI(req.Path) {
+		req.Path = req.URI
+	}
 	permits, err := p.permitRepo.Get(p.db, req.RoleID, req.Path)
 	if err != nil {
 		return nil, err
@@ -477,4 +522,45 @@ func (p *permit) GetPermit(ctx context.Context, req *GetPermitReq) (*GetPermitRe
 		Response:  permits.Response,
 		Condition: permits.Condition,
 	}, nil
+}
+
+type DeleteRoleReq struct {
+	RoleID string `json:"-"`
+	AppID  string `json:"-"`
+}
+type DeleteRoleResp struct {
+}
+
+func (p *permit) DeleteRole(ctx context.Context, req *DeleteRoleReq) (*DeleteRoleResp, error) {
+	err := p.roleRepo.Delete(p.db, &models.RoleQuery{
+		ID: req.RoleID,
+	})
+	if err != nil {
+		return nil, err
+	}
+	// 删除对应 角色的人
+	err = p.roleGrantRepo.Delete(p.db, &models.RoleGrantQuery{
+		RoleID: req.RoleID,
+	})
+	if err != nil {
+		return nil, err
+	}
+	// 删除，role 对应的permit
+	err = p.permitRepo.Delete(p.db, &models.PermitQuery{RoleID: req.RoleID})
+	if err != nil {
+		return nil, err
+	}
+	// 删除缓存
+	err = p.limitRepo.DeletePerMatch(ctx, req.AppID)
+	if err != nil {
+		//
+		logger.Logger.Errorw("delete per match", req.RoleID, err.Error())
+	}
+
+	err = p.limitRepo.DeletePermit(ctx, req.RoleID)
+	if err != nil {
+
+	}
+	return &DeleteRoleResp{}, nil
+
 }

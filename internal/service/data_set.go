@@ -58,11 +58,11 @@ type CreateDataSetResp struct {
 
 // CreateDataSet CreateDataSet
 func (per *dataset) CreateDataSet(c context.Context, req *CreateDataSetReq) (*CreateDataSetResp, error) {
-	exist, err := per.datasetRepo.Find(per.db, &models.DataSetQuery{Name: req.Name})
+	_, total, err := per.datasetRepo.Find(per.db, &models.DataSetQuery{Name: req.Name}, 0, 0)
 	if err != nil {
 		return nil, err
 	}
-	if len(exist) > 0 {
+	if total > 0 {
 		return nil, error2.New(code.ErrExistDataSetNameState)
 	}
 	dataset := &models.DataSet{
@@ -128,9 +128,9 @@ type UpdateDataSetResp struct {
 
 // UpdateDataSet UpdateDataSet
 func (per *dataset) UpdateDataSet(c context.Context, req *UpdateDataSetReq) (*UpdateDataSetResp, error) {
-	data, err := per.datasetRepo.Find(per.db, &models.DataSetQuery{
+	data, _, err := per.datasetRepo.Find(per.db, &models.DataSetQuery{
 		Name: req.Name,
-	})
+	}, 0, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -139,14 +139,14 @@ func (per *dataset) UpdateDataSet(c context.Context, req *UpdateDataSetReq) (*Up
 			return nil, error2.New(code.ErrExistDataSetNameState)
 		}
 	}
-	dataset := &models.DataSet{
+	datasets := &models.DataSet{
 		ID:      req.ID,
 		Name:    req.Name,
 		Tag:     req.Tag,
 		Type:    req.Type,
 		Content: req.Content,
 	}
-	err = per.datasetRepo.Update(per.db, dataset)
+	err = per.datasetRepo.Update(per.db, req.ID, datasets)
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +162,8 @@ type GetByConditionSetReq struct {
 
 // GetByConditionSetResp GetByConditionSetResp
 type GetByConditionSetResp struct {
-	List []*DataSetVo `json:"list"`
+	Total int64        `json:"total"`
+	List  []*DataSetVo `json:"list"`
 }
 
 // DataSetVo DataSetVo
@@ -176,16 +177,17 @@ type DataSetVo struct {
 
 // GetByConditionSet GetByConditionSet
 func (per *dataset) GetByConditionSet(c context.Context, req *GetByConditionSetReq) (*GetByConditionSetResp, error) {
-	arr, err := per.datasetRepo.Find(per.db, &models.DataSetQuery{
+	arr, total, err := per.datasetRepo.Find(per.db, &models.DataSetQuery{
 		Tag:   req.Tag,
 		Name:  req.Name,
 		Types: req.Types,
-	})
+	}, 0, 0)
 	if err != nil {
 		return nil, err
 	}
 	resp := &GetByConditionSetResp{
-		List: make([]*DataSetVo, len(arr)),
+		Total: total,
+		List:  make([]*DataSetVo, len(arr)),
 	}
 	for index, value := range arr {
 		resp.List[index] = new(DataSetVo)

@@ -20,8 +20,8 @@ internalNet:
 
 # --------------------- endpoint -------------
 endpoint:
-  poly: "http://polyapi:80"
-  form: "http://localhost:81"
+  poly: "http://polyapi"
+  form: "http://localhost"
 
 
 # --------------------- transport -----------------

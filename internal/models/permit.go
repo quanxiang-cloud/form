@@ -20,7 +20,17 @@ type Permit struct {
 	CreatorName string
 }
 
-//
+type Condition map[string]interface{}
+
+// Value 实现方法
+func (c Condition) Value() (driver.Value, error) {
+	return json.Marshal(c)
+}
+
+// Scan 实现方法
+func (c *Condition) Scan(data interface{}) error {
+	return json.Unmarshal(data.([]byte), &c)
+}
 
 type Key struct {
 	Type       string      `json:"type,omitempty"`
@@ -52,8 +62,6 @@ type PermitRepo interface {
 	BatchCreate(db *gorm.DB, form ...*Permit) error
 
 	Get(db *gorm.DB, roleID, path string) (*Permit, error)
-
-	Find(db *gorm.DB, query *PermitQuery) ([]*Permit, error)
 
 	Delete(db *gorm.DB, query *PermitQuery) error
 

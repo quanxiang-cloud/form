@@ -33,7 +33,7 @@ DROP TABLE IF EXISTS `permit`;
 CREATE TABLE `permit` (
     `id` 		 VARCHAR(64) 	COMMENT 'unique id',
     `role_id`  VARCHAR(64)    COMMENT 'authority' ,
-    `path`       VARCHAR(255) 	 NOT NULL COMMENT 'permit id',
+    `path`       VARCHAR(255) 	 NOT NULL COMMENT 'path',
     `params` 	TEXT	 COMMENT 'params',
     `response`  TEXT     COMMENT 'response',
     `condition` 		 TEXT 	COMMENT 'conditions',

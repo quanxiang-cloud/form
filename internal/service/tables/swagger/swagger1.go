@@ -4,67 +4,110 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-openapi/spec"
+	"github.com/quanxiang-cloud/form/internal/service/tables/util"
 )
 
 const (
-	url1 = "/api/v1/form/%s/home/form/%s/%s"
-	url2 = "/api/v1/form/%s/home/form/%s"
-	url3 = "/api/v1/form/%s/home/form/%s/:id"
+	url1   = "/api/v1/form/%s/home/form/%s/%s"
+	url2   = "/api/v1/form/%s/home/form/%s"
+	url3   = "/api/v1/form/%s/home/form/%s/:id"
+	get    = "get"
+	create = "create"
+	update = "update"
+	delete = "delete"
+	search = "search"
 )
 
-func GetMethod(tableName string, schemas spec.SchemaProperties) spec.OperationProps {
-	responses := entityResp(schemas)
+func GetMethod(schemasBus *schemasBus) spec.OperationProps {
+	responses := entityResp(schemasBus.schemas)
 	parameters := []spec.Parameter{
 		idParameter(),
 	}
-	return doOperationProps("v2_get", getSummary(tableName, "查询单条"), responses, parameters)
+	return doOperationProps(&operation{
+		"v2_get",
+		util.GetSummary(schemasBus.tableName, "查询单条"),
+		responses,
+
+		parameters,
+	})
 }
 
-func PutMethod(tableName string, schemas, filterSchema spec.SchemaProperties) spec.OperationProps {
-	responses := countAndEntityResp(schemas)
+func PutMethod(schemasBus *schemasBus) spec.OperationProps {
+	responses := countAndEntityResp(schemasBus.schemas)
 	parameters := []spec.Parameter{
-		entityParameter(filterSchema),
+		entityParameter(schemasBus.filterSchema),
 		idParameter(),
 	}
-	return doOperationProps("v2_update", getSummary(tableName, "更新"), responses, parameters)
+	return doOperationProps(&operation{
+		"v2_update",
+		util.GetSummary(schemasBus.tableName, "更新"),
+		responses,
+
+		parameters,
+	})
 }
-func DeleteMethod(tableName string, schemas spec.SchemaProperties) spec.OperationProps {
+func DeleteMethod(schemasBus *schemasBus) spec.OperationProps {
 	responses := countResp()
 	parameters := []spec.Parameter{
-		entityParameter(schemas),
+		entityParameter(schemasBus.schemas),
 		idParameter(),
 	}
-	return doOperationProps("v2_delete", getSummary(tableName, "删除"), responses, parameters)
+	return doOperationProps(&operation{
+		"v2_delete",
+		util.GetSummary(schemasBus.tableName, "删除"),
+		responses,
+
+		parameters,
+	})
 }
 
-func PostMethod(tableName string, schemas, filterSchema spec.SchemaProperties) spec.OperationProps {
-	responses := countAndEntityResp(schemas)
+func PostMethod(schemasBus *schemasBus) spec.OperationProps {
+	responses := countAndEntityResp(schemasBus.schemas)
 
 	parameters := []spec.Parameter{
-		entityParameter(filterSchema),
+		entityParameter(schemasBus.filterSchema),
 		idParameter(),
 	}
-	return doOperationProps("v2_create", getSummary(tableName, "更新"), responses, parameters)
+	return doOperationProps(&operation{
+		"v2_create",
+		util.GetSummary(schemasBus.tableName, "更新"),
+		responses,
+
+		parameters,
+	})
 }
 
-func SearchMethod(tableName string, schemas spec.SchemaProperties) spec.OperationProps {
-	responses := entitiesResp(schemas)
+func SearchMethod(schemasBus *schemasBus) spec.OperationProps {
+	responses := entitiesResp(schemasBus.schemas)
 	parameters := []spec.Parameter{
 		queryParameter(),
 	}
-	return doOperationProps("v2_search", getSummary(tableName, "查询多条"), responses, parameters)
+	return doOperationProps(&operation{
+		"v2_search",
+		util.GetSummary(schemasBus.tableName, "查询多条"),
+		responses,
+		parameters,
+	})
 }
-func doOperationProps(operationID, summary string, response *spec.Responses, parameter []spec.Parameter) spec.OperationProps {
+
+type operation struct {
+	operationID string
+	summary     string
+	response    *spec.Responses
+	parameter   []spec.Parameter
+}
+
+func doOperationProps(operation *operation) spec.OperationProps {
 	return spec.OperationProps{
-		ID:          operationID,
+		ID:          operation.operationID,
 		Security:    nil,
 		Deprecated:  false,
 		Description: "",
-		Summary:     summary,
+		Summary:     operation.summary,
 		Produces:    []string{"application/json"},
 		Consumes:    []string{"application/json"},
-		Responses:   response,
-		Parameters:  parameter,
+		Responses:   operation.response,
+		Parameters:  operation.parameter,
 	}
 }
 
@@ -72,7 +115,14 @@ func DoSchemas(appID, tableID, tableName string, schemas spec.SchemaProperties) 
 
 	filterSystems := make(spec.SchemaProperties)
 
-	filterSystem(schemas, filterSystems)
+	schemasbus := &schemasBus{
+		tableName:    tableName,
+		tableID:      tableID,
+		schemas:      schemas,
+		filterSchema: filterSystems,
+	}
+
+	util.FilterSystem(schemas, filterSystems)
 	swagger := &spec.Swagger{
 		SwaggerProps: spec.SwaggerProps{
 			Info: &spec.Info{
@@ -109,58 +159,58 @@ func DoSchemas(appID, tableID, tableName string, schemas spec.SchemaProperties) 
 						PathItemProps: spec.PathItemProps{
 							Get: &spec.Operation{ // search
 
-								OperationProps: SearchMethod(tableName, schemas),
+								OperationProps: SearchMethod(schemasbus),
 							},
 							Post: &spec.Operation{ // create
-								OperationProps: PostMethod(tableName, schemas, filterSystems),
+								OperationProps: PostMethod(schemasbus),
 							},
 						},
 					},
 					fmt.Sprintf(url3, appID, tableID): {
 						PathItemProps: spec.PathItemProps{
 							Get: &spec.Operation{ // get
-								OperationProps: GetMethod(tableName, schemas),
+								OperationProps: GetMethod(schemasbus),
 							},
 							Put: &spec.Operation{ //  put
-								OperationProps: PutMethod(tableName, schemas, filterSystems),
+								OperationProps: PutMethod(schemasbus),
 							},
 							Delete: &spec.Operation{ //  delete
-								OperationProps: DeleteMethod(tableName, schemas),
+								OperationProps: DeleteMethod(schemasbus),
 							},
 						},
 					},
-					fmt.Sprintf(url1, appID, tableID, "get"): {
+					fmt.Sprintf(url1, appID, tableID, get): {
 						PathItemProps: spec.PathItemProps{
 							Post: &spec.Operation{ // get
-								OperationProps: V1GetMethod(tableID, tableName, schemas),
+								OperationProps: V1GetMethod(schemasbus),
 							},
 						},
 					},
-					fmt.Sprintf(url1, appID, tableID, "search"): {
+					fmt.Sprintf(url1, appID, tableID, search): {
 						PathItemProps: spec.PathItemProps{
 							Post: &spec.Operation{ // get
-								OperationProps: V1SearchMethod(tableID, tableName, schemas),
+								OperationProps: V1SearchMethod(schemasbus),
 							},
 						},
 					},
-					fmt.Sprintf(url1, appID, tableID, "update"): {
+					fmt.Sprintf(url1, appID, tableID, update): {
 						PathItemProps: spec.PathItemProps{
 							Post: &spec.Operation{ // get
-								OperationProps: V1Update(tableID, tableName, schemas, filterSystems),
+								OperationProps: V1Update(schemasbus),
 							},
 						},
 					},
-					fmt.Sprintf(url1, appID, tableID, "delete"): {
+					fmt.Sprintf(url1, appID, tableID, delete): {
 						PathItemProps: spec.PathItemProps{
 							Post: &spec.Operation{ // get
-								OperationProps: V1Delete(tableID, tableName, schemas),
+								OperationProps: V1Delete(schemasbus),
 							},
 						},
 					},
-					fmt.Sprintf(url1, appID, tableID, "create"): {
+					fmt.Sprintf(url1, appID, tableID, create): {
 						PathItemProps: spec.PathItemProps{
 							Post: &spec.Operation{ // get
-								OperationProps: V1Create(tableID, tableName, schemas, filterSystems),
+								OperationProps: V1Create(schemasbus),
 							},
 						},
 					},
