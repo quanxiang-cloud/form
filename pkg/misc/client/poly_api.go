@@ -4,12 +4,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/quanxiang-cloud/cabin/tailormade/client"
-	"github.com/quanxiang-cloud/form/internal/service/tables/swagger"
 	"net/http"
 )
 
 const (
-	polyapiHost = "http://polyapi:9090/api/v1/polyapi/inner/regSwagger/system/app/" + swagger.Service
+	polyapiHost = "http://polyapi:9090/api/v1/polyapi/inner/regSwagger/system/app/form"
 	version     = "last"
 )
 
@@ -30,8 +29,7 @@ type RegSwaggerResp struct {
 
 // RegSwagger RegSwagger
 func (p *polyapi) RegSwagger(ctx context.Context, host, swag, appID, tableID, tableName string) (*RegSwaggerResp, error) {
-	namespace := fmt.Sprintf("/system/app/%s/raw/inner/%s/%s", appID, swagger.Service, tableID)
-
+	namespace := fmt.Sprintf("/system/app/%s/raw/inner/form/%s", appID, tableID)
 	params := struct {
 		NameSpace      string `json:"namespace"`
 		Host           string `json:"host"`

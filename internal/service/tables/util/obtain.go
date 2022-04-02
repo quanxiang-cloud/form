@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"git.internal.yunify.com/qxp/misc/error2"
 	"github.com/go-openapi/spec"
 	"github.com/quanxiang-cloud/form/internal/models"
@@ -179,4 +180,21 @@ func IsLayoutComponent(value interface{}) bool {
 	}
 	return false
 
+}
+
+func FilterSystem(sourceStruct spec.SchemaProperties, dst spec.SchemaProperties) {
+	if sourceStruct == nil || dst == nil {
+		return
+	}
+	for key, value := range sourceStruct {
+		switch key {
+		case _id, _createdAt, _creatorID, _creatorName, _updatedAt, _modifierID, _modifierName:
+		default:
+			dst[key] = value
+		}
+	}
+}
+
+func GetSummary(tableName, operate string) string {
+	return fmt.Sprintf("%s(%s)", tableName, operate)
 }

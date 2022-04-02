@@ -35,7 +35,6 @@ type RoleQuery struct {
 type RoleRepo interface {
 	BatchCreate(db *gorm.DB, role ...*Role) error
 	Get(db *gorm.DB, id string) (*Role, error)
-	Find(db *gorm.DB, query *RoleQuery) ([]*Role, error)
 	Update(db *gorm.DB, id string, role *Role) error
 	Delete(db *gorm.DB, query *RoleQuery) error
 	List(db *gorm.DB, query *RoleQuery, page, size int) ([]*Role, int64, error)

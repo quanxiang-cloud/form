@@ -90,12 +90,17 @@ func permitRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 	}
 	apiPermit := r[managerPath].Group("/apiPermit")
 	{
-		apiPermit.POST("/create", permits.CratePermit)      // 创建权限
+		apiPermit.POST("/create", permits.CratePermit) // 创建权限
+
 		apiPermit.POST("/update/:id", permits.UpdatePermit) // 更新权限
-		apiPermit.POST("/get", permits.GetPermit)           // 获取权限
-		apiPermit.POST("/list", permits.ListPermit)         // 获取权限
-		apiPermit.POST("/delete", permits.DeletePermit)     // 删除权限
-		apiPermit.POST("/find", permits.FindPermit)         // 获取权限
+
+		apiPermit.POST("/get", permits.GetPermit) // 获取权限
+
+		apiPermit.POST("/delete", permits.DeletePermit) // 删除权限
+
+		apiPermit.POST("/list", permits.ListPermit) // 获取权限 前端在用
+
+		apiPermit.POST("/find", permits.FindPermit) // 获取权限   后端在用，
 	}
 	home := r[homePath].Group("/permission")
 	{

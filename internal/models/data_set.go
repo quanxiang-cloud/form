@@ -23,8 +23,8 @@ type DataSetQuery struct {
 // DataSetRepo 数据层接口
 type DataSetRepo interface {
 	Insert(db *gorm.DB, dataset *DataSet) error
-	Update(db *gorm.DB, dataset *DataSet) error
+	Update(db *gorm.DB, id string, dataset *DataSet) error
 	Delete(db *gorm.DB, id string) error
 	GetByID(db *gorm.DB, id string) (*DataSet, error)
-	Find(db *gorm.DB, query *DataSetQuery) ([]*DataSet, error)
+	Find(db *gorm.DB, query *DataSetQuery, page, size int) ([]*DataSet, int64, error)
 }
