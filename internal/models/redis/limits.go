@@ -75,6 +75,7 @@ func (p *limitRepo) GetPerMatch(ctx context.Context, appID, userID string) (*mod
 }
 
 func (p *limitRepo) DeletePerMatch(ctx context.Context, appID string) error {
+
 	return p.c.Del(ctx, p.PerMatchKey()+appID).Err()
 }
 

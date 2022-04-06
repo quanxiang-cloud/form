@@ -63,6 +63,9 @@ func (t *table) GetTable(ctx context.Context, req *GetTableReq) (*GetTableResp, 
 	if err != nil {
 		return nil, err
 	}
+	if tables.ID == "" {
+		return nil, nil
+	}
 	return &GetTableResp{
 		ID:     tables.ID,
 		Schema: tables.Schema,

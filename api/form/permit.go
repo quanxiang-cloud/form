@@ -102,7 +102,13 @@ func (p *Permit) GetPermit(c *gin.Context) {
 }
 
 func (p *Permit) SaveUserPerMatch(c *gin.Context) {
-	req := &service.SaveUserPerMatchReq{}
+	ps := getProfile(c)
+
+	req := &service.SaveUserPerMatchReq{
+		UserID: ps.userID,
+		AppID:  c.Param("appID"),
+	}
+
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
 		logger.Logger.Errorw("should bind", header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
@@ -113,7 +119,14 @@ func (p *Permit) SaveUserPerMatch(c *gin.Context) {
 }
 
 func (p *Permit) UserRoleMatch(c *gin.Context) {
-	req := &service.FindGrantRoleReq{}
+	ps := getProfile(c)
+	req := &service.FindGrantRoleReq{
+		Owners: []string{
+			ps.depID,
+			ps.userID,
+		},
+		AppID: c.Param(_appID),
+	}
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
 		logger.Logger.Errorw("should bind", header.GetRequestIDKV(ctx).Fuzzy(), err.Error())

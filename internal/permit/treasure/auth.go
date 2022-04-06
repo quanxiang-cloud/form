@@ -2,9 +2,11 @@ package treasure
 
 import (
 	"context"
+
 	"time"
 
-	"git.internal.yunify.com/qxp/misc/logger"
+	"github.com/quanxiang-cloud/cabin/logger"
+
 	error2 "github.com/quanxiang-cloud/cabin/error"
 	redis2 "github.com/quanxiang-cloud/cabin/tailormade/db/redis"
 	"github.com/quanxiang-cloud/cabin/tailormade/header"

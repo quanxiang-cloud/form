@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"github.com/quanxiang-cloud/cabin/logger"
 	"io"
 	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 
-	"git.internal.yunify.com/qxp/misc/logger"
 	"github.com/quanxiang-cloud/form/internal/permit"
 	"github.com/quanxiang-cloud/form/pkg/misc/config"
 )

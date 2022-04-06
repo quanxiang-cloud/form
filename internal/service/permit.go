@@ -2,15 +2,22 @@ package service
 
 import (
 	"context"
-	"git.internal.yunify.com/qxp/misc/logger"
+
+	daprd "github.com/dapr/go-sdk/client"
 	id2 "github.com/quanxiang-cloud/cabin/id"
+	"github.com/quanxiang-cloud/cabin/logger"
 	redis2 "github.com/quanxiang-cloud/cabin/tailormade/db/redis"
 	time2 "github.com/quanxiang-cloud/cabin/time"
+	"github.com/quanxiang-cloud/form/internal/component/event"
 	"github.com/quanxiang-cloud/form/internal/models"
 	"github.com/quanxiang-cloud/form/internal/models/mysql"
 	"github.com/quanxiang-cloud/form/internal/models/redis"
 	config2 "github.com/quanxiang-cloud/form/pkg/misc/config"
 	"gorm.io/gorm"
+)
+
+const (
+	form_permit = "form-permit"
 )
 
 type Permit interface {
@@ -49,6 +56,8 @@ type permit struct {
 	roleGrantRepo models.RoleRantRepo
 	permitRepo    models.PermitRepo
 	limitRepo     models.LimitsRepo
+	daprClient    daprd.Client
+	conf          *config2.Config
 }
 type ListPermitReq struct {
 	RoleID string   `json:"roleID"`
@@ -102,7 +111,6 @@ func (p *permit) ListPermit(ctx context.Context, req *ListPermitReq) (*ListPermi
 	return &resp, nil
 }
 
-// FindPermitReq TODO 分页
 type FindPermitReq struct {
 	RoleID string `json:"roleID"`
 	Page   int    `json:"page"`
@@ -192,20 +200,22 @@ func (p *permit) FindGrantRole(ctx context.Context, req *FindGrantRoleReq) (*Fin
 }
 
 type SaveUserPerMatchReq struct {
-	PermitID string
-	UserID   string
-	AppID    string
+	RoleID string `json:"roleID"`
+	UserID string `json:"userID"`
+	AppID  string `json:"appID"`
 }
 
 type SaveUserPerMatchResp struct{}
 
 func (p *permit) SaveUserPerMatch(ctx context.Context, req *SaveUserPerMatchReq) (*SaveUserPerMatchResp, error) {
-	match := &models.PermitMatch{
-		UserID: req.UserID,
-		AppID:  req.AppID,
-		RoleID: req.PermitID,
+	userSpec := event.Data{
+		UserSpec: &event.UserSpec{
+			RoleID: req.RoleID,
+			UserID: req.UserID,
+			AppID:  req.AppID,
+		},
 	}
-	err := p.limitRepo.CreatePerMatch(ctx, match)
+	err := p.publish(ctx, "form-user-match1", userSpec)
 	if err != nil {
 		return nil, err
 	}
@@ -221,9 +231,14 @@ func NewPermit(conf *config2.Config) (Permit, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	client, err := daprd.NewClient()
+	if err != nil {
+		return nil, err
+	}
 	return &permit{
 		db:            db,
+		conf:          conf,
+		daprClient:    client,
 		roleRepo:      mysql.NewRoleRepo(),
 		roleGrantRepo: mysql.NewRoleGrantRepo(),
 		permitRepo:    mysql.NewPermitRepo(),
@@ -395,15 +410,14 @@ func (p *permit) AssignRoleGrant(ctx context.Context, req *AssignRoleGrantReq) (
 }
 
 type CreatePerReq struct {
-	AccessPath string `json:"path"`
-	URI        string `json:"uri"`
-
-	Params    models.FiledPermit `json:"params"`
-	Response  models.FiledPermit `json:"response"`
-	RoleID    string             `json:"roleID"`
-	UserID    string             `json:"userID"`
-	UserName  string             `json:"userName"`
-	Condition models.Condition   `json:"condition"`
+	AccessPath string             `json:"path"`
+	URI        string             `json:"uri"`
+	Params     models.FiledPermit `json:"params"`
+	Response   models.FiledPermit `json:"response"`
+	RoleID     string             `json:"roleID"`
+	UserID     string             `json:"userID"`
+	UserName   string             `json:"userName"`
+	Condition  models.Condition   `json:"condition"`
 }
 
 type CreatePerResp struct{}
@@ -412,7 +426,6 @@ func (p *permit) CreatePermit(ctx context.Context, req *CreatePerReq) (*CreatePe
 	if IsFormAPI(req.AccessPath) {
 		req.AccessPath = req.URI
 	}
-
 	permits := &models.Permit{
 		ID:          id2.HexUUID(true),
 		Path:        req.AccessPath,
@@ -428,7 +441,20 @@ func (p *permit) CreatePermit(ctx context.Context, req *CreatePerReq) (*CreatePe
 	if err != nil {
 		return nil, err
 	}
-	p.modifyRedis(ctx, permits)
+	spec := &event.PermitSpec{
+		RoleID:    req.RoleID,
+		Path:      req.AccessPath,
+		Condition: req.Condition,
+		Response:  req.Response,
+		Params:    req.Params,
+		Action:    "create",
+	}
+	err = p.publish(ctx, form_permit, &event.Data{
+		PermitSpec: spec,
+	})
+	if err != nil {
+		logger.Logger.WithName("publish permit create ").Errorw("publish", "topic", form_permit, "err is", err.Error())
+	}
 	return &CreatePerResp{}, nil
 }
 
@@ -453,24 +479,8 @@ func (p *permit) UpdatePermit(ctx context.Context, req *UpdatePerReq) (*UpdatePe
 	return &UpdatePerResp{}, nil
 }
 
-func (p *permit) modifyRedis(ctx context.Context, permits *models.Permit) {
-	if p.limitRepo.ExistsKey(ctx, permits.RoleID) {
-		return
-	}
-	// add redis cache
-	err := p.limitRepo.CreatePermit(ctx, permits.RoleID, &models.Limits{
-		Path:      permits.Path,
-		Params:    permits.Params,
-		Response:  permits.Response,
-		Condition: permits.Condition,
-	})
-	if err != nil {
-		logger.Logger.Errorw("add permit cache ", permits.RoleID, err.Error())
-	}
-}
-
 type DeletePerReq struct {
-	roleID string `json:"roleID"`
+	RoleID string `json:"roleID"`
 	Path   string `json:"path"`
 	URI    string `json:"uri"`
 }
@@ -482,11 +492,25 @@ func (p *permit) DeletePermit(ctx context.Context, req *DeletePerReq) (*DeletePe
 		req.Path = req.URI
 	}
 	err := p.permitRepo.Delete(p.db, &models.PermitQuery{
-		RoleID: req.roleID,
+		RoleID: req.RoleID,
 		Path:   req.Path,
 	})
+
 	if err != nil {
 		return nil, err
+	}
+	spec := &event.PermitSpec{
+		RoleID: req.RoleID,
+		Path:   req.Path,
+		Action: "delete",
+	}
+
+	// TODO dapr
+	err = p.publish(ctx, form_permit, &event.Data{
+		PermitSpec: spec,
+	})
+	if err != nil {
+		logger.Logger.WithName("publish permit create ").Errorw("publish", "topic", form_permit, "err is", err.Error())
 	}
 	return &DeletePerResp{}, nil
 }
@@ -563,4 +587,12 @@ func (p *permit) DeleteRole(ctx context.Context, req *DeleteRoleReq) (*DeleteRol
 	}
 	return &DeleteRoleResp{}, nil
 
+}
+
+func (p *permit) publish(ctx context.Context, topic string, data interface{}) error {
+	if err := p.daprClient.PublishEvent(ctx, p.conf.PubSubName, topic, data); err != nil {
+		logger.Logger.WithName("public").Errorw("publish error", "topic", topic, "publicName", p.conf.PubSubName)
+		return err
+	}
+	return nil
 }

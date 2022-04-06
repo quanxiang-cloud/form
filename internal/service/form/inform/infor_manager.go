@@ -33,14 +33,14 @@ type HookManger struct {
 // NewHookManger NewHookManger
 func NewHookManger(ctx context.Context, conf *config.Config) (*HookManger, error) {
 
-	//client, err := daprd.NewClient()
-	//if err != nil {
-	//	return nil, err
-	//}
+	client, err := daprd.NewClient()
+	if err != nil {
+		return nil, err
+	}
 	m := &HookManger{
-		//daprClient: client,
-		Send: make(chan *FormData),
-		conf: conf,
+		daprClient: client,
+		Send:       make(chan *FormData),
+		conf:       conf,
 	}
 	go m.Start(ctx)
 	return m, nil
@@ -62,9 +62,9 @@ func (manager *HookManger) Start(ctx context.Context) {
 
 }
 func (manager *HookManger) publish(ctx context.Context, topic string, data interface{}) error {
-	//if err := manager.daprClient.PublishEvent(context.Background(), manager.conf.PubSubName, topic, data); err != nil {
-	//	manager.log.Error(err, "publishEvent", "topic", topic, "pubsubName", manager.conf.PubSubName)
-	//	return err
-	//}
+	if err := manager.daprClient.PublishEvent(ctx, manager.conf.PubSubName, topic, data); err != nil {
+		manager.log.Error(err, "publishEvent", "topic", topic, "pubsubName", manager.conf.PubSubName)
+		return err
+	}
 	return nil
 }

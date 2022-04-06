@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	error2 "git.internal.yunify.com/qxp/misc/error2"
+	error2 "github.com/quanxiang-cloud/cabin/error"
 	"github.com/quanxiang-cloud/form/internal/models"
 	"github.com/quanxiang-cloud/form/internal/models/redis"
 	"github.com/quanxiang-cloud/form/pkg/misc/code"
@@ -78,22 +78,22 @@ func CheckSerial(serial *models.SerialScheme, oldSerialStr string) error {
 
 	oldBit, ok := big.NewInt(0).SetString(oldSerial.Bit, 10)
 	if !ok {
-		return error2.NewError(code.ErrParameter)
+		return error2.New(code.ErrParameter)
 	}
 
 	newBit, ok := big.NewInt(0).SetString(serial.Bit, 10)
 	if !ok {
-		return error2.NewError(code.ErrParameter)
+		return error2.New(code.ErrParameter)
 	}
 
 	_, ok = big.NewInt(0).SetString(serial.Value, 10)
 	if !ok {
-		return error2.NewError(code.ErrParameter)
+		return error2.New(code.ErrParameter)
 	}
 
 	_, ok = big.NewInt(0).SetString(serial.Step, 10)
 	if !ok {
-		return error2.NewError(code.ErrParameter)
+		return error2.New(code.ErrParameter)
 	}
 
 	if newBit.Cmp(oldBit) <= 0 {

@@ -79,32 +79,32 @@ func permitRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 	}
 	role := r[managerPath].Group("/apiRole")
 	{
-		role.POST("/create", permits.CreateRole)     //  创建角色
-		role.POST("/update", permits.UpdateRole)     //  更新角色
-		role.POST("/get/:id", permits.GetRole)       // 获取单条角色
-		role.POST("/delete/:id", permits.DeleteRole) // 删除对应的角色
-		role.POST("/find", permits.FindRole)         // 获取角色列表
-		role.POST("/userRoleMatch", permits.UserRoleMatch)
+		role.POST("/create", permits.CreateRole)                    //  创建角色
+		role.POST("/update", permits.UpdateRole)                    //  更新角色
+		role.POST("/get/:id", permits.GetRole)                      // 获取单条角色
+		role.POST("/delete/:id", permits.DeleteRole)                // 删除对应的角色
+		role.POST("/find", permits.FindRole)                        // 获取角色列表
 		role.POST("/grant/list/:roleID", permits.FindGrantRole)     // 获取某个角色对应的人或者部门
 		role.POST("/grant/assign/:roleID", permits.AssignRoleGrant) // 给某个角色加人 、减人
 	}
 	apiPermit := r[managerPath].Group("/apiPermit")
 	{
-		apiPermit.POST("/create", permits.CratePermit) // 创建权限
-
+		apiPermit.POST("/create", permits.CratePermit)      // 创建权限
 		apiPermit.POST("/update/:id", permits.UpdatePermit) // 更新权限
-
-		apiPermit.POST("/get", permits.GetPermit) // 获取权限
-
-		apiPermit.POST("/delete", permits.DeletePermit) // 删除权限
-
-		apiPermit.POST("/list", permits.ListPermit) // 获取权限 前端在用
-
-		apiPermit.POST("/find", permits.FindPermit) // 获取权限   后端在用，
+		apiPermit.POST("/get", permits.GetPermit)           // 获取权限
+		apiPermit.POST("/delete", permits.DeletePermit)     // 删除权限
+		apiPermit.POST("/list", permits.ListPermit)         // 获取权限 前端在用
 	}
-	home := r[homePath].Group("/permission")
+	home := r[homePath].Group("/apiRole") //
 	{
-		home.POST("/perGroup/saveUserPerMatch", permits.SaveUserPerMatch) // 保存用户匹配的权限组
+		home.POST("/create", permits.SaveUserPerMatch) // 保存用户匹配的权限组
+		home.POST("/list", permits.UserRoleMatch)      // 查看这个人下面，有哪些，角色
+	}
+
+	// inner 接口，permit 调用
+	{
+		r[internalPath].Group("/apiRole/userRoleMatch", permits.UserRoleMatch)
+		r[internalPath].Group("/apiPermit/find", permits.FindPermit)
 	}
 
 	return nil

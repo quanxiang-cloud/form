@@ -11,6 +11,7 @@ import (
 const (
 	ployPath = "poly"
 	formPath = "form"
+	cache    = "cache"
 )
 
 type router func(c *config2.Config, r map[string]*echo.Group) error
@@ -18,6 +19,7 @@ type router func(c *config2.Config, r map[string]*echo.Group) error
 var routers = []router{
 	polyRouter,
 	formRouter,
+	perCacheRouter,
 }
 
 // Router routing.
@@ -33,6 +35,7 @@ func NewRouter(c *config2.Config) (*Router, error) {
 	r := map[string]*echo.Group{
 		ployPath: engine.Group("/api/v1/polyapi"),
 		formPath: engine.Group("/api/v1/form"),
+		cache:    engine.Group("/cache"),
 	}
 
 	for _, f := range routers {
@@ -87,5 +90,17 @@ func formRouter(c *config2.Config, r map[string]*echo.Group) error {
 		group.Any("/*", ProxyForm(p))
 		group.Any("/:appID/home/form/:tableID/:action", ProxyForm(cor))
 	}
+	return nil
+}
+
+// 缓存一致性 ， userID roleID
+func perCacheRouter(c *config2.Config, r map[string]*echo.Group) error {
+
+	caches, err := NewCache(c)
+	if err != nil {
+		return err
+	}
+	r[cache].Any("/match", caches.Match)
+	r[cache].Any("/permit", caches.Permit)
 	return nil
 }

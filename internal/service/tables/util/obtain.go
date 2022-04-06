@@ -2,8 +2,8 @@ package util
 
 import (
 	"fmt"
-	"git.internal.yunify.com/qxp/misc/error2"
 	"github.com/go-openapi/spec"
+	error2 "github.com/quanxiang-cloud/cabin/error"
 	"github.com/quanxiang-cloud/form/internal/models"
 	"github.com/quanxiang-cloud/form/pkg/misc/code"
 	"reflect"
@@ -24,12 +24,12 @@ const (
 func GetMapToMap(schema map[string]interface{}, key string) (map[string]interface{}, error) {
 	value, ok := schema[key]
 	if !ok {
-		return nil, error2.NewError(code.ErrParameter)
+		return nil, error2.New(code.ErrParameter)
 	}
 	if v, ok := value.(map[string]interface{}); ok {
 		return v, nil
 	}
-	return nil, error2.NewError(code.ErrParameter)
+	return nil, error2.New(code.ErrParameter)
 }
 
 // GetMapToString GetMapToString
@@ -49,18 +49,18 @@ func GetAsMap(v interface{}) (map[string]interface{}, error) {
 	if m, ok := v.(map[string]interface{}); ok {
 		return m, nil
 	}
-	return nil, error2.NewError(code.ErrParameter)
+	return nil, error2.New(code.ErrParameter)
 }
 
 func GetMapToBool(schema map[string]interface{}, key string) (bool, error) {
 	value, ok := schema[key]
 	if !ok {
-		return false, error2.NewError(code.ErrParameter)
+		return false, error2.New(code.ErrParameter)
 	}
 	if v, ok := value.(bool); ok {
 		return v, nil
 	}
-	return false, error2.NewError(code.ErrParameter)
+	return false, error2.New(code.ErrParameter)
 }
 
 func Convert1(schema map[string]interface{}) (s models.SchemaProperties, total int64, err error) {
@@ -114,7 +114,7 @@ func Convert1(schema map[string]interface{}) (s models.SchemaProperties, total i
 						continue
 					}
 					if _, ok := v["items"].(map[string]interface{}); !ok {
-						return nil, 0, error2.NewError(code.ErrItemConvert)
+						return nil, 0, error2.New(code.ErrItemConvert)
 					}
 				}
 			case "length":
