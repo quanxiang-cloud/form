@@ -2,7 +2,6 @@ package tables
 
 import (
 	"context"
-
 	"github.com/quanxiang-cloud/form/internal/models"
 	"github.com/quanxiang-cloud/form/internal/models/mysql"
 	"github.com/quanxiang-cloud/form/internal/service"
@@ -10,11 +9,44 @@ import (
 	"gorm.io/gorm"
 )
 
+type GetTableInfoReq struct {
+	TableID string `json:"tableID" binding:"required"`
+	AppID   string `json:"appID"`
+}
+
+type GetTableInfoResp struct {
+	TableID     string `json:"tableID"`
+	FieldLen    int64  `json:"fieldLen"`
+	CreatorName string `json:"createdBy"`
+	CreatedAt   int64  `json:"createdAt"`
+	EditorName  string `json:"updatedBy"`
+	UpdatedAt   int64  `json:"updatedAt"`
+}
+
+func (t *table) GetTableInfo(ctx context.Context, req *GetTableInfoReq) (*GetTableInfoResp, error) {
+	modelData, err := t.tableSchemaRepo.Get(t.db, req.AppID, req.TableID)
+	if err != nil {
+		return nil, err
+	}
+	//if modelData == nil {
+	//	return nil, error2.NewError(code.ErrNODataSetNameState)
+	//}
+	return &GetTableInfoResp{
+		TableID:     modelData.TableID,
+		FieldLen:    modelData.FieldLen,
+		CreatorName: modelData.CreatorName,
+		EditorName:  modelData.EditorName,
+		UpdatedAt:   modelData.UpdatedAt,
+		CreatedAt:   modelData.CreatedAt,
+	}, nil
+}
+
 type Table interface {
 	GetTable(ctx context.Context, req *GetTableReq) (*GetTableResp, error)
 	DeleteTable(ctx context.Context, req *DeleteTableReq) (*DeleteTableResp, error)
 	FindTable(ctx context.Context, req *FindTableReq) (*FindTableResp, error)
 	UpdateConfig(ctx context.Context, req *UpdateConfigReq) (*UpdateConfigResp, error)
+	GetTableInfo(ctx context.Context, req *GetTableInfoReq) (*GetTableInfoResp, error)
 }
 
 type table struct {
