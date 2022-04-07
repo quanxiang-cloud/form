@@ -31,8 +31,7 @@ func action(ctr consensus.Guidance) gin.HandlerFunc {
 			return
 		}
 		if err = c.ShouldBind(bus); err != nil {
-			logger.Logger.WithName("action").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
-			c.AbortWithError(http.StatusInternalServerError, err)
+			c.AbortWithError(http.StatusBadRequest, err)
 			return
 		}
 		do, err := ctr.Do(ctx, bus)
@@ -70,7 +69,7 @@ func get(ctr consensus.Guidance) gin.HandlerFunc {
 		}
 		if err = c.ShouldBind(bus); err != nil {
 			logger.Logger.WithName("get").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
-			c.AbortWithError(http.StatusInternalServerError, err)
+			c.AbortWithError(http.StatusBadRequest, err)
 			return
 		}
 		do, err := ctr.Do(ctx, bus)
@@ -92,7 +91,7 @@ func search(ctr consensus.Guidance) gin.HandlerFunc {
 		}
 		if err = c.ShouldBind(bus); err != nil {
 			logger.Logger.WithName("search").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
-			c.AbortWithError(http.StatusInternalServerError, err)
+			c.AbortWithError(http.StatusBadRequest, err)
 			return
 		}
 		do, err := ctr.Do(header.MutateContext(c), bus)
@@ -117,7 +116,7 @@ func delete(ctr consensus.Guidance) gin.HandlerFunc {
 		}
 		if err = c.ShouldBind(bus); err != nil {
 			logger.Logger.WithName("delete").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
-			c.AbortWithError(http.StatusInternalServerError, err)
+			c.AbortWithError(http.StatusBadRequest, err)
 			return
 		}
 		do, err := ctr.Do(header.MutateContext(c), bus)
@@ -143,7 +142,7 @@ func update(ctr consensus.Guidance) gin.HandlerFunc {
 		}
 		if err = c.ShouldBind(bus); err != nil {
 			logger.Logger.WithName("update").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
-			c.AbortWithError(http.StatusInternalServerError, err)
+			c.AbortWithError(http.StatusBadRequest, err)
 			return
 		}
 		do, err := ctr.Do(header.MutateContext(c), bus)
@@ -164,7 +163,7 @@ func create(ctr consensus.Guidance) gin.HandlerFunc {
 		}
 		if err = c.ShouldBind(bus); err != nil {
 			logger.Logger.WithName("create").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
-			c.AbortWithError(http.StatusInternalServerError, err)
+			c.AbortWithError(http.StatusBadRequest, err)
 			return
 		}
 		do, err := ctr.Do(header.MutateContext(c), bus)
