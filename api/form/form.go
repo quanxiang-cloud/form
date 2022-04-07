@@ -182,7 +182,7 @@ func initBus(c *gin.Context, bus *consensus.Bus, method string) error {
 	bus.UserID = c.GetHeader(_userID)
 	bus.UserName = c.GetHeader(_userName)
 	depIDS := strings.Split(c.GetHeader(_departmentID), ",")
-	bus.DepID = depIDS[len(depIDS)-1]
+	bus.DepID = depIDS[0]
 	bus.Path = c.Request.RequestURI
 	return nil
 }

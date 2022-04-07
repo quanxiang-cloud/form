@@ -107,6 +107,10 @@ func permitRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 	{
 		r[internalPath].POST("/apiRole/userRoleMatch", permits.UserRoleMatch)
 		r[internalPath].POST("/apiPermit/find", permits.FindPermit)
+
+		r[internalPath].POST("/apiRole/create", permits.CreateRole)
+		r[internalPath].POST("/apiRole/grant/:roleID", permits.AssignRoleGrant)
+
 	}
 
 	return nil
@@ -150,6 +154,7 @@ func tableRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 		manager.POST("/delete", table.DeleteTable)
 		manager.POST("/createBlank", table.CreateBlank)
 		manager.POST("/search", table.FindTable)
+		manager.POST("/getInfo", table.GetTableInfo)
 	}
 	managerConfig := r[managerPath].Group("/config")
 	{

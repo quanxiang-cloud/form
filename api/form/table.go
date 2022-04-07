@@ -116,11 +116,24 @@ func (t *Table) UpdateConfig(c *gin.Context) {
 	resp.Format(t.table.UpdateConfig(ctx, req)).Context(c)
 }
 
+func (t *Table) GetTableInfo(c *gin.Context) {
+	req := &table2.GetTableInfoReq{
+		AppID: c.Param("appID"),
+	}
+	ctx := header.MutateContext(c)
+	if err := c.ShouldBind(req); err != nil {
+		logger.Logger.WithName("api table").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
+		return
+	}
+	resp.Format(t.table.GetTableInfo(ctx, req)).Context(c)
+
+}
+
 func getProfile(c *gin.Context) *profile {
 	depIDS := strings.Split(c.GetHeader(_departmentID), ",")
 	return &profile{
 		userID:   c.Param(_userID),
 		userName: c.Param(_userName),
-		depID:    depIDS[len(depIDS)-1],
+		depID:    depIDS[0],
 	}
 }
