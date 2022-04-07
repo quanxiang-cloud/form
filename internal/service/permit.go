@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"github.com/quanxiang-cloud/cabin/tailormade/header"
 
 	daprd "github.com/dapr/go-sdk/client"
 	id2 "github.com/quanxiang-cloud/cabin/id"
@@ -113,7 +114,7 @@ func (p *permit) ListAndSelect(ctx context.Context, req *ListAndSelectReq) (*Lis
 }
 
 type ListPermitReq struct {
-	RoleID string   `json:"roleID"`
+	RoleID string   `json:"roleID,omitempty"`
 	Paths  []string `json:"paths"`
 	URIs   []string `json:"uris"`
 }
@@ -126,6 +127,9 @@ type ListVo struct {
 }
 
 func (p *permit) ListPermit(ctx context.Context, req *ListPermitReq) (*ListPermitResp, error) {
+	if len(req.Paths) == 0 || len(req.URIs) == 0 {
+		return &ListPermitResp{}, nil
+	}
 	if len(req.Paths) > 100 {
 		req.Paths = req.Paths[0:100]
 		req.URIs = req.URIs[0:100]
@@ -507,7 +511,7 @@ func (p *permit) CreatePermit(ctx context.Context, req *CreatePerReq) (*CreatePe
 		PermitSpec: spec,
 	})
 	if err != nil {
-		logger.Logger.WithName("publish permit create ").Errorw("publish", "topic", form_permit, "err is", err.Error())
+		logger.Logger.WithName("publish permit create ").Errorw("publish", "topic", form_permit, header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
 	}
 	return &CreatePerResp{}, nil
 }
