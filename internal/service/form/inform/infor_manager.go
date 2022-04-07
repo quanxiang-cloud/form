@@ -32,7 +32,6 @@ type HookManger struct {
 
 // NewHookManger NewHookManger
 func NewHookManger(ctx context.Context, conf *config.Config) (*HookManger, error) {
-
 	client, err := daprd.NewClient()
 	if err != nil {
 		return nil, err

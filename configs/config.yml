@@ -22,10 +22,10 @@ log:
 
 # -------------------- mysql --------------------  
 mysql:
-  host: 192.168.200.18:3306
+  host: 192.168.200.13:32020
   db: form
   user: root
-  password: uyWxtvt6gCOy3VPLB3rTpa0rQ
+  password: qxp1234
   log: true
 # -------------------- mongo --------------------
 mongo:

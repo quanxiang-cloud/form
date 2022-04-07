@@ -40,8 +40,9 @@ type Service struct {
 }
 
 type Endpoint struct {
-	Poly string `yaml:"poly"`
-	Form string `yaml:"form"`
+	Poly      string `yaml:"poly"`
+	Form      string `yaml:"form"`
+	FormInner string `yaml:"formInner"`
 }
 
 type Transport struct {

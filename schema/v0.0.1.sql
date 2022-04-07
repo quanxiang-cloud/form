@@ -85,7 +85,7 @@ CREATE TABLE `table_schema` (
 DROP TABLE IF EXISTS `table_relation`;
 CREATE TABLE `table_relation` (
      `id` 		 VARCHAR(64) 	COMMENT ' id',
-     `app_id` 	 VARCHAR(64) 	NOT NULL COMMENT 'table is which app',
+     `app_id` 	 VARCHAR(64) 	NOT NULL COMMENT 'table is which  one app',
      `table_id`    VARCHAR(64)    NOT NULL COMMENT 'tableID',
      `field_name`  VARCHAR(64)  COMMENT 'field name' ,
      `sub_table_id`  VARCHAR(64)   COMMENT 'sub table id' ,
@@ -96,3 +96,12 @@ CREATE TABLE `table_relation` (
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
+DROP TABLE IF EXISTS `user_role`;
+CREATE TABLE `user_role` (
+      `id` 		 VARCHAR(64) 	COMMENT ' id',
+      `app_id` 	 VARCHAR(64) 	NOT NULL COMMENT 'app id',
+      `user_id`    VARCHAR(64)    NOT NULL COMMENT 'user id',
+      `role_id`  VARCHAR(64)  COMMENT 'role id' ,
+      `role_name`  VARCHAR(64)   COMMENT 'role name' ,
+      PRIMARY KEY  (`id`)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8;

@@ -12,14 +12,14 @@ import (
 
 var (
 	formHost           string
-	cacheMatchRoleURL  = "%s/api/v1/form/%s/m/apiRole/userRoleMatch"
-	roleMatchPermitURL = "%s/api/v1/form/%s/m/apiPermit/find"
+	cacheMatchRoleURL  = "%s/api/v1/form/%s/internal/apiRole/userRoleMatch"
+	roleMatchPermitURL = "%s/api/v1/form/%s/internal/apiPermit/find"
 )
 
 func init() {
 	formHost = os.Getenv("FORM_HOST")
 	if formHost == "" {
-		formHost = "http://form"
+		formHost = "http://localhost:8080"
 	}
 }
 
@@ -57,6 +57,7 @@ func (f *Form) GetCacheMatchRole(ctx context.Context, userID, depID, appID strin
 		Owners: owners,
 		AppID:  appID,
 	}, resp)
+
 	if err != nil {
 		return nil, err
 	}

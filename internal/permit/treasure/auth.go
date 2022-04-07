@@ -98,7 +98,6 @@ func (a *Auth) getCacheMatch(ctx context.Context, req *permit.Request) (*models.
 	if resp.Types == models.InitType {
 		perMatch.RoleID = models.RoleInit
 		resp.RoleID = models.RoleInit
-
 	}
 	err = a.redis.CreatePerMatch(ctx, perMatch)
 	if err != nil {

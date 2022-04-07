@@ -48,6 +48,8 @@ type Permit interface {
 	SaveUserPerMatch(ctx context.Context, req *SaveUserPerMatchReq) (*SaveUserPerMatchResp, error)
 
 	ListPermit(ctx context.Context, req *ListPermitReq) (*ListPermitResp, error)
+
+	ListAndSelect(ctx context.Context, req *ListAndSelectReq) (*ListAndSelectResp, error)
 }
 
 type permit struct {
@@ -59,6 +61,57 @@ type permit struct {
 	daprClient    daprd.Client
 	conf          *config2.Config
 }
+
+type ListAndSelectReq struct {
+	AppID  string `json:"appID"`
+	UserID string `json:"userID"`
+	DepID  string `json:"depID"`
+}
+
+type ListAndSelectResp struct {
+	OptionPer []*Per `json:"optionPer"`
+	SelectPer *Per   `json:"selectPer"`
+}
+
+type Per struct {
+	RoleID   string `json:"roleID"`
+	RoleName string `json:"roleName"`
+}
+
+func (p *permit) ListAndSelect(ctx context.Context, req *ListAndSelectReq) (*ListAndSelectResp, error) {
+	//
+
+	list, _, err := p.roleGrantRepo.List(p.db, &models.RoleGrantQuery{
+		Owners: []string{req.DepID, req.UserID},
+		AppID:  req.AppID,
+	}, 1, 999)
+	if err != nil {
+		return nil, err
+	}
+	ids := make([]string, len(list))
+	for index, value := range list {
+		ids[index] = value.RoleID
+	}
+	roles, _, err := p.roleRepo.List(p.db, &models.RoleQuery{
+		RoleIDS: ids,
+	}, 1, 999)
+	if err != nil {
+		return nil, err
+	}
+	resp := &ListAndSelectResp{
+		OptionPer: make([]*Per, len(roles)),
+	}
+	for index, value := range roles {
+		resp.OptionPer[index] = &Per{
+			RoleID:   value.ID,
+			RoleName: value.Name,
+		}
+	}
+	// TODO
+
+	return resp, nil
+}
+
 type ListPermitReq struct {
 	RoleID string   `json:"roleID"`
 	Paths  []string `json:"paths"`
@@ -83,7 +136,7 @@ func (p *permit) ListPermit(ctx context.Context, req *ListPermitReq) (*ListPermi
 	temp := make(map[string]string)
 
 	for index, value := range req.URIs {
-		temp[value] = req.URIs[index]
+		temp[value] = req.Paths[index]
 	}
 	form := IsFormAPI(req.Paths[0])
 	if form {
@@ -187,7 +240,6 @@ func (p *permit) FindGrantRole(ctx context.Context, req *FindGrantRoleReq) (*Fin
 		List:  make([]*GrantRoles, 0, len(grantRole)),
 		Total: total,
 	}
-
 	for _, value := range grantRole {
 		resp.List = append(resp.List, &GrantRoles{
 			RoleID:    value.RoleID,
@@ -200,9 +252,10 @@ func (p *permit) FindGrantRole(ctx context.Context, req *FindGrantRoleReq) (*Fin
 }
 
 type SaveUserPerMatchReq struct {
-	RoleID string `json:"roleID"`
-	UserID string `json:"userID"`
-	AppID  string `json:"appID"`
+	RoleID   string `json:"roleID"`
+	RoleName string `json:"roleName"`
+	UserID   string `json:"userID"`
+	AppID    string `json:"appID"`
 }
 
 type SaveUserPerMatchResp struct{}
@@ -213,9 +266,10 @@ func (p *permit) SaveUserPerMatch(ctx context.Context, req *SaveUserPerMatchReq)
 			RoleID: req.RoleID,
 			UserID: req.UserID,
 			AppID:  req.AppID,
+			Action: "create",
 		},
 	}
-	err := p.publish(ctx, "form-user-match1", userSpec)
+	err := p.publish(ctx, "form-user-match", userSpec)
 	if err != nil {
 		return nil, err
 	}
@@ -580,11 +634,20 @@ func (p *permit) DeleteRole(ctx context.Context, req *DeleteRoleReq) (*DeleteRol
 		//
 		logger.Logger.Errorw("delete per match", req.RoleID, err.Error())
 	}
+	//
+	err = p.publish(ctx, "form-user-match", &event.Data{
+		UserSpec: &event.UserSpec{
+			RoleID: req.RoleID,
+			AppID:  req.AppID,
+			Action: "delete",
+		},
+	})
+	logger.Logger.Errorw("")
 
-	err = p.limitRepo.DeletePermit(ctx, req.RoleID)
-	if err != nil {
-
-	}
+	//err = p.limitRepo.DeletePermit(ctx, req.RoleID)
+	//if err != nil {
+	//
+	//}
 	return &DeleteRoleResp{}, nil
 
 }

@@ -55,7 +55,10 @@ func (t *permitRepo) List(db *gorm.DB, query *models.PermitQuery, page, size int
 	}
 
 	if query.Path != "" {
-		db = db.Where("path = ?", query.Path)
+		db = db.Where("path =  ?", query.Path)
+	}
+	if len(query.Paths) != 0 {
+		db = db.Where("path in ?", query.Paths)
 	}
 
 	if len(query.RoleIDs) != 0 {

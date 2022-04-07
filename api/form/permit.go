@@ -138,7 +138,8 @@ func (p *Permit) UserRoleMatch(c *gin.Context) {
 		c.AbortWithError(http.StatusInternalServerError, err)
 	}
 	if len(match.List) == 0 {
-		c.AbortWithError(http.StatusForbidden, err)
+		resp.Format(&service.GetRoleResp{}, nil).Context(c)
+		return
 	}
 	reqRole := &service.GetRoleReq{
 		ID: match.List[0].RoleID,
@@ -232,4 +233,15 @@ func (p *Permit) ListPermit(c *gin.Context) {
 		return
 	}
 	resp.Format(p.permit.ListPermit(ctx, req)).Context(c)
+}
+
+func (p *Permit) ListAndSelect(c *gin.Context) {
+	req := &service.ListAndSelectReq{}
+	ctx := header.MutateContext(c)
+	if err := c.ShouldBind(req); err != nil {
+		logger.Logger.Errorw("should bind", header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	resp.Format(p.permit.ListAndSelect(ctx, req)).Context(c)
 }

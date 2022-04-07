@@ -3,7 +3,7 @@ kind: Subscription
 metadata:
   name: permit-user-match
 spec:
-  topic: form-user-match1
+  topic: form-user-match
   route: /cache/match
   pubsubname: form-kafka-pubsub
 scopes:

@@ -11,7 +11,7 @@ func (t *roleGrantRepo) List(db *gorm.DB, query *models.RoleGrantQuery, page, si
 	page, size = pages(page, size)
 	var (
 		count          int64
-		tableRelations []*models.RoleGrant
+		tableRelations = make([]*models.RoleGrant, 0)
 	)
 	ql := db.Table(t.TableName())
 	if len(query.Owners) != 0 {
@@ -28,11 +28,11 @@ func (t *roleGrantRepo) List(db *gorm.DB, query *models.RoleGrantQuery, page, si
 	}
 	ql = ql.Order("created_at DESC")
 
-	err := db.Count(&count).Error
+	err := ql.Count(&count).Error
 	if err != nil {
 		return nil, 0, err
 	}
-	err = db.Order("created_at desc").Offset((page - 1) * size).Limit(size).Find(&tableRelations).Error
+	err = ql.Order("created_at desc").Offset((page - 1) * size).Limit(size).Find(&tableRelations).Error
 	if err != nil {
 		return nil, 0, err
 	}

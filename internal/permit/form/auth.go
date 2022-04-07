@@ -19,8 +19,7 @@ func NewAuth(conf *config.Config) (*Auth, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	next, err := NewCondition(conf)
+	next, err := NewProxy(conf)
 	if err != nil {
 		return nil, err
 	}
@@ -40,14 +39,13 @@ func (a *Auth) Do(ctx context.Context, req *permit.Request) (*permit.Response, e
 	if err != nil || p == nil {
 		return nil, err
 	}
-
-	entity := req.Body[_entity]
-	if entity != nil {
-		// input parameter judgment
-		if !treasure.Pre(entity, p.Params) {
-			return nil, nil
-		}
-	}
+	//entity := req.Body[_entity]
+	//if entity != nil {
+	//	// input parameter judgment
+	//	if !treasure.Pre(entity, p.Params) {
+	//		return nil, nil
+	//	}
+	//}
 	req.Permit = p
 	return a.next.Do(ctx, req)
 }
