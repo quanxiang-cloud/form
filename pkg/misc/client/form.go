@@ -3,11 +3,10 @@ package client
 import (
 	"context"
 	"encoding/json"
+	pb "github.com/quanxiang-cloud/structor/api/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/structpb"
-
-	pb "github.com/quanxiang-cloud/structor/api/proto"
 )
 
 const (
@@ -30,7 +29,11 @@ func NewFormAPI() (*FormAPI, error) {
 }
 
 func connect(target string) (pb.DSLServiceClient, error) {
-	conn, err := grpc.Dial(target, grpc.WithInsecure())
+
+	conn, err := grpc.Dial(target,
+		grpc.WithInsecure(),
+		grpc.WithReturnConnectionError(),
+	)
 
 	if err != nil {
 		return nil, err
