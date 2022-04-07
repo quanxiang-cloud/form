@@ -34,8 +34,8 @@ func NewForm(conf client.Config) *Form {
 }
 
 type GetMatchRoleResp struct {
-	RoleID string          `json:"roleID"`
-	Types  models.RoleType `json:"types"`
+	RoleID string          `json:"id"`
+	Types  models.RoleType `json:"type"`
 }
 
 func (f *Form) GetCacheMatchRole(ctx context.Context, userID, depID, appID string) (*GetMatchRoleResp, error) {

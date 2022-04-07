@@ -27,7 +27,7 @@ func action(ctr consensus.Guidance) gin.HandlerFunc {
 			return
 		}
 		if err = c.ShouldBind(bus); err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
+			c.AbortWithError(http.StatusBadRequest, err)
 			return
 		}
 		do, err := ctr.Do(header.MutateContext(c), bus)
@@ -61,7 +61,7 @@ func get(ctr consensus.Guidance) gin.HandlerFunc {
 			},
 		}
 		if err = c.ShouldBind(bus); err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
+			c.AbortWithError(http.StatusBadRequest, err)
 			return
 		}
 		do, err := ctr.Do(header.MutateContext(c), bus)
@@ -79,7 +79,7 @@ func search(ctr consensus.Guidance) gin.HandlerFunc {
 			return
 		}
 		if err = c.ShouldBind(bus); err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
+			c.AbortWithError(http.StatusBadRequest, err)
 			return
 		}
 		do, err := ctr.Do(header.MutateContext(c), bus)
@@ -101,7 +101,7 @@ func delete(ctr consensus.Guidance) gin.HandlerFunc {
 			},
 		}
 		if err = c.ShouldBind(bus); err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
+			c.AbortWithError(http.StatusBadRequest, err)
 			return
 		}
 		do, err := ctr.Do(header.MutateContext(c), bus)
@@ -124,7 +124,7 @@ func update(ctr consensus.Guidance) gin.HandlerFunc {
 			},
 		}
 		if err = c.ShouldBind(bus); err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
+			c.AbortWithError(http.StatusBadRequest, err)
 			return
 		}
 		do, err := ctr.Do(header.MutateContext(c), bus)
@@ -142,7 +142,7 @@ func create(ctr consensus.Guidance) gin.HandlerFunc {
 			return
 		}
 		if err = c.ShouldBind(bus); err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
+			c.AbortWithError(http.StatusBadRequest, err)
 			return
 		}
 		do, err := ctr.Do(header.MutateContext(c), bus)
