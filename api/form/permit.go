@@ -36,7 +36,7 @@ func (p *Permit) CreateRole(c *gin.Context) {
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
 		logger.Logger.Errorw("should bind", header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 	resp.Format(p.permit.CreateRole(ctx, req)).Context(c)
@@ -47,7 +47,7 @@ func (p *Permit) UpdateRole(c *gin.Context) {
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
 		logger.Logger.Errorw("should bind", header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 	resp.Format(p.permit.UpdateRole(ctx, req)).Context(c)
@@ -60,7 +60,7 @@ func (p *Permit) DeleteRole(c *gin.Context) {
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
 		logger.Logger.Errorw("should bind", header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 	resp.Format(p.permit.DeleteRole(ctx, req)).Context(c)
@@ -71,7 +71,7 @@ func (p *Permit) CratePermit(c *gin.Context) {
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
 		logger.Logger.Errorw("should bind", header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 	resp.Format(p.permit.CreatePermit(ctx, req)).Context(c)
@@ -84,7 +84,7 @@ func (p *Permit) UpdatePermit(c *gin.Context) {
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
 		logger.Logger.Errorw("should bind", header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 	resp.Format(p.permit.UpdatePermit(ctx, req)).Context(c)
@@ -95,7 +95,7 @@ func (p *Permit) GetPermit(c *gin.Context) {
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
 		logger.Logger.Errorw("should bind", header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 	resp.Format(p.permit.GetPermit(ctx, req)).Context(c)
@@ -112,7 +112,7 @@ func (p *Permit) SaveUserPerMatch(c *gin.Context) {
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
 		logger.Logger.Errorw("should bind", header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 	resp.Format(p.permit.SaveUserPerMatch(ctx, req)).Context(c)
@@ -130,12 +130,12 @@ func (p *Permit) UserRoleMatch(c *gin.Context) {
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
 		logger.Logger.Errorw("should bind", header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 	match, err := p.permit.FindGrantRole(ctx, req)
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.AbortWithError(http.StatusBadRequest, err)
 	}
 	if len(match.List) == 0 {
 		resp.Format(&service.GetRoleResp{}, nil).Context(c)
@@ -152,7 +152,7 @@ func (p *Permit) FindPermit(c *gin.Context) {
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
 		logger.Logger.Errorw("should bind", header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 	resp.Format(p.permit.FindPermit(ctx, req)).Context(c)
@@ -165,7 +165,7 @@ func (p *Permit) FindRole(c *gin.Context) {
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
 		logger.Logger.Errorw("should bind", header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 	resp.Format(p.permit.FindRole(ctx, req)).Context(c)
@@ -178,7 +178,7 @@ func (p *Permit) GetRole(c *gin.Context) {
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
 		logger.Logger.Errorw("should bind", header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 	resp.Format(p.permit.GetRole(ctx, req)).Context(c)
@@ -193,7 +193,7 @@ func (p *Permit) FindGrantRole(c *gin.Context) {
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
 		logger.Logger.Errorw("should bind", header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 	resp.Format(p.permit.FindGrantRole(ctx, req)).Context(c)
@@ -207,7 +207,7 @@ func (p *Permit) AssignRoleGrant(c *gin.Context) {
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
 		logger.Logger.Errorw("should bind", header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 	resp.Format(p.permit.AssignRoleGrant(ctx, req)).Context(c)
@@ -218,7 +218,7 @@ func (p *Permit) DeletePermit(c *gin.Context) {
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
 		logger.Logger.Errorw("should bind", header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 	resp.Format(p.permit.DeletePermit(ctx, req)).Context(c)
@@ -229,7 +229,7 @@ func (p *Permit) ListPermit(c *gin.Context) {
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
 		logger.Logger.Errorw("should bind", header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 	resp.Format(p.permit.ListPermit(ctx, req)).Context(c)
@@ -240,7 +240,7 @@ func (p *Permit) ListAndSelect(c *gin.Context) {
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
 		logger.Logger.Errorw("should bind", header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 	resp.Format(p.permit.ListAndSelect(ctx, req)).Context(c)
