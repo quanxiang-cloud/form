@@ -127,7 +127,7 @@ func (p *Permit) SaveUserPerMatch(c *gin.Context) {
 	resp.Format(p.permit.SaveUserPerMatch(ctx, req, service.RoleUserOption(p.permit))).Context(c)
 }
 
-// UserPerMatch user per match.
+// UserRoleMatch user per match.
 func (p *Permit) UserRoleMatch(c *gin.Context) {
 	ps := getProfile(c)
 	req := &service.FindGrantRoleReq{
