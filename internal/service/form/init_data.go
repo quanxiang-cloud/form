@@ -14,13 +14,13 @@ const (
 	createKey = "new"
 
 	updateKey = "updated"
-	// DeleteKey the key of "deleted" in the ref
+	// DeleteKey the key of "deleted" in the ref.
 	deleteKey = "deleted"
-	// AppIDKey the component's AppID in the ref
+	// AppIDKey the component's AppID in the ref.
 	appIDKey = "appID"
-	// TableIDKey the component's TableID in the ref
+	// TableIDKey the component's TableID in the ref.
 	tableIDKey = "tableID"
-	// EntityKey the component's entity in the ref
+	// EntityKey the component's entity in the ref.
 
 	entityKey = "entity"
 
@@ -28,11 +28,11 @@ const (
 
 	queryKey = "query"
 
-	// PrimitiveID PrimitiveID
+	// PrimitiveID PrimitiveID.
 	primitiveID = "primitiveID"
-	// SubID subID
+	// SubID subID.
 	subIDs = "subID"
-	// FieldName  FieldName
+	// FieldName  FieldName.
 	fieldName = "fieldName"
 )
 
@@ -56,7 +56,7 @@ func initOptionEntity(ctx context.Context, optValue map[string]interface{}, opti
 	return
 }
 
-// RefData  map[string] interface{}
+// RefData  map[string] interface{}.
 type RefData struct {
 	AppID         string                 `json:"appID"`
 	TableID       string                 `json:"tableID"`
@@ -104,7 +104,7 @@ func initRefData(ctx context.Context, optValue map[string]interface{}, data *Ref
 	return
 }
 
-// ExtraData ExtraData
+// ExtraData ExtraData.
 type ExtraData struct {
 	AppID   string `json:"appID"`
 	TableID string `json:"tableID"`
@@ -120,7 +120,7 @@ func initExtraData(ctx context.Context, optValue map[string]interface{}, extraDa
 	return
 }
 
-// SetFieldValue SetFieldValue
+// SetFieldValue SetFieldValue.
 func SetFieldValue(ctx context.Context, data interface{}, ptr interface{}) error {
 	if data == nil {
 		return nil
@@ -130,7 +130,6 @@ func SetFieldValue(ctx context.Context, data interface{}, ptr interface{}) error
 	ptrKind := reflect.TypeOf(ptr).Elem().Kind()
 	if dateKind == reflect.Ptr {
 		return SetFieldValue(ctx, value.Elem(), ptr)
-
 	}
 	if dateKind != ptrKind {
 		logger.Logger.Errorw("dateKind type is not ptrKind", "", "")

@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"reflect"
+
 	"github.com/quanxiang-cloud/form/internal/models/redis"
 	"github.com/quanxiang-cloud/form/internal/service/consensus"
 	"github.com/quanxiang-cloud/form/internal/service/types"
 	"github.com/quanxiang-cloud/form/pkg/misc/utils"
-	"reflect"
 )
 
 type common struct {
@@ -103,11 +104,11 @@ func (c *common) subUpdate(ctx context.Context) error {
 	}
 	err = c.new(ctx, refData, extraData)
 	if err != nil {
-		//logger.Logger.Errorw("new  is  err is", err.Error())
+		// logger.Logger.Errorw("new  is  err is", err.Error())
 	}
 	err = c.delete(ctx, refData, extraData, c.tag == "sub_table") // 等于sub table 需要删除
 	if err != nil {
-		//logger.Logger.Errorw("new  is  err is", err.Error())
+		// logger.Logger.Errorw("new  is  err is", err.Error())
 	}
 	return nil
 }
@@ -116,7 +117,7 @@ func (c *common) subGet(ctx context.Context, isReplace bool) error {
 	return nil
 }
 
-// new :component create options
+// new :component create options.
 func (c *common) new(ctx context.Context, refData *RefData, originalData *ExtraData) error {
 	ids := make([]interface{}, 0)
 	for _, _subTable := range refData.New {
@@ -150,13 +151,11 @@ func (c *common) new(ctx context.Context, refData *RefData, originalData *ExtraD
 			return err
 		}
 		ids = append(ids, opt.Entity["_id"])
-
 	}
 	return c.addRelationShip(ctx, refData, originalData, ids)
 }
 
 func (c *common) addRelationShip(ctx context.Context, refData *RefData, extraData *ExtraData, ids []interface{}) error {
-
 	primitiveKey, err := getPrimaryID(c.primaryEntity)
 	if err != nil {
 		return err
@@ -184,13 +183,13 @@ func (c *common) addRelationShip(ctx context.Context, refData *RefData, extraDat
 		bus.CreatedOrUpdate.Entity = entity
 		_, err = c.ref.Do(ctx, bus)
 		if err != nil {
-			//logger.Logger.Errorw("add sub form is err ,err is ", logger.STDRequestID(ctx), err.Error())
+			// logger.Logger.Errorw("add sub form is err ,err is ", logger.STDRequestID(ctx), err.Error())
 		}
 	}
 	return nil
 }
 
-// getRelationName getRelationName
+// getRelationName getRelationName.
 func getRelationName(primary, sub string) string {
 	return fmt.Sprintf("%s_%s", primary, sub)
 }
@@ -274,7 +273,7 @@ func (c *common) delete(ctx context.Context, refData *RefData, originalData *Ext
 	bus.Get.Query = dslQuery
 	_, err := c.ref.Do(ctx, bus)
 	if err != nil {
-		//logger.Logger.Errorw("add sub form is err ,err is ", logger.STDRequestID(ctx), err.Error())
+		// logger.Logger.Errorw("add sub form is err ,err is ", logger.STDRequestID(ctx), err.Error())
 	}
 	return nil
 }
@@ -335,7 +334,7 @@ func (s *serial) handlerFunc(ctx context.Context, action string) error {
 	serialMap := s.ref.serialRepo.GetAll(ctx, originalData.AppID, originalData.TableID, s.key)
 	serialScheme, res, err := utils.ExecuteTemplate(serialMap)
 	if err != nil {
-		//logger.Logger.Errorw("serial template is err", logger.STDRequestID(ctx))
+		// logger.Logger.Errorw("serial template is err", logger.STDRequestID(ctx))
 		return err
 	}
 	//
@@ -367,6 +366,5 @@ func (a *associatedRecords) getTag() string {
 }
 
 func (a *associatedRecords) handlerFunc(ctx context.Context, action string) error {
-
 	return nil
 }

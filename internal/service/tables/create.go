@@ -2,6 +2,7 @@ package tables
 
 import (
 	"context"
+
 	time2 "github.com/quanxiang-cloud/cabin/time"
 	"github.com/quanxiang-cloud/form/internal/service/tables/util"
 
@@ -18,7 +19,7 @@ const (
 	_title       = "title"
 )
 
-// 处理web Table de
+// 处理web Table de.
 type webTable struct {
 	next      Guidance
 	db        *gorm.DB

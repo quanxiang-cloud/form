@@ -35,7 +35,7 @@ func NewRefs(conf *config.Config) (consensus.Guidance, error) {
 	}, nil
 }
 
-// Do create update
+// Do create update.
 func (c *refs) Do(ctx context.Context, bus *consensus.Bus) (*consensus.Response, error) {
 	if bus.Method == "create" {
 		bus.CreatedOrUpdate.Entity = consensus.DefaultField(bus.CreatedOrUpdate.Entity,
@@ -85,7 +85,6 @@ func (c *refs) Do(ctx context.Context, bus *consensus.Bus) (*consensus.Response,
 			if err != nil {
 				logger.Logger.Errorw("msg", "", err.Error())
 			}
-
 		}
 	}
 	return c.next.Do(ctx, bus)

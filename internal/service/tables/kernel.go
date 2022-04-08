@@ -26,8 +26,7 @@ type ConvertSchemas struct {
 	Description   string
 }
 
-type DoResponse struct {
-}
+type DoResponse struct{}
 
 type Guidance interface {
 	Do(ctx context.Context, bus *Bus) (*DoResponse, error)

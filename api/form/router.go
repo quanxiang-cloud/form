@@ -3,9 +3,10 @@ package api
 import (
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"github.com/quanxiang-cloud/form/internal/service/form"
 	config2 "github.com/quanxiang-cloud/form/pkg/misc/config"
+
+	"github.com/gin-gonic/gin"
 )
 
 const (
@@ -223,7 +224,7 @@ func dataSetRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 	return nil
 }
 
-// Run router
+// Run router.
 func (r *Router) Run() {
 	go r.engineInner.Run(r.c.PortInner)
 	r.engine.Run(r.c.Port)

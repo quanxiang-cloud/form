@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/quanxiang-cloud/cabin/logger"
 	"github.com/quanxiang-cloud/cabin/tailormade/header"
 	"github.com/quanxiang-cloud/cabin/tailormade/resp"
 	"github.com/quanxiang-cloud/form/internal/service"
@@ -14,7 +15,7 @@ type DataSet struct {
 	dataset service.DataSet
 }
 
-// NewDataSet 初始化
+// Newdataset initialization.
 func NewDataSet(conf *config.Config) (*DataSet, error) {
 	d, err := service.NewDataSet(conf)
 	if err != nil {
@@ -25,55 +26,71 @@ func NewDataSet(conf *config.Config) (*DataSet, error) {
 	}, nil
 }
 
-// CreateDataSet CreateDataSet
+// CreateDataSet CreateDataSet.
 func (d *DataSet) CreateDataSet(c *gin.Context) {
+	ctx := header.MutateContext(c)
+
 	req := &service.CreateDataSetReq{}
 	if err := c.ShouldBind(req); err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
+		logger.Logger.WithName("CreateDataSet").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
-	resp.Format(d.dataset.CreateDataSet(header.MutateContext(c), req)).Context(c)
 
+	resp.Format(d.dataset.CreateDataSet(ctx, req)).Context(c)
 }
 
-// GetDataSet GetDataSet
+// GetDataSet GetDataSet.
 func (d *DataSet) GetDataSet(c *gin.Context) {
+	ctx := header.MutateContext(c)
+
 	req := &service.GetDataSetReq{}
 	if err := c.ShouldBind(req); err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
+		logger.Logger.WithName("GetDataSet").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
-	resp.Format(d.dataset.GetDataSet(header.MutateContext(c), req)).Context(c)
+
+	resp.Format(d.dataset.GetDataSet(ctx, req)).Context(c)
 }
 
-// UpdateDataSet UpdateDataSet
+// UpdateDataSet UpdateDataSet.
 func (d *DataSet) UpdateDataSet(c *gin.Context) {
+	ctx := header.MutateContext(c)
+
 	req := &service.UpdateDataSetReq{}
 	if err := c.ShouldBind(req); err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
+		logger.Logger.WithName("UpdateDataSet").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
-	resp.Format(d.dataset.UpdateDataSet(header.MutateContext(c), req)).Context(c)
-
+	resp.Format(d.dataset.UpdateDataSet(ctx, req)).Context(c)
 }
 
-// GetByConditionSet GetByConditionSet
+// GetByConditionSet GetByConditionSet.
 func (d *DataSet) GetByConditionSet(c *gin.Context) {
+	ctx := header.MutateContext(c)
+
 	req := &service.GetByConditionSetReq{}
 	if err := c.ShouldBind(req); err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
+		logger.Logger.WithName("GetByConditionSet").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
-	resp.Format(d.dataset.GetByConditionSet(header.MutateContext(c), req)).Context(c)
+
+	resp.Format(d.dataset.GetByConditionSet(ctx, req)).Context(c)
 }
 
-// DeleteDataSet DeleteDataSet
+// DeleteDataSet DeleteDataSet.
 func (d *DataSet) DeleteDataSet(c *gin.Context) {
+	ctx := header.MutateContext(c)
+
 	req := &service.DeleteDataSetReq{}
 	if err := c.ShouldBind(req); err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
+		logger.Logger.WithName("DeleteDataSet").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
-	resp.Format(d.dataset.DeleteDataSet(header.MutateContext(c), req)).Context(c)
 
+	resp.Format(d.dataset.DeleteDataSet(ctx, req)).Context(c)
 }

@@ -549,7 +549,6 @@ func (p *permit) DeletePermit(ctx context.Context, req *DeletePerReq) (*DeletePe
 		RoleID: req.RoleID,
 		Path:   req.Path,
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -606,8 +605,7 @@ type DeleteRoleReq struct {
 	RoleID string `json:"-"`
 	AppID  string `json:"-"`
 }
-type DeleteRoleResp struct {
-}
+type DeleteRoleResp struct{}
 
 func (p *permit) DeleteRole(ctx context.Context, req *DeleteRoleReq) (*DeleteRoleResp, error) {
 	err := p.roleRepo.Delete(p.db, &models.RoleQuery{
@@ -649,7 +647,6 @@ func (p *permit) DeleteRole(ctx context.Context, req *DeleteRoleReq) (*DeleteRol
 	//
 	//}
 	return &DeleteRoleResp{}, nil
-
 }
 
 func (p *permit) publish(ctx context.Context, topic string, data interface{}) error {

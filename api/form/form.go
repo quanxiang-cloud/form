@@ -2,14 +2,15 @@ package api
 
 import (
 	"errors"
-	"github.com/quanxiang-cloud/form/internal/service/types"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/quanxiang-cloud/cabin/logger"
 	"github.com/quanxiang-cloud/cabin/tailormade/header"
 	"github.com/quanxiang-cloud/cabin/tailormade/resp"
 	"github.com/quanxiang-cloud/form/internal/service/consensus"
+	"github.com/quanxiang-cloud/form/internal/service/types"
 )
 
 type profile struct {
@@ -20,23 +21,27 @@ type profile struct {
 
 func action(ctr consensus.Guidance) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := header.MutateContext(c)
+
 		bus := &consensus.Bus{}
 		err := initBus(c, bus, c.Param("action"))
 		if err != nil {
+			logger.Logger.WithName("action").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
 			c.AbortWithError(http.StatusBadRequest, err)
 			return
 		}
 		if err = c.ShouldBind(bus); err != nil {
+			logger.Logger.WithName("action").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
 			c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
-		do, err := ctr.Do(header.MutateContext(c), bus)
+		do, err := ctr.Do(ctx, bus)
 
 		resp.Format(do, err).Context(c)
 	}
 }
 
-// checkURL CheckURL
+// checkURL CheckURL.
 func checkURL(c *gin.Context) (appID, tableName string, err error) {
 	appID, ok := c.Params.Get("appID")
 	tableName, okt := c.Params.Get("tableName")
@@ -49,9 +54,12 @@ func checkURL(c *gin.Context) (appID, tableName string, err error) {
 
 func get(ctr consensus.Guidance) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := header.MutateContext(c)
+
 		bus := &consensus.Bus{}
 		err := initBus(c, bus, "get")
 		if err != nil {
+			logger.Logger.WithName("get").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
 			c.AbortWithError(http.StatusBadRequest, err)
 			return
 		}
@@ -61,10 +69,11 @@ func get(ctr consensus.Guidance) gin.HandlerFunc {
 			},
 		}
 		if err = c.ShouldBind(bus); err != nil {
+			logger.Logger.WithName("get").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
 			c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
-		do, err := ctr.Do(header.MutateContext(c), bus)
+		do, err := ctr.Do(ctx, bus)
 
 		resp.Format(do, err).Context(c)
 	}
@@ -72,13 +81,17 @@ func get(ctr consensus.Guidance) gin.HandlerFunc {
 
 func search(ctr consensus.Guidance) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := header.MutateContext(c)
+
 		bus := &consensus.Bus{}
 		err := initBus(c, bus, "search")
 		if err != nil {
+			logger.Logger.WithName("search").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
 			c.AbortWithError(http.StatusBadRequest, err)
 			return
 		}
 		if err = c.ShouldBind(bus); err != nil {
+			logger.Logger.WithName("search").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
 			c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
@@ -89,9 +102,11 @@ func search(ctr consensus.Guidance) gin.HandlerFunc {
 
 func delete(ctr consensus.Guidance) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := header.MutateContext(c)
 		bus := &consensus.Bus{}
 		err := initBus(c, bus, "delete")
 		if err != nil {
+			logger.Logger.WithName("delete").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
 			c.AbortWithError(http.StatusBadRequest, err)
 			return
 		}
@@ -101,6 +116,7 @@ func delete(ctr consensus.Guidance) gin.HandlerFunc {
 			},
 		}
 		if err = c.ShouldBind(bus); err != nil {
+			logger.Logger.WithName("delete").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
 			c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
@@ -112,9 +128,11 @@ func delete(ctr consensus.Guidance) gin.HandlerFunc {
 
 func update(ctr consensus.Guidance) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := header.MutateContext(c)
 		bus := &consensus.Bus{}
 		err := initBus(c, bus, "update")
 		if err != nil {
+			logger.Logger.WithName("update").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
 			c.AbortWithError(http.StatusBadRequest, err)
 			return
 		}
@@ -124,6 +142,7 @@ func update(ctr consensus.Guidance) gin.HandlerFunc {
 			},
 		}
 		if err = c.ShouldBind(bus); err != nil {
+			logger.Logger.WithName("update").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
 			c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
@@ -135,13 +154,16 @@ func update(ctr consensus.Guidance) gin.HandlerFunc {
 
 func create(ctr consensus.Guidance) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := header.MutateContext(c)
 		bus := &consensus.Bus{}
 		err := initBus(c, bus, "create")
 		if err != nil {
+			logger.Logger.WithName("create").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
 			c.AbortWithError(http.StatusBadRequest, err)
 			return
 		}
 		if err = c.ShouldBind(bus); err != nil {
+			logger.Logger.WithName("create").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
 			c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}

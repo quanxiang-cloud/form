@@ -12,7 +12,7 @@ const (
 	topic = "form-data4"
 )
 
-// FormData FormData
+// FormData FormData.
 type FormData struct {
 	TableID string      `json:"tableID"`
 	Entity  interface{} `json:"entity"`
@@ -22,7 +22,7 @@ type FormData struct {
 	Method  string      `json:"method"`
 }
 
-// HookManger 管理发送kafka
+// HookManger 管理发送kafka.
 type HookManger struct {
 	Send       chan *FormData // 增删改数据后，放到这个信道
 	conf       *config.Config
@@ -30,7 +30,7 @@ type HookManger struct {
 	log        logr.Logger
 }
 
-// NewHookManger NewHookManger
+// NewHookManger NewHookManger.
 func NewHookManger(ctx context.Context, conf *config.Config) (*HookManger, error) {
 	client, err := daprd.NewClient()
 	if err != nil {
@@ -43,10 +43,9 @@ func NewHookManger(ctx context.Context, conf *config.Config) (*HookManger, error
 	}
 	go m.Start(ctx)
 	return m, nil
-
 }
 
-// Start Start
+// Start Start.
 func (manager *HookManger) Start(ctx context.Context) {
 	for {
 		select {
@@ -55,11 +54,10 @@ func (manager *HookManger) Start(ctx context.Context) {
 				manager.log.Error(err, "push flow", "sendData ", sendData)
 			}
 		case <-ctx.Done():
-
 		}
 	}
-
 }
+
 func (manager *HookManger) publish(ctx context.Context, topic string, data interface{}) error {
 	if err := manager.daprClient.PublishEvent(ctx, manager.conf.PubSubName, topic, data); err != nil {
 		manager.log.Error(err, "publishEvent", "topic", topic, "pubsubName", manager.conf.PubSubName)

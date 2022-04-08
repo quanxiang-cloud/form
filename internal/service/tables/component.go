@@ -3,6 +3,7 @@ package tables
 import (
 	"context"
 	"encoding/json"
+
 	id2 "github.com/quanxiang-cloud/cabin/id"
 	redis2 "github.com/quanxiang-cloud/cabin/tailormade/db/redis"
 	"github.com/quanxiang-cloud/form/internal/models"
@@ -140,8 +141,8 @@ func (c *component) addRepo(table *models.TableRelation) error {
 		return c.tableRelationRepo.BatchCreate(c.db, table)
 	}
 	return c.tableRelationRepo.Update(c.db, table.TableID, table.FieldName, table)
-
 }
+
 func (c *component) doSerial(ctx context.Context, bus *base) error {
 	fieldName := bus.fieldName
 	cp := &ComponentProp{}
@@ -189,10 +190,9 @@ func (c *component) doSerial(ctx context.Context, bus *base) error {
 	}
 
 	return nil
-
 }
 
-// ComponentProp schema中 x-component-props 结构
+// ComponentProp schema中 x-component-props 结构.
 type ComponentProp struct {
 	AppID   string   `json:"appID"`
 	TableID string   `json:"tableID"`

@@ -14,6 +14,7 @@ import (
 
 	error2 "github.com/quanxiang-cloud/cabin/error"
 	"github.com/quanxiang-cloud/cabin/logger"
+	"github.com/quanxiang-cloud/cabin/tailormade/header"
 	cabinr "github.com/quanxiang-cloud/cabin/tailormade/resp"
 	"github.com/quanxiang-cloud/form/internal/permit"
 	"github.com/quanxiang-cloud/form/internal/permit/treasure"
@@ -59,7 +60,7 @@ func (p *Proxy) Do(ctx context.Context, req *permit.Request) (*permit.Response, 
 	}
 
 	proxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
-		logger.Logger.Errorf("Got error while modifying response: %v \n", err.Error())
+		logger.Logger.WithName("modify response").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -68,7 +69,7 @@ func (p *Proxy) Do(ctx context.Context, req *permit.Request) (*permit.Response, 
 	r.Host = p.url.Host
 	data, err := json.Marshal(req.Body)
 	if err != nil {
-		logger.Logger.Errorf("entity json marshal failed: %s", err.Error())
+		logger.Logger.WithName("form proxy").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
 		return nil, err
 	}
 

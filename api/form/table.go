@@ -13,13 +13,13 @@ import (
 	config2 "github.com/quanxiang-cloud/form/pkg/misc/config"
 )
 
-// Table  table
+// Table  table.
 type Table struct {
 	table    table2.Table
 	guidance table2.Guidance
 }
 
-// NewTable new table
+// NewTable new table.
 func NewTable(conf *config2.Config) (*Table, error) {
 	t, err := table2.NewTable(conf)
 	if err != nil {
@@ -35,6 +35,7 @@ func NewTable(conf *config2.Config) (*Table, error) {
 	}, nil
 }
 
+// CrateTable create table.
 func (t *Table) CrateTable(c *gin.Context) {
 	profiles := getProfile(c)
 	req := &table2.Bus{
@@ -44,13 +45,14 @@ func (t *Table) CrateTable(c *gin.Context) {
 	}
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
-		logger.Logger.WithName("api table").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
+		logger.Logger.WithName("CrateTable").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 	resp.Format(t.guidance.Do(ctx, req)).Context(c)
 }
 
+// GetTable GetTable.
 func (t *Table) GetTable(c *gin.Context) {
 	req := &table2.GetTableReq{
 		AppID:   c.Param(_appID),
@@ -58,13 +60,14 @@ func (t *Table) GetTable(c *gin.Context) {
 	}
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
-		logger.Logger.WithName("api table").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
+		logger.Logger.WithName("GetTable").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 	resp.Format(t.table.GetTable(ctx, req)).Context(c)
 }
 
+// DeleteTable DeleteTable.
 func (t *Table) DeleteTable(c *gin.Context) {
 	req := &table2.DeleteTableReq{
 		AppID: c.Param("appID"),
@@ -72,12 +75,13 @@ func (t *Table) DeleteTable(c *gin.Context) {
 
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
-		logger.Logger.WithName("api table").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
+		logger.Logger.WithName("DeleteTable").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
 		return
 	}
 	resp.Format(t.table.DeleteTable(ctx, req)).Context(c)
 }
 
+// CreateBlank create blank.
 func (t *Table) CreateBlank(c *gin.Context) {
 	resp.Format(struct {
 		TableID string `json:"tableID"`
@@ -86,25 +90,27 @@ func (t *Table) CreateBlank(c *gin.Context) {
 	}, nil).Context(c)
 }
 
+// FindTable find table.
 func (t *Table) FindTable(c *gin.Context) {
 	req := &table2.FindTableReq{
 		AppID: c.Param("appID"),
 	}
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
-		logger.Logger.WithName("api table").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
+		logger.Logger.WithName("FindTable").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
 		return
 	}
 	resp.Format(t.table.FindTable(ctx, req)).Context(c)
 }
 
+// UpdateConfig update config.
 func (t *Table) UpdateConfig(c *gin.Context) {
 	req := &table2.UpdateConfigReq{
 		AppID: c.Param("appID"),
 	}
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
-		logger.Logger.WithName("api table").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
+		logger.Logger.WithName("UpdateConfig").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
 		return
 	}
 	resp.Format(t.table.UpdateConfig(ctx, req)).Context(c)
@@ -117,5 +123,4 @@ func getProfile(c *gin.Context) *profile {
 		userName: c.Param(_userName),
 		depID:    depIDS[len(depIDS)-1],
 	}
-
 }

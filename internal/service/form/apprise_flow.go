@@ -32,7 +32,7 @@ func NewAppriseFlow(conf *config.Config) (consensus.Guidance, error) {
 	}, nil
 }
 
-// Do 可以用策略模式改，可以先用switch
+// Do 可以用策略模式改，可以先用switch.
 func (a *appriseFlow) Do(ctx context.Context, bus *consensus.Bus) (*consensus.Response, error) {
 	// 先去创建数据
 	do, err := a.next.Do(ctx, bus)
@@ -66,7 +66,8 @@ func (a *appriseFlow) deleteApprise(ctx context.Context, bus *consensus.Bus) {
 		TableID: bus.TableID,
 		Entity: map[string]interface{}{
 			"data":      ids,
-			"delete_id": bus.UserID},
+			"delete_id": bus.UserID,
+		},
 	}
 	inform.DefaultFormFiled(ctx, data, "delete")
 	logger.Logger.Infof(" %s send kafk data:   %+v : ", data)
@@ -77,7 +78,6 @@ func (a *appriseFlow) updateApprise(ctx context.Context, bus *consensus.Bus) {
 	ids := consensus.GetIDByQuery(bus.Get.Query)
 
 	for _, id := range ids {
-
 		entity := consensus.DefaultField(bus.CreatedOrUpdate.Entity,
 			consensus.WithUpdateID(id),
 		)

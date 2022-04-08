@@ -3,6 +3,7 @@ package swagger
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/go-openapi/spec"
 	"github.com/quanxiang-cloud/form/internal/service/tables/util"
 )
@@ -46,6 +47,7 @@ func PutMethod(schemasBus *schemasBus) spec.OperationProps {
 		parameters,
 	})
 }
+
 func DeleteMethod(schemasBus *schemasBus) spec.OperationProps {
 	responses := countResp()
 	parameters := []spec.Parameter{
@@ -112,7 +114,6 @@ func doOperationProps(operation *operation) spec.OperationProps {
 }
 
 func DoSchemas(appID, tableID, tableName string, schemas spec.SchemaProperties) (string, error) {
-
 	filterSystems := make(spec.SchemaProperties)
 
 	schemasbus := &schemasBus{
@@ -226,5 +227,4 @@ func DoSchemas(appID, tableID, tableName string, schemas spec.SchemaProperties) 
 	}
 	swaggers := string(marshal)
 	return swaggers, nil
-
 }

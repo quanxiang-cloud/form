@@ -2,6 +2,7 @@ package swagger
 
 import (
 	"fmt"
+
 	"github.com/go-openapi/spec"
 	"github.com/quanxiang-cloud/form/internal/service/tables/util"
 )
@@ -25,7 +26,6 @@ func V1GetMethod(schemasBus *schemasBus) spec.OperationProps {
 
 		parameters,
 	})
-
 }
 
 func V1Delete(schemasBus *schemasBus) spec.OperationProps {

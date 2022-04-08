@@ -5,16 +5,16 @@ import (
 )
 
 const (
-	// TermsKey TermsKey
+	// TermsKey TermsKey.
 	TermsKey = "terms"
 	TermKey  = "term"
 	IDKey    = "_id"
 )
 
-// KeyValue KeyValue
+// KeyValue KeyValue.
 type KeyValue map[string]interface{}
 
-// GetSimple GetSimple
+// GetSimple GetSimple.
 func GetSimple(tag, fieldName string, value interface{}) map[string]interface{} {
 	return map[string]interface{}{
 		tag: KeyValue{
@@ -23,7 +23,7 @@ func GetSimple(tag, fieldName string, value interface{}) map[string]interface{} 
 	}
 }
 
-// GetBool GetBool
+// GetBool GetBool.
 func GetBool(tag string, value ...interface{}) map[string]interface{} {
 	return map[string]interface{}{
 		"bool": KeyValue{
@@ -50,18 +50,16 @@ func GetIDByQuery(query map[string]interface{}) []string {
 				ids = append(ids, id1)
 			}
 		}
-
 	} else if reflect.TypeOf(term).Kind() == reflect.String {
 		id1, ok := term.(string)
 		if ok {
 			ids = append(ids, id1)
 		}
-
 	}
 	return ids
 }
 
-// Term Term
+// Term Term.
 func Term(data interface{}) interface{} {
 	switch reflect.TypeOf(data).Kind() {
 	case reflect.Map:
@@ -76,7 +74,6 @@ func Term(data interface{}) interface{} {
 		if value := v.MapIndex(reflect.ValueOf(IDKey)); value.IsValid() {
 			return value.Interface()
 		}
-
 	}
 	return nil
 }

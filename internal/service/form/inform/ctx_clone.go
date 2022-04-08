@@ -21,10 +21,10 @@ const (
 	magic   = " "
 )
 
-// HeaderOpt HeaderOpt
+// HeaderOpt HeaderOpt.
 type HeaderOpt func(ctx context.Context)
 
-// WithVersion WithVersion
+// WithVersion WithVersion.
 func WithVersion(formData *FormData) HeaderOpt {
 	return func(ctx context.Context) {
 		versions, ok := ctx.Value(_version).(string)
@@ -35,7 +35,7 @@ func WithVersion(formData *FormData) HeaderOpt {
 	}
 }
 
-// WithMagic WithMagic
+// WithMagic WithMagic.
 func WithMagic(formData *FormData) HeaderOpt {
 	return func(ctx context.Context) {
 		magics, ok := ctx.Value(_magic).(string)
@@ -47,7 +47,7 @@ func WithMagic(formData *FormData) HeaderOpt {
 	}
 }
 
-// WithMethod WithMethod
+// WithMethod WithMethod.
 func WithMethod(formData *FormData, method string) HeaderOpt {
 	return func(ctx context.Context) {
 		//methods, ok := ctx.Value(_method).(string)
@@ -58,7 +58,7 @@ func WithMethod(formData *FormData, method string) HeaderOpt {
 	}
 }
 
-// WithSeq WithSeq
+// WithSeq WithSeq.
 func WithSeq(formData *FormData) HeaderOpt {
 	return func(ctx context.Context) {
 		sequences, ok := ctx.Value(_seq).(string)
@@ -69,14 +69,14 @@ func WithSeq(formData *FormData) HeaderOpt {
 	}
 }
 
-// CloneHeader CloneHeader
+// CloneHeader CloneHeader.
 func CloneHeader(ctx context.Context, opts ...HeaderOpt) {
 	for _, opt := range opts {
 		opt(ctx)
 	}
 }
 
-// CTXHeader Context
+// CTXHeader Context.
 func CTXHeader(c context.Context, ctx *gin.Context) context.Context {
 	c = context.WithValue(c, _magic, ctx.Request.Header.Get(string(_magic)))
 	c = context.WithValue(c, _seq, ctx.Request.Header.Get(string(_seq)))
@@ -85,7 +85,7 @@ func CTXHeader(c context.Context, ctx *gin.Context) context.Context {
 	return c
 }
 
-// DefaultFormFiled DefaultFormFiled
+// DefaultFormFiled DefaultFormFiled.
 func DefaultFormFiled(ctx context.Context, data *FormData, method string) {
 	CloneHeader(ctx, WithMethod(data, method), WithVersion(data), WithMagic(data), WithSeq(data))
 }

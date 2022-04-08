@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+
 	"github.com/quanxiang-cloud/form/internal/models/mysql"
 	"gorm.io/gorm"
 
@@ -14,7 +15,7 @@ import (
 	"github.com/quanxiang-cloud/form/pkg/misc/config"
 )
 
-// DataSet DataSet
+// DataSet DataSet.
 type DataSet interface {
 	CreateDataSet(c context.Context, req *CreateDataSetReq) (*CreateDataSetResp, error)
 	GetDataSet(c context.Context, req *GetDataSetReq) (*GetDataSetResp, error)
@@ -28,9 +29,8 @@ type dataset struct {
 	datasetRepo models.DataSetRepo
 }
 
-// NewDataSet NewDataSet
+// NewDataSet NewDataSet.
 func NewDataSet(conf *config.Config) (DataSet, error) {
-
 	db, err := CreateMysqlConn(conf)
 	if err != nil {
 		return nil, err
@@ -43,7 +43,7 @@ func NewDataSet(conf *config.Config) (DataSet, error) {
 	return u, nil
 }
 
-// CreateDataSetReq CreateDataSetReq
+// CreateDataSetReq CreateDataSetReq.
 type CreateDataSetReq struct {
 	Name    string `json:"name" binding:"max=100"`
 	Tag     string `json:"tag"  binding:"max=100"`
@@ -51,12 +51,12 @@ type CreateDataSetReq struct {
 	Content string `json:"content"`
 }
 
-// CreateDataSetResp CreateDataSetResp
+// CreateDataSetResp CreateDataSetResp.
 type CreateDataSetResp struct {
 	ID string `json:"id"`
 }
 
-// CreateDataSet CreateDataSet
+// CreateDataSet CreateDataSet.
 func (per *dataset) CreateDataSet(c context.Context, req *CreateDataSetReq) (*CreateDataSetResp, error) {
 	_, total, err := per.datasetRepo.Find(per.db, &models.DataSetQuery{Name: req.Name}, 0, 0)
 	if err != nil {
@@ -82,12 +82,12 @@ func (per *dataset) CreateDataSet(c context.Context, req *CreateDataSetReq) (*Cr
 	}, nil
 }
 
-// GetDataSetReq GetDataSetReq
+// GetDataSetReq GetDataSetReq.
 type GetDataSetReq struct {
 	ID string `json:"id"`
 }
 
-// GetDataSetResp GetDataSetResp
+// GetDataSetResp GetDataSetResp.
 type GetDataSetResp struct {
 	ID      string `json:"id"`
 	Name    string `json:"name" binding:"max=100"`
@@ -96,7 +96,7 @@ type GetDataSetResp struct {
 	Content string `json:"content"`
 }
 
-// GetDataSet GetDataSet
+// GetDataSet GetDataSet.
 func (per *dataset) GetDataSet(c context.Context, req *GetDataSetReq) (*GetDataSetResp, error) {
 	datasets, err := per.datasetRepo.GetByID(per.db, req.ID)
 	if err != nil {
@@ -113,7 +113,7 @@ func (per *dataset) GetDataSet(c context.Context, req *GetDataSetReq) (*GetDataS
 	return resp, nil
 }
 
-// UpdateDataSetReq UpdateDataSetReq
+// UpdateDataSetReq UpdateDataSetReq.
 type UpdateDataSetReq struct {
 	ID      string `json:"id"`
 	Name    string `json:"name"`
@@ -122,11 +122,10 @@ type UpdateDataSetReq struct {
 	Content string `json:"content"`
 }
 
-// UpdateDataSetResp UpdateDataSetResp
-type UpdateDataSetResp struct {
-}
+// UpdateDataSetResp UpdateDataSetResp.
+type UpdateDataSetResp struct{}
 
-// UpdateDataSet UpdateDataSet
+// UpdateDataSet UpdateDataSet.
 func (per *dataset) UpdateDataSet(c context.Context, req *UpdateDataSetReq) (*UpdateDataSetResp, error) {
 	data, _, err := per.datasetRepo.Find(per.db, &models.DataSetQuery{
 		Name: req.Name,
@@ -153,20 +152,20 @@ func (per *dataset) UpdateDataSet(c context.Context, req *UpdateDataSetReq) (*Up
 	return &UpdateDataSetResp{}, nil
 }
 
-// GetByConditionSetReq GetByConditionSetReq
+// GetByConditionSetReq GetByConditionSetReq.
 type GetByConditionSetReq struct {
 	Name  string `json:"name"`
 	Tag   string `json:"tag"`
 	Types int64  `json:"type"`
 }
 
-// GetByConditionSetResp GetByConditionSetResp
+// GetByConditionSetResp GetByConditionSetResp.
 type GetByConditionSetResp struct {
 	Total int64        `json:"total"`
 	List  []*DataSetVo `json:"list"`
 }
 
-// DataSetVo DataSetVo
+// DataSetVo DataSetVo.
 type DataSetVo struct {
 	ID      string `json:"id"`
 	Name    string `json:"name"`
@@ -175,7 +174,7 @@ type DataSetVo struct {
 	Content string `json:"content"`
 }
 
-// GetByConditionSet GetByConditionSet
+// GetByConditionSet GetByConditionSet.
 func (per *dataset) GetByConditionSet(c context.Context, req *GetByConditionSetReq) (*GetByConditionSetResp, error) {
 	arr, total, err := per.datasetRepo.Find(per.db, &models.DataSetQuery{
 		Tag:   req.Tag,
@@ -194,27 +193,25 @@ func (per *dataset) GetByConditionSet(c context.Context, req *GetByConditionSetR
 		cloneDataSet(value, resp.List[index])
 	}
 	return resp, nil
-
 }
+
 func cloneDataSet(src *models.DataSet, dst *DataSetVo) {
 	dst.ID = src.ID
 	dst.Name = src.Name
 	dst.Tag = src.Tag
 	dst.Type = src.Type
 	dst.Content = src.Content
-
 }
 
-// DeleteDataSetReq DeleteDataSetReq
+// DeleteDataSetReq DeleteDataSetReq.
 type DeleteDataSetReq struct {
 	ID string `json:"id"`
 }
 
-// DeleteDataSetResp DeleteDataSetResp
-type DeleteDataSetResp struct {
-}
+// DeleteDataSetResp DeleteDataSetResp.
+type DeleteDataSetResp struct{}
 
-// DeleteDataSet DeleteDataSet
+// DeleteDataSet DeleteDataSet.
 func (per *dataset) DeleteDataSet(c context.Context, req *DeleteDataSetReq) (*DeleteDataSetResp, error) {
 	err := per.datasetRepo.Delete(per.db, req.ID)
 	if err != nil {

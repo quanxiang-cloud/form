@@ -18,16 +18,14 @@ var cs = []components{
 	&associatedRecords{},
 }
 
-var (
-	ErrNoComponents = errors.New("no ErrNoComponents like this")
-)
+var ErrNoComponents = errors.New("no ErrNoComponents like this")
 
-// Component Container for components
+// Component Container for components.
 type component struct {
 	com map[string]components
 }
 
-// NewCom return component instance
+// NewCom return component instance.
 func newFormComponent() *component {
 	c := &component{
 		com: make(map[string]components, len(cs)),
@@ -38,7 +36,7 @@ func newFormComponent() *component {
 	return c
 }
 
-// GetCom build a component
+// GetCom build a component.
 func (c *component) getCom(tag string, req *comReq) (components, error) {
 	com, ok := c.com[tag] // 获取组件
 	if !ok {

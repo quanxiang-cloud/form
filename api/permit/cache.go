@@ -4,13 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/quanxiang-cloud/form/pkg/misc/config"
 	"io/ioutil"
 
 	"github.com/labstack/echo/v4"
 	"github.com/quanxiang-cloud/cabin/logger"
 	"github.com/quanxiang-cloud/form/internal/component/event"
 	"github.com/quanxiang-cloud/form/internal/permit"
+	"github.com/quanxiang-cloud/form/pkg/misc/config"
 )
 
 func (p *Cache) Match(c echo.Context) error {
@@ -23,10 +23,9 @@ func (p *Cache) Match(c echo.Context) error {
 
 	err = json.Unmarshal(body, &data)
 	if err != nil {
-
 		return nil
 	}
-	//fmt.Printf("ssssss%v", data.Data.UserSpec)
+	// fmt.Printf("ssssss%v", data.Data.UserSpec)
 	if data.Data.UserSpec == nil {
 		data.Data.UserSpec = &event.UserSpec{}
 	}
@@ -42,7 +41,6 @@ func (p *Cache) Match(c echo.Context) error {
 		return err
 	}
 	return nil
-
 }
 
 func (p *Cache) Permit(c echo.Context) error {
@@ -53,7 +51,6 @@ func (p *Cache) Permit(c echo.Context) error {
 	}
 	err = json.Unmarshal(body, data.Data.PermitSpec)
 	if err != nil {
-
 		return nil
 	}
 	per := data.Data.PermitSpec

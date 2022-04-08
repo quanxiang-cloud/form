@@ -7,10 +7,10 @@ import (
 	time2 "github.com/quanxiang-cloud/cabin/time"
 )
 
-// Entity Entity
+// Entity Entity.
 type Entity interface{}
 
-// EntityOpt entity options
+// EntityOpt entity options.
 type EntityOpt func(e defaultFieldMap)
 
 type defaultFieldMap map[string]interface{}
@@ -25,21 +25,21 @@ const (
 	_modifierName = "modifier_name"
 )
 
-// WithID default field with id
+// WithID default field with id.
 func WithID() EntityOpt {
 	return func(d defaultFieldMap) {
 		d[_id] = id2.HexUUID(true)
 	}
 }
 
-// WithUpdateID WithUpdateID
+// WithUpdateID WithUpdateID.
 func WithUpdateID(updateID string) EntityOpt {
 	return func(d defaultFieldMap) {
 		d[_id] = updateID
 	}
 }
 
-// WithCreated default field with created_at、creator_id and creator_name
+// WithCreated default field with created_at、creator_id and creator_name.
 func WithCreated(userID, userName string) EntityOpt {
 	return func(d defaultFieldMap) {
 		d[_createdAt] = time2.Now()
@@ -48,7 +48,7 @@ func WithCreated(userID, userName string) EntityOpt {
 	}
 }
 
-// WithUpdated default field with updated_at、modifier_id and modifier_name
+// WithUpdated default field with updated_at、modifier_id and modifier_name.
 func WithUpdated(userID, userName string) EntityOpt {
 	return func(d defaultFieldMap) {
 		d[_updatedAt] = time2.Now()
@@ -100,7 +100,7 @@ func defaultFieldWithDep(e Entity, dep int, opts ...EntityOpt) Entity {
 	return e
 }
 
-// DefaultField DefaultField
+// DefaultField DefaultField.
 func DefaultField(e Entity, opts ...EntityOpt) Entity {
 	return defaultFieldWithDep(e, 0, opts...)
 }

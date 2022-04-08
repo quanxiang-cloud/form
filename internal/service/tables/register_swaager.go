@@ -2,6 +2,7 @@ package tables
 
 import (
 	"context"
+
 	"github.com/quanxiang-cloud/cabin/logger"
 	"github.com/quanxiang-cloud/form/internal/service/tables/swagger"
 	"github.com/quanxiang-cloud/form/internal/service/tables/util"
@@ -15,7 +16,6 @@ type registerSwagger struct {
 }
 
 func (reg *registerSwagger) Do(ctx context.Context, bus *Bus) (*DoResponse, error) {
-
 	schema := util.GetSpecSchema(bus.ConvertSchema)
 	swagger, err := swagger.DoSchemas(bus.AppID, bus.TableID, bus.Title, schema)
 	if err != nil {
