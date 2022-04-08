@@ -32,9 +32,7 @@ func connect(target string) (pb.DSLServiceClient, error) {
 
 	conn, err := grpc.Dial(target,
 		grpc.WithInsecure(),
-		grpc.WithReturnConnectionError(),
 	)
-
 	if err != nil {
 		return nil, err
 	}

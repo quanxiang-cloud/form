@@ -39,7 +39,7 @@ func (c *comet) Do(ctx context.Context, bus *consensus.Bus) (*consensus.Response
 		req.Query = bus.Query
 		return c.callGet(ctx, req)
 
-	case "search":
+	case "find", "search":
 		req := &SearchReq{
 			Sort:  bus.List.Sort,
 			Page:  bus.List.Page,
@@ -95,10 +95,10 @@ func (c *comet) callSearch(ctx context.Context, req *SearchReq) (*consensus.Resp
 	if err != nil {
 		return nil, err
 	}
-	response := new(consensus.Response)
-	response.ListResp.Total = searchResp.Total
-	response.ListResp.Entities = searchResp.Entities
-	return &consensus.Response{}, nil
+	resp := new(consensus.Response)
+	resp.ListResp.Total = searchResp.Total
+	resp.ListResp.Entities = searchResp.Entities
+	return resp, nil
 }
 
 func (c *comet) callCreate(ctx context.Context, req *CreateReq) (*consensus.Response, error) {
