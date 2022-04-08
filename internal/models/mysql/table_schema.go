@@ -63,7 +63,12 @@ func (t *tableSchemaRepo) List(db *gorm.DB, query *models.TableSchemaQuery, size
 	if query.AppID != "" {
 		db = db.Where("app_id = ?", query.AppID)
 	}
-
+	if query.Title != "" {
+		db = db.Where("title = ?", query.Title)
+	}
+	if query.SourceType != 0 {
+		db = db.Where("source = ?", query.SourceType)
+	}
 	var (
 		count  int64
 		tables []*models.TableSchema

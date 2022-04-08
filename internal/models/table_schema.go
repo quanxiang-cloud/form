@@ -58,8 +58,10 @@ func (p *SchemaProperties) Scan(data interface{}) error {
 }
 
 type TableSchemaQuery struct {
-	TableID string
-	AppID   string
+	TableID    string
+	AppID      string
+	Title      string
+	SourceType SourceType
 }
 
 type TableSchemeRepo interface {
