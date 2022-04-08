@@ -167,3 +167,12 @@ func GetInnerXName(tableID, tag string) string {
 	tableIDs := strings.Split(tableID, "_")
 	return fmt.Sprintf("%s_%s", tableIDs[len(tableIDs)-1], tag)
 }
+func GenXName(appID, tableID, tag string) string {
+	return fmt.Sprintf("/system/app/%s/raw/inner/%s/%s/%s.r", appID, "form", tableID, GetInnerXName(tableID, tag))
+}
+
+// GetInnerXName GetInnerXName
+func GetInnerXName(tableID, tag string) string {
+	tableIDs := strings.Split(tableID, "_")
+	return fmt.Sprintf("%s_%s", tableIDs[len(tableIDs)-1], tag)
+}

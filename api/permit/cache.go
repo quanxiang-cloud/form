@@ -24,7 +24,6 @@ func (p *Cache) UserRole(c echo.Context) error {
 	if err != nil {
 		return nil
 	}
-
 	if data.Data.UserSpec == nil {
 		data.Data.UserSpec = &event.UserSpec{}
 	}
