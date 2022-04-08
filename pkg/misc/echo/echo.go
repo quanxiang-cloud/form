@@ -2,6 +2,7 @@ package echo
 
 import (
 	"context"
+	"errors"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -61,9 +62,11 @@ func Logger(next echo.HandlerFunc) echo.HandlerFunc {
 		start := time.Now()
 		path := c.Request().URL.Path
 		raw := c.Request().URL.RawQuery
-
+		err := errors.New("")
 		// Process request
-		err := next(c)
+		if echoErr := next(c); echoErr != nil {
+			err = echoErr
+		}
 
 		if raw != "" {
 			path = path + "?" + raw
