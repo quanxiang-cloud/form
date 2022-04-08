@@ -1,14 +1,12 @@
 package router
 
 import (
-	"context"
-
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
 	"github.com/quanxiang-cloud/cabin/logger"
 	guard "github.com/quanxiang-cloud/form/internal/permit/form"
 	defender "github.com/quanxiang-cloud/form/internal/permit/poly"
 	config2 "github.com/quanxiang-cloud/form/pkg/misc/config"
+	echo2 "github.com/quanxiang-cloud/form/pkg/misc/echo"
 )
 
 const (
@@ -60,23 +58,7 @@ const (
 func newRouter(c *config2.Config) *echo.Echo {
 	engine := echo.New()
 
-	engine.Use(
-		middleware.RequestIDWithConfig(
-			middleware.RequestIDConfig{
-				Skipper: middleware.DefaultSkipper,
-				RequestIDHandler: func(ctx echo.Context, s string) {
-					ctx.Response().Header().Set(echo.HeaderXRequestID, s)
-				},
-				TargetHeader: RequestID,
-			},
-		),
-
-		middleware.LoggerWithConfig(middleware.LoggerConfig{
-			Format: loggerFormat + "\n",
-		}),
-
-		middleware.Recover(),
-	)
+	engine.Use(echo2.Logger, echo2.Recover)
 
 	return engine
 }
@@ -130,28 +112,4 @@ func perCacheRouter(c *config2.Config, r map[string]*echo.Group) error {
 	r[cache].Any("/permit", caches.Permit)
 
 	return nil
-}
-
-// predefined header.
-const (
-	RequestID = "Request-Id"
-	Timezone  = "Timezone"
-	TenantID  = "Tenant-Id"
-)
-
-// MutateContext mutate context.
-func MutateContext(c echo.Context) context.Context {
-	var (
-		_requestID interface{} = "Request-Id"
-		_timezone  interface{} = "Timezone"
-		_tenantID  interface{} = "Tenant-Id"
-
-		ctx = context.Background()
-	)
-
-	ctx = context.WithValue(ctx, _requestID, c.Request().Header.Get(RequestID))
-	ctx = context.WithValue(ctx, _timezone, c.Request().Header.Get(Timezone))
-	ctx = context.WithValue(ctx, _tenantID, c.Request().Header.Get(TenantID))
-
-	return ctx
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/quanxiang-cloud/cabin/logger"
 	"github.com/quanxiang-cloud/cabin/tailormade/header"
 	"github.com/quanxiang-cloud/form/internal/permit"
+	echo2 "github.com/quanxiang-cloud/form/pkg/misc/echo"
 )
 
 // ProxyForm form proxy.
@@ -17,7 +18,7 @@ func ProxyForm(form permit.Permit) echo.HandlerFunc {
 			Writer:  c.Response().Writer,
 		}
 
-		ctx := MutateContext(c)
+		ctx := echo2.MutateContext(c)
 		if err := bindParams(c, req); err != nil {
 			logger.Logger.WithName("bind params").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
 			c.NoContent(http.StatusBadRequest)
@@ -47,7 +48,7 @@ func ProxyPoly(poly permit.Permit) echo.HandlerFunc {
 			Writer:  c.Response().Writer,
 		}
 
-		ctx := MutateContext(c)
+		ctx := echo2.MutateContext(c)
 		if err := bindParams(c, req); err != nil {
 			logger.Logger.WithName("bind params").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
 			c.JSON(http.StatusBadRequest, err)

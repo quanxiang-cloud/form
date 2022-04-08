@@ -11,6 +11,7 @@ require (
 	github.com/labstack/echo/v4 v4.7.2
 	github.com/quanxiang-cloud/cabin v0.0.4
 	github.com/quanxiang-cloud/structor v0.0.0-20220310021208-c5d38deab66c
+	go.uber.org/zap v1.19.1
 	google.golang.org/grpc v1.40.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/yaml.v2 v2.4.0

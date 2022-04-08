@@ -7,6 +7,7 @@ import (
 	config2 "github.com/quanxiang-cloud/form/pkg/misc/config"
 
 	"github.com/gin-gonic/gin"
+	gin2 "github.com/quanxiang-cloud/cabin/tailormade/gin"
 )
 
 const (
@@ -188,8 +189,7 @@ func newRouter(c *config2.Config) (*gin.Engine, error) {
 	gin.SetMode(c.Model)
 	engine := gin.New()
 
-	engine.Use(gin.Logger(),
-		gin.Recovery())
+	engine.Use(gin2.LoggerFunc(), gin2.RecoveryFunc())
 
 	return engine, nil
 }
