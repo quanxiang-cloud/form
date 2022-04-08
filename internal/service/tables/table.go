@@ -158,7 +158,7 @@ type tableVo struct {
 }
 
 func (t *table) FindTable(ctx context.Context, req *FindTableReq) (*FindTableResp, error) {
-	tables, total, err := t.tableSchemaRepo.Find(t.db, &models.TableSchemaQuery{}, req.Size, req.Page)
+	tables, total, err := t.tableSchemaRepo.List(t.db, &models.TableSchemaQuery{}, req.Size, req.Page)
 	if err != nil {
 		return nil, err
 	}

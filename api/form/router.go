@@ -95,21 +95,24 @@ func permitRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 		apiPermit.POST("/update/:id", permits.UpdatePermit) // 更新权限
 		apiPermit.POST("/get", permits.GetPermit)           // 获取权限
 		apiPermit.POST("/delete", permits.DeletePermit)     // 删除权限
-		apiPermit.POST("/list", permits.ListPermit)         // 获取权限 前端在用
+
+		apiPermit.POST("/list", permits.ListPermit) // 获取权限 前端在用
 	}
 	home := r[homePath].Group("/apiRole") //
 	{
-		home.POST("/create", permits.SaveUserPerMatch) // 保存用户匹配的权限组
-		home.POST("/list", permits.ListAndSelect)      // 查看这个人下面，有哪些，角色
+		home.POST("/create", permits.SaveUserPerMatch)          // 保存用户匹配的权限组
+		home.POST("/list", permits.ListAndSelect)               // 查看这个人下面，有哪些，角色
+		r[homePath].POST("/apiPermit/list", permits.PathPermit) // 看paths ,
 	}
 
 	// inner 接口，permit 调用
 	{
 		r[internalPath].POST("/apiRole/userRoleMatch", permits.UserRoleMatch)
 		r[internalPath].POST("/apiPermit/find", permits.FindPermit)
-
+		r[internalPath].POST("/apiRole/userRole/create", permits.CreateUserRole)
 		r[internalPath].POST("/apiRole/create", permits.CreateRole)
 		r[internalPath].POST("/apiRole/grant/:roleID", permits.AssignRoleGrant)
+		r[internalPath].POST("/apiRole/grant/assign/:roleID")
 
 	}
 
@@ -119,19 +122,19 @@ func permitRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 func cometRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 	cometHome := r[homePath].Group("/form/:tableName")
 	v2Path := r[v2HomePath].Group("/form/:tableName")
-
+	inner := r[internalPath].Group("/form/:tableName")
 	guide, err := form.NewRefs(c)
 	if err != nil {
 		return err
 	}
 	{
 		cometHome.POST("/:action", action(guide))
-
 		v2Path.GET("/:id", get(guide))
 		v2Path.DELETE("/:id", delete(guide))
 		v2Path.PUT("/:id", update(guide))
 		v2Path.POST("", create(guide))
 		v2Path.GET("", search(guide))
+		inner.POST("/:action", action(guide))
 	}
 	table, err := NewTable(c)
 	if err != nil {
@@ -155,6 +158,7 @@ func tableRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 		manager.POST("/createBlank", table.CreateBlank)
 		manager.POST("/search", table.FindTable)
 		manager.POST("/getInfo", table.GetTableInfo)
+		manager.POST("/getXName", table.GetXName)
 	}
 	managerConfig := r[managerPath].Group("/config")
 	{

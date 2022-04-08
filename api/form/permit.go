@@ -130,7 +130,7 @@ func (p *Permit) SaveUserPerMatch(c *gin.Context) {
 
 		return
 	}
-	resp.Format(p.permit.SaveUserPerMatch(ctx, req)).Context(c)
+	resp.Format(p.permit.SaveUserPerMatch(ctx, req, service.RoleUserOption(p.permit))).Context(c)
 }
 
 // UserPerMatch user per match.
@@ -275,4 +275,36 @@ func (p *Permit) ListAndSelect(c *gin.Context) {
 		return
 	}
 	resp.Format(p.permit.ListAndSelect(ctx, req)).Context(c)
+}
+
+func (p *Permit) PathPermit(c *gin.Context) {
+	pr := getProfile(c)
+	req := &service.ListAndSelectReq{
+		AppID:  c.Param(_appID),
+		UserID: pr.userID,
+	}
+	ctx := header.MutateContext(c)
+	permit, err := p.permit.ListAndSelect(ctx, req)
+	if err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+	uriAPIReq := &service.ListPermitReq{
+		RoleID: permit.SelectPer.RoleID,
+	}
+	if err = c.ShouldBind(uriAPIReq); err != nil {
+
+	}
+	resp.Format(p.permit.ListPermit(ctx, uriAPIReq)).Context(c)
+}
+
+func (p *Permit) CreateUserRole(c *gin.Context) {
+	req := &service.SaveUserPerMatchReq{}
+	ctx := header.MutateContext(c)
+	if err := c.ShouldBind(req); err != nil {
+		logger.Logger.Errorw("should bind", header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+	resp.Format(p.permit.SaveUserPerMatch(ctx, req)).Context(c)
 }

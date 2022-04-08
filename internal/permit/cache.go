@@ -13,7 +13,7 @@ const (
 )
 
 type Cache interface {
-	UserMatch(ctx context.Context, req *UserMatchReq) (*UserMatchResp, error)
+	UserRole(ctx context.Context, req *UserMatchReq) (*UserMatchResp, error)
 	Limit(ctx context.Context, req *LimitReq) (*LimitResp, error)
 }
 type cache struct {
@@ -33,15 +33,17 @@ type LimitResp struct {
 }
 
 func (c *cache) Limit(ctx context.Context, req *LimitReq) (*LimitResp, error) {
-	//
+	exit := c.redis.ExistsKey(ctx, req.RoleID)
+	if !exit {
+		return &LimitResp{}, nil
+	}
 	if req.Action == delete {
-		err := c.redis.DeletePermit(ctx, req.RoleID)
+		err := c.redis.DeletePermitByPath(ctx, req.RoleID, req.Path)
 		if err != nil {
 			return nil, err
 		}
 		return &LimitResp{}, err
 	}
-
 	err := c.redis.CreatePermit(ctx, req.RoleID, &models.Limits{
 		Path:      req.Path,
 		Condition: req.Condition,
@@ -74,7 +76,7 @@ type UserMatchReq struct {
 type UserMatchResp struct {
 }
 
-func (c *cache) UserMatch(ctx context.Context, req *UserMatchReq) (*UserMatchResp, error) {
+func (c *cache) UserRole(ctx context.Context, req *UserMatchReq) (*UserMatchResp, error) {
 	if req.Action == "delete" {
 		err := c.redis.DeletePerMatch(ctx, req.AppID)
 		if err != nil {
@@ -83,7 +85,7 @@ func (c *cache) UserMatch(ctx context.Context, req *UserMatchReq) (*UserMatchRes
 		return &UserMatchResp{}, nil
 	}
 	// create
-	err := c.redis.CreatePerMatch(ctx, &models.PermitMatch{
+	err := c.redis.CreatePerMatch(ctx, &models.UserRoles{
 		RoleID: req.RoleID,
 		UserID: req.UserID,
 		AppID:  req.AppID,

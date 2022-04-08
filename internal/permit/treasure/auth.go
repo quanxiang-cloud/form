@@ -44,7 +44,7 @@ func NewAuth(conf *config.Config) (*Auth, error) {
 }
 
 func (a *Auth) Auth(ctx context.Context, req *permit.Request) (*consensus.Permit, error) {
-	match, err := a.getCacheMatch(ctx, req)
+	match, err := a.getUserRole(ctx, req)
 	if err != nil || match == nil {
 		return nil, err
 	}
@@ -63,7 +63,7 @@ func (a *Auth) Auth(ctx context.Context, req *permit.Request) (*consensus.Permit
 	}, nil
 }
 
-func (a *Auth) getCacheMatch(ctx context.Context, req *permit.Request) (*models.PermitMatch, error) {
+func (a *Auth) getUserRole(ctx context.Context, req *permit.Request) (*models.UserRoles, error) {
 	for i := 0; i < 5; i++ {
 		perMatch, err := a.redis.GetPerMatch(ctx, req.AppID, req.UserID)
 		if err != nil {
@@ -90,7 +90,7 @@ func (a *Auth) getCacheMatch(ctx context.Context, req *permit.Request) (*models.
 	if err != nil || resp == nil {
 		return nil, err
 	}
-	perMatch := &models.PermitMatch{
+	perMatch := &models.UserRoles{
 		RoleID: resp.RoleID,
 		UserID: req.UserID,
 		AppID:  req.AppID,
@@ -103,7 +103,10 @@ func (a *Auth) getCacheMatch(ctx context.Context, req *permit.Request) (*models.
 	if err != nil {
 		logger.Logger.Errorw("create per match")
 	}
-	return &models.PermitMatch{
+
+	// 入库
+
+	return &models.UserRoles{
 		RoleID: resp.RoleID,
 	}, nil
 }

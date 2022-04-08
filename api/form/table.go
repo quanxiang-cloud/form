@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -129,6 +130,26 @@ func (t *Table) GetTableInfo(c *gin.Context) {
 
 }
 
+// GetXNameReq GetXNameReq
+type GetXNameReq struct {
+	TableID string `json:"TableID"`
+	Action  string `json:"action"`
+	AppID   string `json:"AppID"`
+}
+
+func (t *Table) GetXName(c *gin.Context) {
+	req := &GetXNameReq{}
+	req.AppID = c.Param("appID")
+	if err := c.ShouldBind(req); err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	name := GenXName(req.AppID, req.TableID, req.Action)
+	resp.Format(map[string]string{
+		"name": name,
+	}, nil).Context(c)
+}
+
 func getProfile(c *gin.Context) *profile {
 	depIDS := strings.Split(c.GetHeader(_departmentID), ",")
 	return &profile{
@@ -136,4 +157,13 @@ func getProfile(c *gin.Context) *profile {
 		userName: c.Param(_userName),
 		depID:    depIDS[0],
 	}
+}
+func GenXName(appID, tableID, tag string) string {
+	return fmt.Sprintf("/system/app/%s/raw/inner/%s/%s/%s.r", appID, "form", tableID, GetInnerXName(tableID, tag))
+}
+
+// GetInnerXName GetInnerXName
+func GetInnerXName(tableID, tag string) string {
+	tableIDs := strings.Split(tableID, "_")
+	return fmt.Sprintf("%s_%s", tableIDs[len(tableIDs)-1], tag)
 }

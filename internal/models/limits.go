@@ -17,8 +17,8 @@ type Limits struct {
 	Condition Condition
 }
 
-// PermitMatch PermitMatch
-type PermitMatch struct {
+// UserRoles UserRoles
+type UserRoles struct {
 	RoleID string
 	UserID string
 	AppID  string
@@ -28,9 +28,10 @@ type LimitsRepo interface {
 	CreatePermit(ctx context.Context, roleID string, limits ...*Limits) error
 	GetPermit(ctx context.Context, roleID, path string) (*Limits, error)
 	DeletePermit(ctx context.Context, roleID string) error
+	DeletePermitByPath(ctx context.Context, roleID, path string) error
 
-	CreatePerMatch(ctx context.Context, match *PermitMatch) error
-	GetPerMatch(ctx context.Context, appID, userID string) (*PermitMatch, error)
+	CreatePerMatch(ctx context.Context, match *UserRoles) error
+	GetPerMatch(ctx context.Context, appID, userID string) (*UserRoles, error)
 	DeletePerMatch(ctx context.Context, appID string) error
 
 	// Lock 设置分布式锁
