@@ -1,7 +1,7 @@
 package redis
 
 const (
-	redisKey = "structor:permission"
+	redisKey = "form:permit"
 
 	// Serials Serials
 	Serials = "serials"

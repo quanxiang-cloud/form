@@ -9,8 +9,8 @@ import (
 
 const (
 	url1   = "/api/v1/form/%s/home/form/%s/%s"
-	url2   = "/api/v1/form/%s/home/form/%s"
-	url3   = "/api/v1/form/%s/home/form/%s/:id"
+	url2   = "/api/v2/form/%s/home/form/%s"
+	url3   = "/api/v2/form/%s/home/form/%s/:id"
 	get    = "get"
 	create = "create"
 	update = "update"

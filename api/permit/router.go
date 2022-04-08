@@ -100,7 +100,7 @@ func perCacheRouter(c *config2.Config, r map[string]*echo.Group) error {
 	if err != nil {
 		return err
 	}
-	r[cache].Any("/match", caches.Match)
+	r[cache].Any("/role", caches.UserRole)
 	r[cache].Any("/permit", caches.Permit)
 	return nil
 }

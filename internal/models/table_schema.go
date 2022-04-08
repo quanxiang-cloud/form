@@ -38,12 +38,12 @@ type TableSchema struct {
 type SchemaProperties map[string]SchemaProps
 
 type SchemaProps struct {
-	Title      string           `json:"title"`
-	IsNull     bool             `json:"is_null"`
-	Length     int              `json:"length"`
-	Type       string           `json:"type"`
-	ReadOnly   bool             `json:"read_only"`
-	Items      interface{}      `json:"items,omitempty"`
+	Title      string           `json:"title,omitempty"`
+	IsNull     bool             `json:"is_null,omitempty"`
+	Length     int              `json:"length,omitempty"`
+	Type       string           `json:"type,omitempty"`
+	ReadOnly   bool             `json:"read_only,omitempty"`
+	Items      *SchemaProps     `json:"items,omitempty"`
 	Properties SchemaProperties `json:"properties,omitempty"`
 }
 
@@ -65,7 +65,6 @@ type TableSchemaQuery struct {
 type TableSchemeRepo interface {
 	BatchCreate(db *gorm.DB, schema ...*TableSchema) error
 	Get(db *gorm.DB, appID, tableID string) (*TableSchema, error)
-	Find(db *gorm.DB, query *TableSchemaQuery, size, page int) ([]*TableSchema, int64, error)
 	Delete(db *gorm.DB, query *TableSchemaQuery) error
 	Update(db *gorm.DB, appID, tableID string, baseSchema *TableSchema) error
 	List(db *gorm.DB, query *TableSchemaQuery, page, size int) ([]*TableSchema, int64, error)

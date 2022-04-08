@@ -2,12 +2,11 @@ package service
 
 import (
 	"context"
-	"github.com/quanxiang-cloud/cabin/tailormade/header"
-
 	daprd "github.com/dapr/go-sdk/client"
 	id2 "github.com/quanxiang-cloud/cabin/id"
 	"github.com/quanxiang-cloud/cabin/logger"
 	redis2 "github.com/quanxiang-cloud/cabin/tailormade/db/redis"
+	"github.com/quanxiang-cloud/cabin/tailormade/header"
 	time2 "github.com/quanxiang-cloud/cabin/time"
 	"github.com/quanxiang-cloud/form/internal/component/event"
 	"github.com/quanxiang-cloud/form/internal/models"
@@ -46,7 +45,7 @@ type Permit interface {
 
 	FindPermit(ctx context.Context, req *FindPermitReq) (*FindPermitResp, error)
 
-	SaveUserPerMatch(ctx context.Context, req *SaveUserPerMatchReq) (*SaveUserPerMatchResp, error)
+	SaveUserPerMatch(ctx context.Context, req *SaveUserPerMatchReq, opts ...Option) (*SaveUserPerMatchResp, error)
 
 	ListPermit(ctx context.Context, req *ListPermitReq) (*ListPermitResp, error)
 
@@ -61,6 +60,7 @@ type permit struct {
 	limitRepo     models.LimitsRepo
 	daprClient    daprd.Client
 	conf          *config2.Config
+	userRoleRepo  models.UserRoleRepo
 }
 
 type ListAndSelectReq struct {
@@ -80,7 +80,6 @@ type Per struct {
 }
 
 func (p *permit) ListAndSelect(ctx context.Context, req *ListAndSelectReq) (*ListAndSelectResp, error) {
-	//
 
 	list, _, err := p.roleGrantRepo.List(p.db, &models.RoleGrantQuery{
 		Owners: []string{req.DepID, req.UserID},
@@ -108,8 +107,19 @@ func (p *permit) ListAndSelect(ctx context.Context, req *ListAndSelectReq) (*Lis
 			RoleName: value.Name,
 		}
 	}
-	// TODO
-
+	//
+	userRole, err := p.userRoleRepo.Get(p.db, req.AppID, req.UserID)
+	if err != nil {
+		return nil, err
+	}
+	get, err := p.roleRepo.Get(p.db, userRole.RoleID)
+	if err != nil {
+		return nil, err
+	}
+	resp.SelectPer = &Per{
+		RoleID:   userRole.RoleID,
+		RoleName: get.Name,
+	}
 	return resp, nil
 }
 
@@ -127,18 +137,21 @@ type ListVo struct {
 }
 
 func (p *permit) ListPermit(ctx context.Context, req *ListPermitReq) (*ListPermitResp, error) {
-	if len(req.Paths) == 0 || len(req.URIs) == 0 {
+	if len(req.URIs) == 0 {
+		return p.list(req.Paths, req.RoleID)
+	}
+	if len(req.URIs) != len(req.Paths) {
 		return &ListPermitResp{}, nil
 	}
-	if len(req.Paths) > 100 {
+	if len(req.Paths) == 0 && len(req.URIs) == 0 {
+		return &ListPermitResp{}, nil
+	}
+	if len(req.Paths) > 100 && len(req.URIs) > 100 {
 		req.Paths = req.Paths[0:100]
 		req.URIs = req.URIs[0:100]
 	}
-	if len(req.URIs) != len(req.Paths) {
-		return nil, nil
-	}
-	temp := make(map[string]string)
 
+	temp := make(map[string]string)
 	for index, value := range req.URIs {
 		temp[value] = req.Paths[index]
 	}
@@ -160,6 +173,25 @@ func (p *permit) ListPermit(ctx context.Context, req *ListPermitReq) (*ListPermi
 			key = temp[value.Path]
 		}
 		resp[key] = &ListVo{
+			Params:    value.Params,
+			Response:  value.Response,
+			Condition: value.Condition,
+		}
+	}
+	return &resp, nil
+}
+
+func (p *permit) list(path []string, roleID string) (*ListPermitResp, error) {
+	permits, _, err := p.permitRepo.List(p.db, &models.PermitQuery{
+		RoleID: roleID,
+		Paths:  path,
+	}, 1, 100)
+	resp := make(ListPermitResp)
+	if err != nil {
+		return nil, err
+	}
+	for _, value := range permits {
+		resp[value.Path] = &ListVo{
 			Params:    value.Params,
 			Response:  value.Response,
 			Condition: value.Condition,
@@ -264,20 +296,68 @@ type SaveUserPerMatchReq struct {
 
 type SaveUserPerMatchResp struct{}
 
-func (p *permit) SaveUserPerMatch(ctx context.Context, req *SaveUserPerMatchReq) (*SaveUserPerMatchResp, error) {
-	userSpec := event.Data{
-		UserSpec: &event.UserSpec{
-			RoleID: req.RoleID,
-			UserID: req.UserID,
-			AppID:  req.AppID,
-			Action: "create",
-		},
-	}
-	err := p.publish(ctx, "form-user-match", userSpec)
+func (p *permit) SaveUserPerMatch(ctx context.Context, req *SaveUserPerMatchReq, opts ...Option) (resp *SaveUserPerMatchResp, err error) {
+	// TO 删除
+
+	defer func() {
+		userSpec := &OptionReq{
+			data: event.Data{
+				UserSpec: &event.UserSpec{
+					RoleID: req.RoleID,
+					UserID: req.UserID,
+					AppID:  req.AppID,
+					Action: "create",
+				},
+			},
+		}
+		if err == nil {
+			for _, opt := range opts {
+				opt(ctx, userSpec)
+			}
+		}
+	}()
+
+	resp = &SaveUserPerMatchResp{}
+	err = p.userRoleRepo.Delete(p.db, &models.UserRoleQuery{
+		UserID: req.UserID,
+		AppID:  req.AppID,
+	})
 	if err != nil {
-		return nil, err
+		return
 	}
-	return &SaveUserPerMatchResp{}, nil
+	err = p.userRoleRepo.BatchCreate(p.db, &models.UserRole{
+		UserID: req.UserID,
+		RoleID: req.RoleID,
+		AppID:  req.AppID,
+		ID:     id2.StringUUID(),
+	})
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+type OptionReq struct {
+	data event.Data
+}
+
+//Option Option
+type Option func(ctx context.Context, req *OptionReq)
+
+func RoleUserOption(permit2 Permit) Option {
+	return func(ctx context.Context, req *OptionReq) {
+		k2, ok := permit2.(*permit)
+		if !ok {
+			return
+		}
+		err := k2.publish(ctx, "form-user-match", req.data)
+		if err != nil {
+			logger.Logger.Errorw("", "xxxxx")
+			return
+		}
+
+	}
 }
 
 func NewPermit(conf *config2.Config) (Permit, error) {
@@ -647,11 +727,6 @@ func (p *permit) DeleteRole(ctx context.Context, req *DeleteRoleReq) (*DeleteRol
 		},
 	})
 	logger.Logger.Errorw("")
-
-	//err = p.limitRepo.DeletePermit(ctx, req.RoleID)
-	//if err != nil {
-	//
-	//}
 	return &DeleteRoleResp{}, nil
 
 }

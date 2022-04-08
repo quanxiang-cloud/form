@@ -13,6 +13,10 @@ type limitRepo struct {
 	c *redis.ClusterClient
 }
 
+func (p *limitRepo) DeletePermitByPath(ctx context.Context, roleID, path string) error {
+	return p.c.HDel(ctx, p.PerKey()+roleID, path).Err()
+}
+
 func (p *limitRepo) ExistsKey(ctx context.Context, key string) bool {
 	exists := p.c.Exists(ctx, p.PerKey()+key)
 	return exists.Val() > 0
@@ -53,12 +57,12 @@ func (p *limitRepo) DeletePermit(ctx context.Context, roleID string) error {
 	return p.c.Del(ctx, p.PerKey()+roleID).Err()
 }
 
-func (p *limitRepo) CreatePerMatch(ctx context.Context, match *models.PermitMatch) error {
+func (p *limitRepo) CreatePerMatch(ctx context.Context, match *models.UserRoles) error {
 	return p.c.HSet(ctx, p.PerMatchKey()+
 		match.AppID, match.UserID, match.RoleID).Err()
 }
 
-func (p *limitRepo) GetPerMatch(ctx context.Context, appID, userID string) (*models.PermitMatch, error) {
+func (p *limitRepo) GetPerMatch(ctx context.Context, appID, userID string) (*models.UserRoles, error) {
 	result := p.c.HGet(ctx, p.PerMatchKey()+appID, userID)
 	if result.Err() == redis.Nil {
 		return nil, nil
@@ -66,7 +70,7 @@ func (p *limitRepo) GetPerMatch(ctx context.Context, appID, userID string) (*mod
 	if result.Err() != nil {
 		return nil, result.Err()
 	}
-	resp := &models.PermitMatch{
+	resp := &models.UserRoles{
 		UserID: userID,
 		AppID:  appID,
 	}
@@ -107,7 +111,7 @@ func (p *limitRepo) PerKey() string {
 }
 
 func (p *limitRepo) PerMatchKey() string {
-	return redisKey + ":perMatch:"
+	return redisKey + ":userRole:"
 }
 
 func (p *limitRepo) LockKey() string {

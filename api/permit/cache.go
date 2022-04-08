@@ -3,9 +3,9 @@ package router
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"github.com/quanxiang-cloud/form/pkg/misc/config"
 	"io/ioutil"
+
+	"github.com/quanxiang-cloud/form/pkg/misc/config"
 
 	"github.com/labstack/echo/v4"
 	"github.com/quanxiang-cloud/cabin/logger"
@@ -13,20 +13,17 @@ import (
 	"github.com/quanxiang-cloud/form/internal/permit"
 )
 
-func (p *Cache) Match(c echo.Context) error {
-	fmt.Print("aaaa")
+func (p *Cache) UserRole(c echo.Context) error {
 	data := new(event.DaprEvent)
 	body, err := ioutil.ReadAll(c.Request().Body)
 	if err != nil {
 		return nil
 	}
-
 	err = json.Unmarshal(body, &data)
 	if err != nil {
 
 		return nil
 	}
-	//fmt.Printf("ssssss%v", data.Data.UserSpec)
 	if data.Data.UserSpec == nil {
 		data.Data.UserSpec = &event.UserSpec{}
 	}
@@ -36,13 +33,12 @@ func (p *Cache) Match(c echo.Context) error {
 		AppID:  data.Data.UserSpec.AppID,
 		Action: data.Data.UserSpec.Action,
 	}
-	_, err = p.cache.UserMatch(context.Background(), req)
+	_, err = p.cache.UserRole(context.Background(), req)
 	if err != nil {
 		logger.Logger.Errorw("msg is error ", err.Error())
 		return err
 	}
 	return nil
-
 }
 
 func (p *Cache) Permit(c echo.Context) error {
@@ -51,7 +47,7 @@ func (p *Cache) Permit(c echo.Context) error {
 	if err != nil {
 		return nil
 	}
-	err = json.Unmarshal(body, data.Data.PermitSpec)
+	err = json.Unmarshal(body, &data)
 	if err != nil {
 
 		return nil

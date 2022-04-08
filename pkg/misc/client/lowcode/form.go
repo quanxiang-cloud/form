@@ -14,6 +14,7 @@ var (
 	formHost           string
 	cacheMatchRoleURL  = "%s/api/v1/form/%s/internal/apiRole/userRoleMatch"
 	roleMatchPermitURL = "%s/api/v1/form/%s/internal/apiPermit/find"
+	saveUserRoleURL    = "%s/api/v1/form/%s/internal/apiRole/userRole/create"
 )
 
 func init() {
@@ -96,6 +97,28 @@ func (f *Form) GetRoleMatchPermit(ctx context.Context, appID, roleID string) (*F
 
 	if len(resp.List) == 0 {
 		return nil, nil
+	}
+
+	return resp, nil
+}
+
+type SaveRoleUsersResp struct {
+}
+
+func (f *Form) saveRoleUsers(ctx context.Context, appID, roleID, userID string) (*SaveRoleUsersResp, error) {
+	resp := &SaveRoleUsersResp{}
+	saveUserRoleURLs := fmt.Sprintf(saveUserRoleURL, formHost, appID)
+	err := client.POST(ctx, &f.client, saveUserRoleURLs, struct {
+		RoleID string `json:"roleID"`
+		UserID string `json:"userID"`
+		AppID  string `json:"appID"`
+	}{
+		RoleID: roleID,
+		UserID: userID,
+		AppID:  appID,
+	}, resp)
+	if err != nil {
+		return nil, err
 	}
 
 	return resp, nil

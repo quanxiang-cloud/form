@@ -118,11 +118,14 @@ func Convert1(schema map[string]interface{}) (s models.SchemaProperties, total i
 					}
 				}
 			case "length":
-			//	schemaProps.Length = v1.(int)
+				t, _ := v1.(int)
+				schemaProps.Length = t
 			case "title":
-				schemaProps.Title = v1.(string)
+				t, _ := v1.(string)
+				schemaProps.Title = t
 			case "not_null":
-				schemaProps.IsNull = v1.(bool)
+				t, _ := v1.(bool)
+				schemaProps.IsNull = t
 			case "properties":
 				if p, ok := v1.(map[string]interface{}); ok {
 					s2, _, _ := Convert1(p)
@@ -130,7 +133,19 @@ func Convert1(schema map[string]interface{}) (s models.SchemaProperties, total i
 				}
 			case "items":
 				if item, ok := v1.(map[string]interface{}); ok {
-					schemaProps.Items = item
+					types := GetMapToString(item, "type")
+					items := &models.SchemaProps{
+						Type: types,
+					}
+					if types == "object" {
+						toMap, err := GetMapToMap(item, "properties")
+						if err != nil {
+							return nil, 0, error2.New(code.ErrItemConvert)
+						}
+						s2, _, _ := Convert1(toMap)
+						items.Properties = s2
+					}
+					schemaProps.Items = items
 				}
 			default:
 				continue
@@ -143,14 +158,26 @@ func Convert1(schema map[string]interface{}) (s models.SchemaProperties, total i
 }
 
 func GetSpecSchema(properties models.SchemaProperties) spec.SchemaProperties {
+	if properties == nil {
+		return nil
+	}
 	pr := make(spec.SchemaProperties, 0)
 	for key, value := range properties {
 		d := spec.Schema{
 			SchemaProps: spec.SchemaProps{
 				Type:  []string{value.Type},
 				Title: value.Title,
-				//Items: value.Items,
 			},
+		}
+		if value.Items != nil {
+			d.Items = &spec.SchemaOrArray{
+				Schema: &spec.Schema{
+					SchemaProps: spec.SchemaProps{
+						Type:       []string{value.Items.Type},
+						Properties: GetSpecSchema(value.Items.Properties),
+					},
+				},
+			}
 		}
 		if value.Properties != nil {
 			schema := GetSpecSchema(value.Properties)

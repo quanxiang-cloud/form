@@ -27,11 +27,6 @@ func (t *tableSchemaRepo) Get(db *gorm.DB, appID, tableID string) (*models.Table
 	}
 	return permitForm, nil
 }
-
-func (t *tableSchemaRepo) Find(db *gorm.DB, query *models.TableSchemaQuery, size, page int) ([]*models.TableSchema, int64, error) {
-	return nil, 0, nil
-}
-
 func (t *tableSchemaRepo) Delete(db *gorm.DB, query *models.TableSchemaQuery) error {
 	return nil
 }
