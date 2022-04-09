@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	form_permit = "form-permit"
+	form_permit = "formpermit"
 )
 
 type Permit interface {
@@ -407,10 +407,10 @@ func (p *permit) CreateRole(ctx context.Context, req *CreateRoleReq) (*CreateRol
 		CreatorName: req.UserName,
 		CreatorID:   req.UserID,
 	}
+	roles.Types = req.Types
 	if req.Types == 0 {
 		roles.Types = models.CreateType
 	}
-	roles.Types = req.Types
 	err := p.roleRepo.BatchCreate(p.db, roles)
 	if err != nil {
 		return nil, err
@@ -450,15 +450,15 @@ type GetRoleResp struct {
 }
 
 func (p *permit) GetRole(ctx context.Context, req *GetRoleReq) (*GetRoleResp, error) {
-	permits, err := p.roleRepo.Get(p.db, req.ID)
+	roles, err := p.roleRepo.Get(p.db, req.ID)
 	if err != nil {
 		return nil, err
 	}
 	return &GetRoleResp{
-		ID:          permits.ID,
-		Types:       permits.Types,
-		Name:        permits.Name,
-		Description: permits.Description,
+		ID:          roles.ID,
+		Types:       roles.Types,
+		Name:        roles.Name,
+		Description: roles.Description,
 	}, nil
 }
 
@@ -593,6 +593,7 @@ func (p *permit) CreatePermit(ctx context.Context, req *CreatePerReq) (*CreatePe
 	if err != nil {
 		logger.Logger.WithName("publish permit create ").Errorw("publish", "topic", form_permit, header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
 	}
+	logger.Logger.Info("is ok  ", "topic", form_permit, "data", spec)
 	return &CreatePerResp{}, nil
 }
 
@@ -733,5 +734,6 @@ func (p *permit) publish(ctx context.Context, topic string, data interface{}) er
 		logger.Logger.WithName("public").Errorw("publish error", "topic", topic, "publicName", p.conf.PubSubName)
 		return err
 	}
+	logger.Logger.Info("is oj", "PubSubName", p.conf.PubSubName)
 	return nil
 }

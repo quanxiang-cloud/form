@@ -1,6 +1,6 @@
 # port 端口
 # e.g :80
-port: :81
+port: :80
 portInner: :8080
 
 # model 模式 debug|release
@@ -22,7 +22,7 @@ log:
 
 # -------------------- mysql --------------------  
 mysql:
-  host: 192.168.200.13:32020
+  host: 192.168.200.13:32258
   db: form
   user: root
   password: qxp1234
