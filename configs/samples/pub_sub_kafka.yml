@@ -8,7 +8,7 @@ spec:
   metadata:
     # Kafka broker connection setting
     - name: brokers
-      value: kafka.lowcode.svc.cluster.local:9092
+      value: "192.168.200.18:9092,192.168.200.19:9092,192.168.200.20:9092"
     - name: authRequired
       value: "false"
     - name: maxMessageBytes

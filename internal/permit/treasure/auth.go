@@ -52,7 +52,7 @@ func (a *Auth) Auth(ctx context.Context, req *permit.Request) (*consensus.Permit
 		return nil, nil
 	}
 	permits, err := a.getCachePermit(ctx, match.RoleID, req)
-	if err != nil {
+	if err != nil || permits == nil {
 		return nil, err
 	}
 
@@ -64,6 +64,39 @@ func (a *Auth) Auth(ctx context.Context, req *permit.Request) (*consensus.Permit
 }
 
 func (a *Auth) getUserRole(ctx context.Context, req *permit.Request) (*models.UserRoles, error) {
+	resp, err := a.form.GetCacheMatchRole(ctx, req.UserID, req.DepID, req.AppID)
+	if err != nil || resp == nil {
+		return nil, err
+	}
+	if resp.Types == models.InitType {
+		resp.RoleID = models.RoleInit
+	}
+	return &models.UserRoles{
+		RoleID: resp.RoleID,
+	}, nil
+}
+
+func (a *Auth) getCachePermit(ctx context.Context, roleID string, req *permit.Request) (*models.Limits, error) {
+	resp, err := a.form.GetRoleMatchPermit(ctx, req.AppID, roleID)
+	if err != nil || resp == nil {
+		return nil, err
+	}
+	var getPermit *models.Limits
+	for _, value := range resp.List {
+		if value.Path == req.Request.URL.Path {
+			per := &models.Limits{
+				Path:      value.Path,
+				Condition: value.Condition,
+				Params:    value.Params,
+				Response:  value.Response,
+			}
+			getPermit = per
+		}
+	}
+	return getPermit, nil
+}
+
+func (a *Auth) getUserRole1(ctx context.Context, req *permit.Request) (*models.UserRoles, error) {
 	for i := 0; i < 5; i++ {
 		perMatch, err := a.redis.GetPerMatch(ctx, req.AppID, req.UserID)
 		if err != nil {
@@ -111,7 +144,7 @@ func (a *Auth) getUserRole(ctx context.Context, req *permit.Request) (*models.Us
 	}, nil
 }
 
-func (a *Auth) getCachePermit(ctx context.Context, roleID string, req *permit.Request) (*models.Limits, error) {
+func (a *Auth) getCachePermit1(ctx context.Context, roleID string, req *permit.Request) (*models.Limits, error) {
 	for i := 0; i < 5; i++ {
 		exist := a.redis.ExistsKey(ctx, roleID)
 		if exist {

@@ -1,10 +1,10 @@
 apiVersion: dapr.io/v1alpha1
 kind: Subscription
 metadata:
-  name: permit-user-match
+  name: subuser
 spec:
-  topic: form-user-match
-  route: /cache/match
+  topic: userRole
+  route: /cache/role
   pubsubname: form-kafka-pubsub
 scopes:
   - permit
