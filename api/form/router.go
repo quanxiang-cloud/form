@@ -100,19 +100,18 @@ func permitRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 	}
 	home := r[homePath].Group("/apiRole") //
 	{
-		home.POST("/create", permits.SaveUserPerMatch)          // 保存用户匹配的权限组
+		home.POST("/userRole/create", permits.CreateUserRole)   // 保存用户匹配的权限组
 		home.POST("/list", permits.ListAndSelect)               // 查看这个人下面，有哪些，角色
-		r[homePath].POST("/apiPermit/list", permits.PathPermit) // 看paths ,
+		r[homePath].POST("/apiPermit/list", permits.PathPermit) //  看这个人下有那些path 权限。
 	}
 
 	// inner 接口，permit 调用
 	{
-		r[internalPath].POST("/apiRole/userRoleMatch", permits.UserRoleMatch)
+		r[internalPath].POST("/apiRole/userRole/get", permits.GetUserRole)
 		r[internalPath].POST("/apiPermit/find", permits.FindPermit)
 		r[internalPath].POST("/apiRole/userRole/create", permits.CreateUserRole)
 		r[internalPath].POST("/apiRole/create", permits.CreateRole)
-		r[internalPath].POST("/apiRole/grant/:roleID", permits.AssignRoleGrant)
-		r[internalPath].POST("/apiRole/grant/assign/:roleID")
+		r[internalPath].POST("/apiRole/grant/assign/:roleID", permits.AssignRoleGrant)
 
 	}
 

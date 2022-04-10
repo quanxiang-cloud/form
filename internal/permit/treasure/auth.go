@@ -77,7 +77,7 @@ func (a *Auth) getUserRole(ctx context.Context, req *permit.Request) (*models.Us
 }
 
 func (a *Auth) getCachePermit(ctx context.Context, roleID string, req *permit.Request) (*models.Limits, error) {
-	resp, err := a.form.GetRoleMatchPermit(ctx, req.AppID, roleID)
+	resp, err := a.form.GetPermit(ctx, req.AppID, roleID)
 	if err != nil || resp == nil {
 		return nil, err
 	}
@@ -173,7 +173,7 @@ func (a *Auth) getCachePermit1(ctx context.Context, roleID string, req *permit.R
 	// relese lock
 	defer a.redis.UnLock(ctx, lockPermission)
 
-	resp, err := a.form.GetRoleMatchPermit(ctx, req.AppID, roleID)
+	resp, err := a.form.GetPermit(ctx, req.AppID, roleID)
 	if err != nil || resp == nil {
 		return nil, err
 	}

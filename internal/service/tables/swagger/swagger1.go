@@ -72,7 +72,7 @@ func PostMethod(schemasBus *schemasBus) spec.OperationProps {
 	}
 	return doOperationProps(&operation{
 		"v2_create",
-		util.GetSummary(schemasBus.tableName, "更新"),
+		util.GetSummary(schemasBus.tableName, "创建"),
 		responses,
 
 		parameters,
@@ -114,6 +114,97 @@ func doOperationProps(operation *operation) spec.OperationProps {
 }
 
 func DoSchemas(appID, tableID, tableName string, schemas spec.SchemaProperties) (string, error) {
+	filterSystems := make(spec.SchemaProperties)
+	schemasbus := &schemasBus{
+		tableName:    tableName,
+		tableID:      tableID,
+		schemas:      schemas,
+		filterSchema: filterSystems,
+	}
+
+	util.FilterSystem(schemas, filterSystems)
+	swagger := &spec.Swagger{
+		SwaggerProps: spec.SwaggerProps{
+			Info: &spec.Info{
+				InfoProps: spec.InfoProps{
+					Contact: &spec.ContactInfo{
+						ContactInfoProps: spec.ContactInfoProps{
+							Name:  "",
+							URL:   "",
+							Email: "",
+						},
+					},
+					Title:       "structor",
+					Version:     "last",
+					Description: "表单引擎",
+				},
+				VendorExtensible: spec.VendorExtensible{
+					Extensions: spec.Extensions{},
+				},
+			},
+			Host:    "",
+			Swagger: "2.0",
+			Tags: []spec.Tag{{
+				TagProps: spec.TagProps{
+					Name: "table",
+				},
+			}},
+			Schemes:  []string{"http"},
+			BasePath: "/",
+			Consumes: []string{"application/json"},
+			Produces: []string{"application/json"},
+			Paths: &spec.Paths{
+				Paths: map[string]spec.PathItem{
+					fmt.Sprintf(url1, appID, tableID, get): {
+						PathItemProps: spec.PathItemProps{
+							Post: &spec.Operation{ // get
+								OperationProps: V1GetMethod(schemasbus),
+							},
+						},
+					},
+					fmt.Sprintf(url1, appID, tableID, search): {
+						PathItemProps: spec.PathItemProps{
+							Post: &spec.Operation{ // get
+								OperationProps: V1SearchMethod(schemasbus),
+							},
+						},
+					},
+					fmt.Sprintf(url1, appID, tableID, update): {
+						PathItemProps: spec.PathItemProps{
+							Post: &spec.Operation{ // get
+								OperationProps: V1Update(schemasbus),
+							},
+						},
+					},
+					fmt.Sprintf(url1, appID, tableID, delete): {
+						PathItemProps: spec.PathItemProps{
+							Post: &spec.Operation{ // get
+								OperationProps: V1Delete(schemasbus),
+							},
+						},
+					},
+					fmt.Sprintf(url1, appID, tableID, create): {
+						PathItemProps: spec.PathItemProps{
+							Post: &spec.Operation{ // get
+								OperationProps: V1Create(schemasbus),
+							},
+						},
+					},
+				},
+			},
+			Definitions: make(map[string]spec.Schema),
+		},
+	}
+
+	marshal, err := json.Marshal(swagger)
+	if err != nil {
+		return "", err
+	}
+	swaggers := string(marshal)
+	return swaggers, nil
+}
+
+func DoSchemas1(appID, tableID, tableName string, schemas spec.SchemaProperties) (string, error) {
 	filterSystems := make(spec.SchemaProperties)
 
 	schemasbus := &schemasBus{

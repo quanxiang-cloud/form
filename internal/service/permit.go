@@ -20,6 +20,67 @@ const (
 	form_permit = "formpermit"
 )
 
+type GetUserRoleReq struct {
+	UserID string `json:"userID"`
+	DepID  string `json:"depID"`
+	AppID  string `json:"appID"`
+}
+
+type GetUserRoleResp struct {
+	RoleID string          `json:"roleID"`
+	Types  models.RoleType `json:"type"`
+}
+
+func (p *permit) GetUserRole(ctx context.Context, req *GetUserRoleReq) (*GetUserRoleResp, error) {
+	userRole, err := p.userRoleRepo.Get(p.db, req.UserID, req.AppID)
+	if err != nil {
+		return nil, err
+	}
+	resp := &GetUserRoleResp{
+		RoleID: userRole.RoleID,
+	}
+	if userRole.RoleID != "" {
+		resp.RoleID = userRole.RoleID
+		roles, err := p.roleRepo.Get(p.db, userRole.RoleID)
+		if err != nil {
+			return nil, err
+		}
+		resp.Types = roles.Types
+		return resp, nil
+	}
+	// 根据
+	ow := make([]string, 0)
+	if req.UserID != "" {
+		ow = append(ow, req.UserID)
+	}
+	if req.DepID != "" {
+		ow = append(ow, req.DepID)
+	}
+	grant, total, err := p.roleGrantRepo.List(p.db, &models.RoleGrantQuery{
+		Owners: ow,
+		AppID:  req.AppID,
+	}, 1, 999)
+	if total == 0 || len(grant) == 0 {
+		return resp, nil
+	}
+	// get role
+	role, err := p.roleRepo.Get(p.db, grant[0].RoleID)
+	if err != nil {
+		return nil, err
+	}
+	resp.Types = role.Types
+	// save user role
+	err = p.userRoleRepo.BatchCreate(p.db, &models.UserRole{
+		UserID: req.UserID,
+		RoleID: role.ID,
+		AppID:  req.AppID,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
 type Permit interface {
 	CreateRole(ctx context.Context, req *CreateRoleReq) (*CreateRoleResp, error)
 
@@ -45,11 +106,13 @@ type Permit interface {
 
 	FindPermit(ctx context.Context, req *FindPermitReq) (*FindPermitResp, error)
 
-	SaveUserPerMatch(ctx context.Context, req *SaveUserPerMatchReq, opts ...Option) (*SaveUserPerMatchResp, error)
+	CreateUserRole(ctx context.Context, req *CreateUserRoleReq, opts ...Option) (*CreateUserRoleResp, error)
 
 	ListPermit(ctx context.Context, req *ListPermitReq) (*ListPermitResp, error)
 
 	ListAndSelect(ctx context.Context, req *ListAndSelectReq) (*ListAndSelectResp, error)
+
+	GetUserRole(ctx context.Context, req *GetUserRoleReq) (*GetUserRoleResp, error)
 }
 
 type permit struct {
@@ -80,9 +143,15 @@ type Per struct {
 }
 
 func (p *permit) ListAndSelect(ctx context.Context, req *ListAndSelectReq) (*ListAndSelectResp, error) {
-
+	ow := make([]string, 0)
+	if req.UserID != "" {
+		ow = append(ow, req.UserID)
+	}
+	if req.DepID != "" {
+		ow = append(ow, req.DepID)
+	}
 	list, _, err := p.roleGrantRepo.List(p.db, &models.RoleGrantQuery{
-		Owners: []string{req.DepID, req.UserID},
+		Owners: ow,
 		AppID:  req.AppID,
 	}, 1, 999)
 	if err != nil {
@@ -287,16 +356,15 @@ func (p *permit) FindGrantRole(ctx context.Context, req *FindGrantRoleReq) (*Fin
 	return resp, nil
 }
 
-type SaveUserPerMatchReq struct {
-	RoleID   string `json:"roleID"`
-	RoleName string `json:"roleName"`
-	UserID   string `json:"userID"`
-	AppID    string `json:"appID"`
+type CreateUserRoleReq struct {
+	RoleID string `json:"roleID"`
+	UserID string `json:"userID"`
+	AppID  string `json:"appID"`
 }
 
-type SaveUserPerMatchResp struct{}
+type CreateUserRoleResp struct{}
 
-func (p *permit) SaveUserPerMatch(ctx context.Context, req *SaveUserPerMatchReq, opts ...Option) (resp *SaveUserPerMatchResp, err error) {
+func (p *permit) CreateUserRole(ctx context.Context, req *CreateUserRoleReq, opts ...Option) (resp *CreateUserRoleResp, err error) {
 	// TO 删除
 
 	defer func() {
@@ -317,7 +385,7 @@ func (p *permit) SaveUserPerMatch(ctx context.Context, req *SaveUserPerMatchReq,
 		}
 	}()
 
-	resp = &SaveUserPerMatchResp{}
+	resp = &CreateUserRoleResp{}
 	err = p.userRoleRepo.Delete(p.db, &models.UserRoleQuery{
 		UserID: req.UserID,
 		AppID:  req.AppID,
@@ -380,6 +448,7 @@ func NewPermit(conf *config2.Config) (Permit, error) {
 		roleRepo:      mysql.NewRoleRepo(),
 		roleGrantRepo: mysql.NewRoleGrantRepo(),
 		permitRepo:    mysql.NewPermitRepo(),
+		userRoleRepo:  mysql.NewUserRoleRepo(),
 		limitRepo:     redis.NewLimitRepo(redisClient),
 	}, nil
 }

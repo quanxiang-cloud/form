@@ -102,6 +102,5 @@ CREATE TABLE `user_role` (
       `app_id` 	 VARCHAR(64) 	NOT NULL COMMENT 'app id',
       `user_id`    VARCHAR(64)    NOT NULL COMMENT 'user id',
       `role_id`  VARCHAR(64)  COMMENT 'role id' ,
-      `role_name`  VARCHAR(64)   COMMENT 'role name' ,
       PRIMARY KEY  (`id`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;

@@ -20,7 +20,7 @@ type UserRoleQuery struct {
 // UserRoleRepo UserRoleRepo.
 type UserRoleRepo interface {
 	BatchCreate(db *gorm.DB, userRole ...*UserRole) error
-	Get(db *gorm.DB, userID, appID string) (*UserRole, error)
+	Get(db *gorm.DB, appID, userID string) (*UserRole, error)
 	Delete(db *gorm.DB, query *UserRoleQuery) error
 	List(db *gorm.DB, query *UserRoleQuery, page, size int) ([]*UserRole, int64, error)
 }
