@@ -237,7 +237,7 @@ func newComponent(conf *config.Config) (Guidance, error) {
 
 	return &component{
 		db:                db,
-		tableRelationRepo: mysql.NewTableRelation(),
+		tableRelationRepo: mysql.NewTableRelationRepo(),
 		next:              swagger,
 		serialRepo:        redis.NewSerialRepo(redisClient),
 	}, nil
