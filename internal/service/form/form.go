@@ -31,7 +31,6 @@ type CreateReq struct {
 
 type GetReq struct {
 	Base
-	AppID string
 	Query types.Query `json:"query"`
 	Ref   types.Ref   `json:"ref"`
 }

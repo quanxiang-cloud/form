@@ -9,6 +9,7 @@ const (
 	TermsKey = "terms"
 	TermKey  = "term"
 	IDKey    = "_id"
+	Must     = "must"
 )
 
 // KeyValue KeyValue.

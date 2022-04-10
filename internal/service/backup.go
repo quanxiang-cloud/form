@@ -49,7 +49,7 @@ func NewBackup(conf *config2.Config) (Backup, error) {
 		roleRepo:          mysql.NewRoleRepo(),
 		permitRepo:        mysql.NewPermitRepo(),
 		tableRepo:         mysql.NewTableRepo(),
-		tableRelationRepo: mysql.NewTableRelation(),
+		tableRelationRepo: mysql.NewTableRelationRepo(),
 		tableSchemeRepo:   mysql.NewTableSchema(),
 	}, nil
 }

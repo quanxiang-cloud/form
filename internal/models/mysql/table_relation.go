@@ -71,6 +71,6 @@ func (t *tableRelationRepo) TableName() string {
 	return "table_relation"
 }
 
-func NewTableRelation() models.TableRelationRepo {
+func NewTableRelationRepo() models.TableRelationRepo {
 	return &tableRelationRepo{}
 }

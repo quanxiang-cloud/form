@@ -369,14 +369,14 @@ func NewPermit(conf *config2.Config) (Permit, error) {
 	if err != nil {
 		return nil, err
 	}
-	client, err := daprd.NewClient()
-	if err != nil {
-		return nil, err
-	}
+	//client, err := daprd.NewClient()
+	//if err != nil {
+	//	return nil, err
+	//}
 	return &permit{
-		db:            db,
-		conf:          conf,
-		daprClient:    client,
+		db:   db,
+		conf: conf,
+		//daprClient:    client,
 		roleRepo:      mysql.NewRoleRepo(),
 		roleGrantRepo: mysql.NewRoleGrantRepo(),
 		permitRepo:    mysql.NewPermitRepo(),
@@ -711,12 +711,6 @@ func (p *permit) DeleteRole(ctx context.Context, req *DeleteRoleReq) (*DeleteRol
 	if err != nil {
 		return nil, err
 	}
-	// 删除缓存
-	err = p.limitRepo.DeletePerMatch(ctx, req.AppID)
-	if err != nil {
-		//
-		logger.Logger.Errorw("delete per match", req.RoleID, err.Error())
-	}
 	//
 	err = p.publish(ctx, "form-user-match", &event.Data{
 		UserSpec: &event.UserSpec{
@@ -730,10 +724,10 @@ func (p *permit) DeleteRole(ctx context.Context, req *DeleteRoleReq) (*DeleteRol
 }
 
 func (p *permit) publish(ctx context.Context, topic string, data interface{}) error {
-	if err := p.daprClient.PublishEvent(ctx, p.conf.PubSubName, topic, data); err != nil {
-		logger.Logger.WithName("public").Errorw("publish error", "topic", topic, "publicName", p.conf.PubSubName)
-		return err
-	}
-	logger.Logger.Info("is oj", "PubSubName", p.conf.PubSubName)
+	//if err := p.daprClient.PublishEvent(ctx, p.conf.PubSubName, topic, data); err != nil {
+	//	logger.Logger.WithName("public").Errorw("publish error", "topic", topic, "publicName", p.conf.PubSubName)
+	//	return err
+	//}
+	//logger.Logger.Info("is oj", "PubSubName", p.conf.PubSubName)
 	return nil
 }

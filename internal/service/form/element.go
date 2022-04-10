@@ -3,7 +3,11 @@ package form
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/quanxiang-cloud/cabin/logger"
+	"github.com/quanxiang-cloud/cabin/tailormade/header"
+	"github.com/quanxiang-cloud/form/internal/models"
 	"reflect"
 
 	"github.com/quanxiang-cloud/form/internal/models/redis"
@@ -22,6 +26,7 @@ type common struct {
 	refValue      types.Ref        // ref 结构
 	primaryEntity consensus.Entity // 主表的entity
 	extraValue    types.M          // 透传的数据
+
 }
 
 type comReq struct {
@@ -97,24 +102,158 @@ func (c *common) subUpdate(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	// deal with update option
 	err = c.update(ctx, refData)
 	if err != nil {
-		//	logger.Logger.Errorw("update is  err is", err.Error())
+		logger.Logger.Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
 	}
 	err = c.new(ctx, refData, extraData)
 	if err != nil {
-		// logger.Logger.Errorw("new  is  err is", err.Error())
+		logger.Logger.Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
 	}
 	err = c.delete(ctx, refData, extraData, c.tag == "sub_table") // 等于sub table 需要删除
 	if err != nil {
-		// logger.Logger.Errorw("new  is  err is", err.Error())
+		logger.Logger.Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
 	}
 	return nil
 }
 
 func (c *common) subGet(ctx context.Context, isReplace bool) error {
+	extraData := &ExtraData{}
+	refData := &RefData{}
+	err := c.perInitData(ctx, refData, extraData)
+	if err != nil {
+		return err
+	}
+	data := make([]interface{}, 0)
+	id, err := getPrimaryID(c.primaryEntity)
+	if err != nil {
+		return err
+	}
+	idConditions := consensus.GetSimple(consensus.TermsKey, primitiveID, id)
+	keyCondition := consensus.GetSimple(consensus.TermKey, fieldName, c.key)
+	boolQuery := consensus.GetBool(consensus.Must, idConditions, keyCondition)
+
+	universal := consensus.Universal{
+		UserID:   c.userID,
+		UserName: c.userName,
+	}
+	foundation := consensus.Foundation{
+		AppID:   refData.AppID,
+		TableID: getRelationName(extraData.TableID, refData.TableID),
+		Method:  "search",
+	}
+	bus := new(consensus.Bus)
+	bus.Universal = universal
+	bus.Foundation = foundation
+	bus.Get.Query = boolQuery
+	list := consensus.List{
+		Size: 1000,
+		Page: 1,
+		Sort: []string{"created_at"},
+	}
+	bus.List = list
+
+	searchResp1, err := c.ref.Do(ctx, bus)
+	if err != nil {
+		return err
+	}
+	for _, value := range searchResp1.Entities {
+		_, ok := value[subIDs]
+		if !ok {
+			continue
+		}
+		data = append(data, value[subIDs])
+	}
+	if !isReplace {
+		setValue(c.primaryEntity, c.key, data)
+		return nil
+	}
+
+	idsQuery := consensus.GetSimple(consensus.TermsKey, "_id", data)
+	bus1 := new(consensus.Bus)
+	bus1.Universal = universal
+	bus1.Foundation = consensus.Foundation{
+		TableID: refData.TableID,
+		AppID:   refData.AppID,
+		Method:  "search",
+	}
+	bus1.Get.Query = idsQuery
+	bus.List = list
+
+	subResp, err := c.ref.Do(ctx, bus1)
+	if err != nil {
+		return err
+	}
+	err = c.findOnePost(&params{
+		ctx:       ctx,
+		subResp:   subResp,
+		refData:   refData,
+		extraData: extraData,
+		data:      data,
+	})
+	if err != nil {
+		return err
+	}
 	return nil
+
+}
+
+type params struct {
+	ctx       context.Context
+	subResp   *consensus.Response
+	refData   *RefData
+	extraData *ExtraData
+	data      []interface{}
+}
+
+// sub
+
+func (c *common) findOnePost(param *params) error {
+	replaceData := make([]interface{}, 0)
+	relation, _, err := c.ref.relationRepo.List(c.ref.db, &models.TableRelationQuery{}, 1, 10)
+	if len(relation) < 0 {
+		return nil
+	}
+
+	if err != nil {
+		return err
+	}
+	mapID := make(map[string]types.M)
+	for i := 0; i < len(param.subResp.Entities); i++ {
+		e1 := param.subResp.Entities[i]
+		id := e1["_id"].(string)
+		propertiesFilter(e1, relation[0].Filter)
+		mapID[id] = e1
+	}
+	for _, value := range param.data {
+		id, ok := value.(string)
+		if !ok {
+			return errors.New("par is error ")
+		}
+		if e, ok := mapID[id]; ok {
+			replaceData = append(replaceData, e)
+		}
+	}
+	setValue(c.primaryEntity, c.key, replaceData)
+	return nil
+}
+
+// PropertiesFilter PropertiesFilter
+func propertiesFilter(oldProperties map[string]interface{}, filter []string) {
+	if filter == nil {
+		return
+	}
+	// 1、 把过滤字段 切换成map，
+	filters := make(map[string]int, len(filter))
+	for index, filterKey := range filter {
+		filters[filterKey] = index
+	}
+	// 2、判断 遍历的列，在不在map 中，不在，删除该列
+	for column := range oldProperties {
+		if _, ok := filters[column]; !ok {
+			delete(oldProperties, column)
+		}
+	}
 }
 
 // new :component create options.
@@ -183,7 +322,7 @@ func (c *common) addRelationShip(ctx context.Context, refData *RefData, extraDat
 		bus.CreatedOrUpdate.Entity = entity
 		_, err = c.ref.Do(ctx, bus)
 		if err != nil {
-			// logger.Logger.Errorw("add sub form is err ,err is ", logger.STDRequestID(ctx), err.Error())
+			logger.Logger.Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
 		}
 	}
 	return nil
@@ -273,7 +412,7 @@ func (c *common) delete(ctx context.Context, refData *RefData, originalData *Ext
 	bus.Get.Query = dslQuery
 	_, err := c.ref.Do(ctx, bus)
 	if err != nil {
-		// logger.Logger.Errorw("add sub form is err ,err is ", logger.STDRequestID(ctx), err.Error())
+		logger.Logger.Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
 	}
 	return nil
 }
@@ -307,10 +446,23 @@ func getPrimaryID(e consensus.Entity) (string, error) {
 			if values.CanInterface() {
 				return values.Interface().(string), nil
 			}
+		} else {
+			return "", errors.New("miss id")
 		}
 	}
 
 	return "", nil
+}
+
+func setValue(e consensus.Entity, key string, values interface{}) {
+	if e == nil {
+		return
+	}
+	value := reflect.ValueOf(e)
+	switch _t := reflect.TypeOf(e); _t.Kind() {
+	case reflect.Map:
+		value.SetMapIndex(reflect.ValueOf(key), reflect.ValueOf(values))
+	}
 }
 
 type serial struct {
@@ -330,14 +482,13 @@ func (s *serial) handlerFunc(ctx context.Context, action string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("%+v\n", originalData)
 	serialMap := s.ref.serialRepo.GetAll(ctx, originalData.AppID, originalData.TableID, s.key)
 	serialScheme, res, err := utils.ExecuteTemplate(serialMap)
 	if err != nil {
 		// logger.Logger.Errorw("serial template is err", logger.STDRequestID(ctx))
 		return err
 	}
-	//
+
 	entity, ok := s.primaryEntity.(map[string]interface{})
 	if !ok {
 		return nil
@@ -366,5 +517,5 @@ func (a *associatedRecords) getTag() string {
 }
 
 func (a *associatedRecords) handlerFunc(ctx context.Context, action string) error {
-	return nil
+	return a.common.subGet(ctx, false)
 }
