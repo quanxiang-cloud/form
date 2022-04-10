@@ -5,18 +5,18 @@ import (
 	"gorm.io/gorm"
 )
 
-type roleUserRepo struct{}
+type userRoleRepo struct{}
 
-func (r *roleUserRepo) Get(db *gorm.DB, appID, userID string) (*models.UserRole, error) {
+func (r *userRoleRepo) Get(db *gorm.DB, appID, userID string) (*models.UserRole, error) {
 	userRole := new(models.UserRole)
-	err := db.Table(r.TableName()).Where("user_id = ? and  app_id = ? ", userID, appID).Find(userRole).Error
+	err := db.Table(r.TableName()).Where("app_id = ? and  user_id = ?   ", appID, userID).Find(userRole).Error
 	if err != nil {
 		return nil, err
 	}
 	return userRole, nil
 }
 
-func (r *roleUserRepo) Delete(db *gorm.DB, query *models.UserRoleQuery) error {
+func (r *userRoleRepo) Delete(db *gorm.DB, query *models.UserRoleQuery) error {
 	resp := make([]models.Role, 0)
 	ql := db.Table(r.TableName())
 	if query.AppID != "" {
@@ -28,18 +28,18 @@ func (r *roleUserRepo) Delete(db *gorm.DB, query *models.UserRoleQuery) error {
 	return ql.Delete(resp).Error
 }
 
-func (r *roleUserRepo) List(db *gorm.DB, query *models.UserRoleQuery, page, size int) ([]*models.UserRole, int64, error) {
+func (r *userRoleRepo) List(db *gorm.DB, query *models.UserRoleQuery, page, size int) ([]*models.UserRole, int64, error) {
 	panic("implement me")
 }
 
-func (r *roleUserRepo) TableName() string {
-	return "table_user"
+func (r *userRoleRepo) TableName() string {
+	return "user_role"
 }
 
-func (r *roleUserRepo) BatchCreate(db *gorm.DB, userRole ...*models.UserRole) error {
+func (r *userRoleRepo) BatchCreate(db *gorm.DB, userRole ...*models.UserRole) error {
 	return db.Table(r.TableName()).CreateInBatches(userRole, len(userRole)).Error
 }
 
 func NewUserRoleRepo() models.UserRoleRepo {
-	return &roleUserRepo{}
+	return &userRoleRepo{}
 }

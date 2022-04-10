@@ -11,10 +11,10 @@ import (
 )
 
 var (
-	formHost           string
-	cacheMatchRoleURL  = "%s/api/v1/form/%s/internal/apiRole/userRoleMatch"
-	roleMatchPermitURL = "%s/api/v1/form/%s/internal/apiPermit/find"
-	saveUserRoleURL    = "%s/api/v1/form/%s/internal/apiRole/userRole/create"
+	formHost        string
+	getUserRoleURL  = "%s/api/v1/form/%s/internal/apiRole/userRole/get"
+	getPermitURl    = "%s/api/v1/form/%s/internal/apiPermit/find"
+	saveUserRoleURL = "%s/api/v1/form/%s/internal/apiRole/userRole/create"
 )
 
 func init() {
@@ -41,24 +41,16 @@ type GetMatchRoleResp struct {
 
 func (f *Form) GetCacheMatchRole(ctx context.Context, userID, depID, appID string) (*GetMatchRoleResp, error) {
 	resp := &GetMatchRoleResp{}
-	cacheMatchRoleURL := fmt.Sprintf(cacheMatchRoleURL, formHost, appID)
-
-	owners := make([]string, 0, 2)
-
-	if userID != "" {
-		owners = append(owners, userID)
-	}
-	if depID != "" {
-		owners = append(owners, depID)
-	}
-	err := client.POST(ctx, &f.client, cacheMatchRoleURL, struct {
-		Owners []string `json:"owners"`
-		AppID  string   `json:"appID"`
+	getUserRoleURLs := fmt.Sprintf(getUserRoleURL, formHost, appID)
+	err := client.POST(ctx, &f.client, getUserRoleURLs, struct {
+		UserID string `json:"userID"`
+		DepID  string `json:"depID"`
+		AppID  string `json:"appID"`
 	}{
-		Owners: owners,
+		UserID: userID,
+		DepID:  depID,
 		AppID:  appID,
 	}, resp)
-
 	if err != nil {
 		return nil, err
 	}
@@ -82,11 +74,10 @@ type permit struct {
 	Condition models.Condition   `json:"condition"`
 }
 
-func (f *Form) GetRoleMatchPermit(ctx context.Context, appID, roleID string) (*FindPermitResp, error) {
+func (f *Form) GetPermit(ctx context.Context, appID, roleID string) (*FindPermitResp, error) {
 	resp := &FindPermitResp{}
-	roleMatchPermitURL := fmt.Sprintf(roleMatchPermitURL, formHost, appID)
-
-	err := client.POST(ctx, &f.client, roleMatchPermitURL, struct {
+	getPermitURls := fmt.Sprintf(getPermitURl, formHost, appID)
+	err := client.POST(ctx, &f.client, getPermitURls, struct {
 		RoleID string `json:"roleID"`
 	}{
 		RoleID: roleID,

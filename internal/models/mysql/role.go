@@ -58,6 +58,9 @@ func (t *roleRepo) List(db *gorm.DB, query *models.RoleQuery, page, size int) ([
 	if query.AppID != "" {
 		db = db.Where("app_id = ?", query.AppID)
 	}
+	if len(query.RoleIDS) != 0 {
+		db = db.Where("id in ?", query.RoleIDS)
+	}
 	var (
 		count int64
 		roles []*models.Role

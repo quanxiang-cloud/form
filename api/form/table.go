@@ -153,8 +153,8 @@ func (t *Table) GetXName(c *gin.Context) {
 func getProfile(c *gin.Context) *profile {
 	depIDS := strings.Split(c.GetHeader(_departmentID), ",")
 	return &profile{
-		userID:   c.Param(_userID),
-		userName: c.Param(_userName),
+		userID:   c.GetHeader(_userID),
+		userName: c.GetHeader(_userName),
 		depID:    depIDS[0],
 	}
 }
