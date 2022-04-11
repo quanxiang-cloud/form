@@ -154,7 +154,7 @@ func Convert1(schema map[string]interface{}) (s models.SchemaProperties, total i
 		s[key] = schemaProps
 	}
 
-	return s, 0, nil
+	return s, total, nil
 }
 
 func GetSpecSchema(properties models.SchemaProperties) spec.SchemaProperties {

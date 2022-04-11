@@ -73,7 +73,11 @@ func (p *Permit) DeleteRole(c *gin.Context) {
 
 // CratePermit create permit.
 func (p *Permit) CratePermit(c *gin.Context) {
-	req := &service.CreatePerReq{}
+	pr := getProfile(c)
+	req := &service.CreatePerReq{
+		UserID:   pr.userID,
+		UserName: pr.userName,
+	}
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
 		logger.Logger.WithName("CratePermit").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)

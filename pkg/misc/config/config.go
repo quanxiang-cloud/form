@@ -1,6 +1,7 @@
 package config
 
 import (
+	mongo2 "github.com/quanxiang-cloud/cabin/tailormade/db/mongo"
 	"io/ioutil"
 	"time"
 
@@ -26,6 +27,7 @@ type Config struct {
 	Model       string        `yaml:"model"`
 	Log         logger.Config `yaml:"log"`
 	Mysql       mysql2.Config `yaml:"mysql"`
+	Mongo       mongo2.Config `yaml:"mongo"`
 	PubSubName  string        `yaml:"pubSubName"`
 	Redis       redis2.Config `yaml:"redis"`
 	Kafka       kafka.Config  `yaml:"kafka"`

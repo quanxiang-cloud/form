@@ -41,7 +41,15 @@ func (t *tableRelationRepo) Update(db *gorm.DB, tableID, fieldName string, table
 }
 
 func (t *tableRelationRepo) Delete(db *gorm.DB, query *models.TableRelationQuery) error {
-	return nil
+	resp := make([]models.TableRelation, 0)
+	ql := db.Table(t.TableName())
+	if query.TableID != "" {
+		ql = ql.Where("table_id = ? ", query.TableID)
+	}
+	if query.AppID != "" {
+		ql = ql.Where("app_id = ?", query.AppID)
+	}
+	return ql.Delete(resp).Error
 }
 
 func (t *tableRelationRepo) List(db *gorm.DB, query *models.TableRelationQuery, page, size int) ([]*models.TableRelation, int64, error) {

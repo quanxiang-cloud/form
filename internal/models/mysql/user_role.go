@@ -25,6 +25,9 @@ func (r *userRoleRepo) Delete(db *gorm.DB, query *models.UserRoleQuery) error {
 	if query.UserID != "" {
 		ql = ql.Where("user_id = ?", query.UserID)
 	}
+	if query.RoleID != "" {
+		ql = ql.Where("role_id = ?", query.RoleID)
+	}
 	return ql.Delete(resp).Error
 }
 

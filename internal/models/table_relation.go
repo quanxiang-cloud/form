@@ -21,6 +21,8 @@ type TableRelation struct {
 	SubTableType string
 	// filter
 	Filter Filters
+
+	CreatedAt int64
 }
 
 type Filters []string

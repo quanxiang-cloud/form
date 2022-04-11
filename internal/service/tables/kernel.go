@@ -11,7 +11,7 @@ type Bus struct {
 	UserName string `json:"user_name"`
 
 	AppID   string           `json:"app_id"`
-	TableID string           `json:"tableID"`
+	TableID string           `json:"tableID" binding:"required"`
 	Schema  models.WebSchema `json:"schema"`
 
 	Source models.SourceType `json:"source"` // source 1 是表单驱动，2是模型驱动

@@ -28,7 +28,15 @@ func (t *tableSchemaRepo) Get(db *gorm.DB, appID, tableID string) (*models.Table
 	return permitForm, nil
 }
 func (t *tableSchemaRepo) Delete(db *gorm.DB, query *models.TableSchemaQuery) error {
-	return nil
+	resp := make([]models.TableSchema, 0)
+	ql := db.Table(t.TableName())
+	if query.TableID != "" {
+		ql = ql.Where("table_id = ? ", query.TableID)
+	}
+	if query.AppID != "" {
+		ql = ql.Where("app_id = ?", query.AppID)
+	}
+	return ql.Delete(resp).Error
 }
 
 func (t *tableSchemaRepo) Update(db *gorm.DB, appID, tableID string, tableSchema *models.TableSchema) error {
