@@ -20,6 +20,8 @@ type Table struct {
 	Schema WebSchema
 	// table page config json schema
 	Config Config
+
+	CreatedAt int64
 }
 
 // WebSchema WebSchema.

@@ -33,7 +33,8 @@ DROP TABLE IF EXISTS `permit`;
 CREATE TABLE `permit` (
     `id` 		 VARCHAR(64) 	COMMENT 'unique id',
     `role_id`  VARCHAR(64)    COMMENT 'authority' ,
-    `path`       VARCHAR(255) 	 NOT NULL COMMENT 'path',
+    `path`       VARCHAR(255) 	NOT NULL COMMENT 'path',
+    `method`     VARCHAR(100)   COMMENT 'method',
     `params` 	TEXT	 COMMENT 'params',
     `response`  TEXT     COMMENT 'response',
     `condition` 		 TEXT 	COMMENT 'conditions',
@@ -53,7 +54,7 @@ CREATE TABLE `table` (
    `table_id`    VARCHAR(64)    NOT NULL COMMENT 'tableID',
    `schema`      TEXT   COMMENT 'web schema' ,
    `config` 	 TEXT 	COMMENT 'config',
-    `created_at`     BIGINT(20) 	    COMMENT 'create time',
+   `created_at`     BIGINT(20) 	    COMMENT 'create time',
    UNIQUE KEY `idx_global_name` (`app_id`, `table_id`),
    PRIMARY KEY  (`id`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -91,7 +92,7 @@ CREATE TABLE `table_relation` (
      `sub_table_id`  VARCHAR(64)   COMMENT 'sub table id' ,
      `sub_table_type` VARCHAR(64) 	COMMENT 'sub table type',
      `filter` 	    VARCHAR(255)  	COMMENT 'filter',
-     created_at  BIGINT(20) 	    COMMENT 'create time',
+     `created_at`  BIGINT(20) 	    COMMENT 'create time',
      PRIMARY KEY  (`id`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

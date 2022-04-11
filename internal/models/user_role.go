@@ -15,6 +15,7 @@ type UserRole struct {
 type UserRoleQuery struct {
 	UserID string
 	AppID  string
+	RoleID string
 }
 
 // UserRoleRepo UserRoleRepo.

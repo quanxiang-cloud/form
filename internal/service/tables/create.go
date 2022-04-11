@@ -38,9 +38,10 @@ func (w *webTable) Do(ctx context.Context, bus *Bus) (*DoResponse, error) {
 		Schema: bus.Schema,
 	}
 	if one.ID == "" {
-		tables.ID = id2.HexUUID(true)
+		tables.ID = id2.StringUUID()
 		tables.TableID = bus.TableID
 		tables.AppID = bus.AppID
+		tables.CreatedAt = time2.NowUnix()
 		err = w.tableRepo.BatchCreate(w.db, tables)
 		if err != nil {
 			return nil, err
@@ -102,7 +103,7 @@ func (t *tableSchema) Do(ctx context.Context, bus *Bus) (*DoResponse, error) {
 	}
 
 	if !bus.Update { // create
-		tables.ID = id2.HexUUID(true)
+		tables.ID = id2.StringUUID()
 		tables.Source = bus.Source
 		tables.AppID = bus.AppID
 		tables.TableID = bus.TableID
@@ -114,6 +115,9 @@ func (t *tableSchema) Do(ctx context.Context, bus *Bus) (*DoResponse, error) {
 			return nil, err
 		}
 	} else {
+		tables.EditorID = bus.UserID
+		tables.EditorName = bus.UserName
+		tables.UpdatedAt = time2.NowUnix()
 		tables.EditorID = bus.UserID
 		tables.EditorName = bus.UserName
 		err = t.tableSchemaRepo.Update(t.db, bus.AppID, bus.TableID, tables)

@@ -27,12 +27,12 @@ type GetUserRoleReq struct {
 }
 
 type GetUserRoleResp struct {
-	RoleID string          `json:"roleID"`
+	RoleID string          `json:"id"`
 	Types  models.RoleType `json:"type"`
 }
 
 func (p *permit) GetUserRole(ctx context.Context, req *GetUserRoleReq) (*GetUserRoleResp, error) {
-	userRole, err := p.userRoleRepo.Get(p.db, req.UserID, req.AppID)
+	userRole, err := p.userRoleRepo.Get(p.db, req.AppID, req.UserID)
 	if err != nil {
 		return nil, err
 	}
@@ -68,16 +68,19 @@ func (p *permit) GetUserRole(ctx context.Context, req *GetUserRoleReq) (*GetUser
 	if err != nil {
 		return nil, err
 	}
-	resp.Types = role.Types
+
 	// save user role
 	err = p.userRoleRepo.BatchCreate(p.db, &models.UserRole{
 		UserID: req.UserID,
 		RoleID: role.ID,
 		AppID:  req.AppID,
+		ID:     id2.StringUUID(),
 	})
 	if err != nil {
 		return nil, err
 	}
+	resp.Types = role.Types
+	resp.RoleID = role.ID
 	return resp, nil
 }
 
@@ -780,15 +783,13 @@ func (p *permit) DeleteRole(ctx context.Context, req *DeleteRoleReq) (*DeleteRol
 	if err != nil {
 		return nil, err
 	}
-	//
-	err = p.publish(ctx, "form-user-match", &event.Data{
-		UserSpec: &event.UserSpec{
-			RoleID: req.RoleID,
-			AppID:  req.AppID,
-			Action: "delete",
-		},
+	err = p.userRoleRepo.Delete(p.db, &models.UserRoleQuery{
+		AppID:  req.AppID,
+		RoleID: req.RoleID,
 	})
-	logger.Logger.Errorw("")
+	if err != nil {
+		return nil, err
+	}
 	return &DeleteRoleResp{}, nil
 }
 

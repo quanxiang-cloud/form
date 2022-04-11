@@ -28,9 +28,6 @@ func (t *table) GetTableInfo(ctx context.Context, req *GetTableInfoReq) (*GetTab
 	if err != nil {
 		return nil, err
 	}
-	//if modelData == nil {
-	//	return nil, error2.NewError(code.ErrNODataSetNameState)
-	//}
 	return &GetTableInfoResp{
 		TableID:     modelData.TableID,
 		FieldLen:    modelData.FieldLen,
@@ -88,6 +85,8 @@ type GetTableResp struct {
 	Schema models.WebSchema `json:"schema"`
 	// table page config json schema
 	Config models.Config `json:"config"`
+
+	TableID string `json:"tableID"`
 }
 
 func (t *table) GetTable(ctx context.Context, req *GetTableReq) (*GetTableResp, error) {
@@ -99,9 +98,10 @@ func (t *table) GetTable(ctx context.Context, req *GetTableReq) (*GetTableResp, 
 		return nil, nil
 	}
 	return &GetTableResp{
-		ID:     tables.ID,
-		Schema: tables.Schema,
-		Config: tables.Config,
+		ID:      tables.ID,
+		Schema:  tables.Schema,
+		Config:  tables.Config,
+		TableID: tables.TableID,
 	}, nil
 }
 

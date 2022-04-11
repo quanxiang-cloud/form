@@ -73,21 +73,21 @@ type Response struct {
 }
 
 type GetResp struct {
-	Entity types.M `json:"entity"`
+	Entity types.M `json:"entity,omitempty"`
 }
 
 type DeleteResp struct {
-	Count int64 `json:"count"`
+	Count int64 `json:"count,omitempty"`
 }
 
 type CreatedOrUpdateResp struct {
-	Data  interface{} `json:"data"`
+	Data  interface{} `json:"data,omitempty"`
 	Count int64       `json:"count"`
 }
 
 type ListResp struct {
-	Entities types.Entities `json:"entities"`
-	Total    int64          `json:"total"`
+	Entities types.Entities `json:"entities,omitempty"`
+	Total    int64          `json:"total,omitempty"`
 }
 
 type Guidance interface {
