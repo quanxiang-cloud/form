@@ -101,7 +101,9 @@ func (t *tableSchema) Do(ctx context.Context, bus *Bus) (*DoResponse, error) {
 		FieldLen:    bus.FieldLen,
 		Description: bus.Description,
 	}
-
+	if bus.Source == 0 {
+		bus.Source = models.FormSource
+	}
 	if !bus.Update { // create
 		tables.ID = id2.StringUUID()
 		tables.Source = bus.Source
