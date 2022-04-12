@@ -51,10 +51,6 @@ func NewRouter(c *config2.Config) (*Router, error) {
 	}, nil
 }
 
-const (
-	loggerFormat = `[Echo] ${time_rfc3339_nano} | ${status} | ${latency_human} | ${remote_ip} | ${method}  ${uri}  {"request-id":${id},"err":${error}}`
-)
-
 func newRouter(c *config2.Config) *echo.Echo {
 	engine := echo.New()
 

@@ -2,6 +2,9 @@ package guard
 
 import (
 	"context"
+	"encoding/json"
+	"net/http"
+	"net/url"
 
 	"github.com/quanxiang-cloud/cabin/logger"
 	"github.com/quanxiang-cloud/cabin/tailormade/header"
@@ -39,7 +42,13 @@ func NewCondition(conf *config.Config) (*Condition, error) {
 
 // Do is a guard for permit.
 func (c *Condition) Do(ctx context.Context, req *permit.Request) (*permit.Response, error) {
-	query := req.Body[_query]
+	var query interface{}
+	switch req.Request.Method {
+	case http.MethodGet:
+		query = req.Query
+	case http.MethodPost:
+		query = req.Body[_query]
+	}
 
 	err := c.cond.SetParseValue(ctx, req)
 	if err != nil {
@@ -61,12 +70,36 @@ func (c *Condition) Do(ctx context.Context, req *permit.Request) (*permit.Respon
 		dataes = append(dataes, condition)
 	}
 
+	var newQuery permit.Object
 	if len(dataes) != 0 {
-		req.Body[_query] = permit.Body{
+		newQuery = permit.Object{
 			_bool: types.M{
 				_must: dataes,
 			},
 		}
+	}
+	switch req.Request.Method {
+	case http.MethodGet:
+		queryBytes, err := json.Marshal(newQuery)
+		if err != nil {
+			return nil, err
+		}
+
+		str, err := url.QueryUnescape(req.Request.URL.RawQuery)
+		if err != nil {
+			return nil, err
+		}
+
+		v, err := url.ParseQuery(str)
+		if err != nil {
+			return nil, err
+		}
+
+		v.Set("query", string(queryBytes))
+
+		req.Request.URL.RawQuery = v.Encode()
+	case http.MethodPost:
+		req.Body[_query] = newQuery
 	}
 
 	return c.next.Do(ctx, req)

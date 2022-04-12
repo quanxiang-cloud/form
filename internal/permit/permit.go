@@ -2,6 +2,7 @@ package permit
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 
 	"github.com/quanxiang-cloud/form/internal/service/consensus"
@@ -29,8 +30,15 @@ type Universal struct {
 
 type FormReq struct {
 	Action string `param:"action"`
-	Body   Body
+	Body   Object
+	Query  Object `query:"query"`
+	Entity Object `query:"entity"`
+
 	Permit *consensus.Permit
 }
 
-type Body map[string]interface{}
+type Object map[string]interface{}
+
+func (o *Object) UnmarshalParam(param string) error {
+	return json.Unmarshal([]byte(param), o)
+}

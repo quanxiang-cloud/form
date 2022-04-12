@@ -2,6 +2,7 @@ package guard
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/quanxiang-cloud/cabin/logger"
 	"github.com/quanxiang-cloud/cabin/tailormade/header"
@@ -23,7 +24,7 @@ func NewAuth(conf *config.Config) (*Auth, error) {
 	if err != nil {
 		return nil, err
 	}
-	next, err := NewProxy(conf)
+	next, err := NewCondition(conf)
 	if err != nil {
 		return nil, err
 	}
@@ -49,13 +50,21 @@ func (a *Auth) Do(ctx context.Context, req *permit.Request) (*permit.Response, e
 		return nil, nil
 	}
 
-	//entity := req.Body[_entity]
-	//if entity != nil {
-	//	// input parameter judgment
-	//	if !treasure.Pre(entity, p.Params) {
-	//		return nil, nil
-	//	}
-	//}
+	var entity interface{}
+	switch req.Request.Method {
+	case http.MethodGet:
+		entity = req.Entity
+	case http.MethodPost:
+		entity = req.Body[_entity]
+	}
+
+	if entity != nil {
+		// input parameter judgment
+		if !treasure.Pre(entity, p.Params) {
+			return nil, nil
+		}
+	}
+
 	req.Permit = p
 
 	return a.next.Do(ctx, req)

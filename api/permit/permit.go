@@ -70,11 +70,17 @@ func ProxyPoly(poly permit.Permit) echo.HandlerFunc {
 }
 
 func bindParams(c echo.Context, i *permit.Request) error {
-	if err := (&echo.DefaultBinder{}).BindBody(c, &i.Body); err != nil {
-		return err
+	var err error
+	switch c.Request().Method {
+	case http.MethodPost:
+		i.Body = make(permit.Object)
+		err = (&echo.DefaultBinder{}).BindBody(c, &i.Body)
+	case http.MethodGet:
+		i.Query, i.Entity = make(permit.Object), make(permit.Object)
+		err = (&echo.DefaultBinder{}).BindQueryParams(c, i)
 	}
 
-	if err := (&echo.DefaultBinder{}).BindQueryParams(c, i); err != nil {
+	if err != nil {
 		return err
 	}
 
