@@ -20,70 +20,6 @@ const (
 	form_permit = "formpermit"
 )
 
-type GetUserRoleReq struct {
-	UserID string `json:"userID"`
-	DepID  string `json:"depID"`
-	AppID  string `json:"appID"`
-}
-
-type GetUserRoleResp struct {
-	RoleID string          `json:"id"`
-	Types  models.RoleType `json:"type"`
-}
-
-func (p *permit) GetUserRole(ctx context.Context, req *GetUserRoleReq) (*GetUserRoleResp, error) {
-	userRole, err := p.userRoleRepo.Get(p.db, req.AppID, req.UserID)
-	if err != nil {
-		return nil, err
-	}
-	resp := &GetUserRoleResp{
-		RoleID: userRole.RoleID,
-	}
-	if userRole.RoleID != "" {
-		resp.RoleID = userRole.RoleID
-		roles, err := p.roleRepo.Get(p.db, userRole.RoleID)
-		if err != nil {
-			return nil, err
-		}
-		resp.Types = roles.Types
-		return resp, nil
-	}
-	// 根据
-	ow := make([]string, 0)
-	if req.UserID != "" {
-		ow = append(ow, req.UserID)
-	}
-	if req.DepID != "" {
-		ow = append(ow, req.DepID)
-	}
-	grant, total, err := p.roleGrantRepo.List(p.db, &models.RoleGrantQuery{
-		Owners: ow,
-		AppID:  req.AppID,
-	}, 1, 999)
-	if total == 0 || len(grant) == 0 {
-		return resp, nil
-	}
-	// get role
-	role, err := p.roleRepo.Get(p.db, grant[0].RoleID)
-	if err != nil {
-		return nil, err
-	}
-
-	// save user role
-	err = p.userRoleRepo.BatchCreate(p.db, &models.UserRole{
-		UserID: req.UserID,
-		RoleID: role.ID,
-		AppID:  req.AppID,
-		ID:     id2.StringUUID(),
-	})
-	if err != nil {
-		return nil, err
-	}
-	resp.Types = role.Types
-	resp.RoleID = role.ID
-	return resp, nil
-}
-
 type Permit interface {
 	CreateRole(ctx context.Context, req *CreateRoleReq) (*CreateRoleResp, error)
 
@@ -633,7 +569,19 @@ type CreatePerReq struct {
 type CreatePerResp struct{}
 
 func (p *permit) CreatePermit(ctx context.Context, req *CreatePerReq) (*CreatePerResp, error) {
+	permitArr := make([]*models.Permit, 0)
 	if IsFormAPI(req.AccessPath) {
+		permitArr = append(permitArr, &models.Permit{
+			ID:          id2.HexUUID(true),
+			Path:        req.AccessPath,
+			Params:      req.Params,
+			Response:    req.Response,
+			RoleID:      req.RoleID,
+			CreatorID:   req.UserID,
+			CreatorName: req.UserName,
+			CreatedAt:   time2.NowUnix(),
+			Condition:   req.Condition,
+		})
 		req.AccessPath = req.URI
 	}
 	permits := &models.Permit{
@@ -647,7 +595,8 @@ func (p *permit) CreatePermit(ctx context.Context, req *CreatePerReq) (*CreatePe
 		CreatedAt:   time2.NowUnix(),
 		Condition:   req.Condition,
 	}
-	err := p.permitRepo.BatchCreate(p.db, permits)
+	permitArr = append(permitArr, permits)
+	err := p.permitRepo.BatchCreate(p.db, permitArr...)
 	if err != nil {
 		return nil, err
 	}
@@ -700,6 +649,13 @@ type DeletePerResp struct{}
 
 func (p *permit) DeletePermit(ctx context.Context, req *DeletePerReq) (*DeletePerResp, error) {
 	if IsFormAPI(req.Path) {
+		err := p.permitRepo.Delete(p.db, &models.PermitQuery{
+			RoleID: req.RoleID,
+			Path:   req.Path,
+		})
+		if err != nil {
+			return nil, err
+		}
 		req.Path = req.URI
 	}
 	err := p.permitRepo.Delete(p.db, &models.PermitQuery{
@@ -791,6 +747,70 @@ func (p *permit) DeleteRole(ctx context.Context, req *DeleteRoleReq) (*DeleteRol
 		return nil, err
 	}
 	return &DeleteRoleResp{}, nil
+}
+
+type GetUserRoleReq struct {
+	UserID string `json:"userID"`
+	DepID  string `json:"depID"`
+	AppID  string `json:"appID"`
+}
+
+type GetUserRoleResp struct {
+	RoleID string          `json:"id"`
+	Types  models.RoleType `json:"type"`
+}
+
+func (p *permit) GetUserRole(ctx context.Context, req *GetUserRoleReq) (*GetUserRoleResp, error) {
+	userRole, err := p.userRoleRepo.Get(p.db, req.AppID, req.UserID)
+	if err != nil {
+		return nil, err
+	}
+	resp := &GetUserRoleResp{
+		RoleID: userRole.RoleID,
+	}
+	if userRole.RoleID != "" {
+		resp.RoleID = userRole.RoleID
+		roles, err := p.roleRepo.Get(p.db, userRole.RoleID)
+		if err != nil {
+			return nil, err
+		}
+		resp.Types = roles.Types
+		return resp, nil
+	}
+	// 根据
+	ow := make([]string, 0)
+	if req.UserID != "" {
+		ow = append(ow, req.UserID)
+	}
+	if req.DepID != "" {
+		ow = append(ow, req.DepID)
+	}
+	grant, total, err := p.roleGrantRepo.List(p.db, &models.RoleGrantQuery{
+		Owners: ow,
+		AppID:  req.AppID,
+	}, 1, 999)
+	if total == 0 || len(grant) == 0 {
+		return resp, nil
+	}
+	// get role
+	role, err := p.roleRepo.Get(p.db, grant[0].RoleID)
+	if err != nil {
+		return nil, err
+	}
+
+	// save user role
+	err = p.userRoleRepo.BatchCreate(p.db, &models.UserRole{
+		UserID: req.UserID,
+		RoleID: role.ID,
+		AppID:  req.AppID,
+		ID:     id2.StringUUID(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	resp.Types = role.Types
+	resp.RoleID = role.ID
+	return resp, nil
 }
 
 func (p *permit) publish(ctx context.Context, topic string, data interface{}) error {
