@@ -1,10 +1,22 @@
 package treasure
 
 import (
+	"os"
 	"reflect"
 
 	"github.com/quanxiang-cloud/form/internal/models"
 )
+
+var (
+	intercept string
+)
+
+func init() {
+	intercept = os.Getenv("INTERCEPT") //拦截
+	if intercept == "" {
+		intercept = "false"
+	}
+}
 
 const (
 	object = "object"
@@ -12,6 +24,12 @@ const (
 )
 
 func Pre(entity interface{}, fieldPermit models.FiledPermit) bool {
+	if intercept == "false" {
+		return false
+	}
+	if entity == nil {
+		return false
+	}
 	value := reflect.ValueOf(entity)
 	switch reflect.TypeOf(entity).Kind() {
 	case reflect.Ptr:
@@ -48,6 +66,9 @@ func Pre(entity interface{}, fieldPermit models.FiledPermit) bool {
 }
 
 func Post(response interface{}, fieldPermit models.FiledPermit) {
+	if intercept == "false" {
+		return
+	}
 	if response == nil || fieldPermit == nil {
 		return
 	}

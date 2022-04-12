@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/quanxiang-cloud/form/internal/permit/treasure"
 	"io"
 	"net"
 	"net/http"
@@ -112,13 +113,13 @@ func (p *Proxy) filter(resp *http.Response, req *permit.Request) error {
 		return nil
 	}
 
-	//switch req.Action {
-	//case "get":
-	//	treasure.Post(conResp.GetResp.Entity, req.Permit.Response)
-	//case "search":
-	//	treasure.Post(conResp.ListResp.Entities, req.Permit.Response)
-	//}
-	//
+	switch req.Action {
+	case "get":
+		treasure.Post(conResp.GetResp.Entity, req.Permit.Response)
+	case "search":
+		treasure.Post(conResp.ListResp.Entities, req.Permit.Response)
+	}
+
 	data, err := json.Marshal(cabinResp)
 	if err != nil {
 		logger.Logger.Errorf("entity json marshal failed: %s", err.Error())

@@ -48,14 +48,13 @@ func (a *Auth) Do(ctx context.Context, req *permit.Request) (*permit.Response, e
 	if p == nil {
 		return nil, nil
 	}
-
-	//entity := req.Body[_entity]
-	//if entity != nil {
-	//	// input parameter judgment
-	//	if !treasure.Pre(entity, p.Params) {
-	//		return nil, nil
-	//	}
-	//}
+	entity := req.Body[_entity]
+	if entity != nil {
+		// input parameter judgment
+		if !treasure.Pre(entity, p.Params) {
+			return nil, nil
+		}
+	}
 	req.Permit = p
 
 	return a.next.Do(ctx, req)
