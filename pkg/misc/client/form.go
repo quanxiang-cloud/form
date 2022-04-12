@@ -122,6 +122,7 @@ func (f *FormAPI) Search(ctx context.Context, formReq *FormReq) (*SearchResp, er
 	}
 	return &SearchResp{
 		Entities: entity,
+		Total:    searchResp.Count,
 	}, nil
 }
 
