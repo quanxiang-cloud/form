@@ -25,7 +25,7 @@ const (
 
 func Pre(entity interface{}, fieldPermit models.FiledPermit) bool {
 	if intercept == "false" {
-		return false
+		return true
 	}
 	if entity == nil {
 		return false
