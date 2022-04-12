@@ -42,12 +42,16 @@ func NewCondition(conf *config.Config) (*Condition, error) {
 
 // Do is a guard for permit.
 func (c *Condition) Do(ctx context.Context, req *permit.Request) (*permit.Response, error) {
-	var query interface{}
+	var query permit.Object
 	switch req.Request.Method {
 	case http.MethodGet:
 		query = req.Query
 	case http.MethodPost:
-		query = req.Body[_query]
+		bytes, err := json.Marshal(req.Body[_query])
+		if err != nil {
+			return nil, err
+		}
+		json.Unmarshal(bytes, &query)
 	}
 
 	err := c.cond.SetParseValue(ctx, req)
@@ -57,11 +61,12 @@ func (c *Condition) Do(ctx context.Context, req *permit.Request) (*permit.Respon
 	}
 
 	dataes := make([]interface{}, 0, 2)
-	if query != nil {
+	if query != nil && len(query) != 0 {
 		dataes = append(dataes, query)
 	}
 	condition := req.Permit.Condition
-	if condition != nil {
+	println(len(condition))
+	if condition != nil && len(condition) != 0 {
 		err = c.cond.ParseCondition(condition)
 		if err != nil {
 			logger.Logger.WithName("form condition").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)

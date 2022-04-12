@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	daprd "github.com/dapr/go-sdk/client"
+	error2 "github.com/quanxiang-cloud/cabin/error"
 	id2 "github.com/quanxiang-cloud/cabin/id"
 	"github.com/quanxiang-cloud/cabin/logger"
 	redis2 "github.com/quanxiang-cloud/cabin/tailormade/db/redis"
@@ -12,6 +13,7 @@ import (
 	"github.com/quanxiang-cloud/form/internal/models"
 	"github.com/quanxiang-cloud/form/internal/models/mysql"
 	"github.com/quanxiang-cloud/form/internal/models/redis"
+	"github.com/quanxiang-cloud/form/pkg/misc/code"
 	config2 "github.com/quanxiang-cloud/form/pkg/misc/config"
 	"gorm.io/gorm"
 )
@@ -406,8 +408,18 @@ type CreateRoleResp struct {
 }
 
 func (p *permit) CreateRole(ctx context.Context, req *CreateRoleReq) (*CreateRoleResp, error) {
+	_, total, err := p.roleRepo.List(p.db, &models.RoleQuery{
+		Name:  req.Name,
+		AppID: req.AppID,
+	}, 1, 999)
+	if err != nil {
+		return nil, err
+	}
+	if total > 0 {
+		return nil, error2.New(code.ErrExistGroupNameState)
+	}
 	roles := &models.Role{
-		ID:          id2.HexUUID(true),
+		ID:          id2.StringUUID(),
 		AppID:       req.AppID,
 		Name:        req.Name,
 		Description: req.Description,
@@ -419,7 +431,7 @@ func (p *permit) CreateRole(ctx context.Context, req *CreateRoleReq) (*CreateRol
 	if req.Types == 0 {
 		roles.Types = models.CreateType
 	}
-	err := p.roleRepo.BatchCreate(p.db, roles)
+	err = p.roleRepo.BatchCreate(p.db, roles)
 	if err != nil {
 		return nil, err
 	}
