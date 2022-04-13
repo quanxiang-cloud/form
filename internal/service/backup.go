@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/quanxiang-cloud/form/internal/models"
 	"github.com/quanxiang-cloud/form/internal/models/mysql"
@@ -15,17 +14,17 @@ import (
 
 // Backup import and export data interface.
 type Backup interface {
-	ExportTable(context.Context, *ExportReq) (*ExportResp, error)
-	ExportPermit(context.Context, *ExportReq) (*ExportResp, error)
-	ExportTableRelation(context.Context, *ExportReq) (*ExportResp, error)
-	ExportTableScheme(context.Context, *ExportReq) (*ExportResp, error)
-	ExportRole(context.Context, *ExportReq) (*ExportResp, error)
+	ExportTable(context.Context, *ExportTableReq) (*ExportTableResp, error)
+	ExportPermit(context.Context, *ExportPermitReq) (*ExportPermitResp, error)
+	ExportTableRelation(context.Context, *ExportTableRelationReq) (*ExportTableRelationResp, error)
+	ExportTableScheme(context.Context, *ExportTableSchemeReq) (*ExportTableSchemeResp, error)
+	ExportRole(context.Context, *ExportRoleReq) (*ExportRoleResp, error)
 
-	ImportTable(context.Context, *ImportReq) (*ImportResp, error)
-	ImportPermit(context.Context, *ImportReq) (*ImportResp, error)
-	ImportTableRelation(context.Context, *ImportReq) (*ImportResp, error)
-	ImportTableScheme(context.Context, *ImportReq) (*ImportResp, error)
-	ImportRole(context.Context, *ImportReq) (*ImportResp, error)
+	ImportTable(context.Context, *ImportTableReq) (*ImportTableResp, error)
+	ImportPermit(context.Context, *ImportPermitReq) (*ImportPermitResp, error)
+	ImportTableRelation(context.Context, *ImportTableRelationReq) (*ImportTableRelationResp, error)
+	ImportTableScheme(context.Context, *ImportTableSchemeReq) (*ImportTableSchemeResp, error)
+	ImportRole(context.Context, *ImportRoleReq) (*ImportRoleResp, error)
 }
 
 type backup struct {
@@ -54,24 +53,19 @@ func NewBackup(conf *config2.Config) (Backup, error) {
 	}, nil
 }
 
-// ExportReq export request.
-type ExportReq struct {
+type ExportTableReq struct {
 	AppID string `uri:"appID"`
 	Page  int    `json:"page"`
 	Size  int    `json:"size"`
 }
 
-// ExportResp export response.
-type ExportResp struct {
-	Data  Object `json:"data"`
-	Count int64  `json:"count"`
+type ExportTableResp struct {
+	Tables []*models.Table `json:"tables"`
+	Count  int64           `json:"count"`
 }
 
-// Object export data type.
-type Object []interface{}
-
 // ExportTable export table data.
-func (b *backup) ExportTable(ctx context.Context, req *ExportReq) (*ExportResp, error) {
+func (b *backup) ExportTable(ctx context.Context, req *ExportTableReq) (*ExportTableResp, error) {
 	tables, count, err := b.tableRepo.List(b.db, &models.TableQuery{
 		AppID: req.AppID,
 	},
@@ -81,19 +75,25 @@ func (b *backup) ExportTable(ctx context.Context, req *ExportReq) (*ExportResp, 
 		return nil, err
 	}
 
-	data := make(Object, 0, len(tables))
-	for _, table := range tables {
-		data = append(data, table)
-	}
-
-	return &ExportResp{
-		Data:  data,
-		Count: count,
+	return &ExportTableResp{
+		Tables: tables,
+		Count:  count,
 	}, nil
 }
 
+type ExportPermitReq struct {
+	AppID string `uri:"appID"`
+	Page  int    `json:"page"`
+	Size  int    `json:"size"`
+}
+
+type ExportPermitResp struct {
+	Permits []*models.Permit `json:"permits"`
+	Count   int64            `json:"count"`
+}
+
 // ExportPermit export permit data.
-func (b *backup) ExportPermit(ctx context.Context, req *ExportReq) (*ExportResp, error) {
+func (b *backup) ExportPermit(ctx context.Context, req *ExportPermitReq) (*ExportPermitResp, error) {
 	roles, count, err := b.roleRepo.List(b.db, &models.RoleQuery{
 		AppID: req.AppID,
 	},
@@ -104,9 +104,9 @@ func (b *backup) ExportPermit(ctx context.Context, req *ExportReq) (*ExportResp,
 	}
 
 	if len(roles) == 0 {
-		return &ExportResp{
-			Data:  nil,
-			Count: 0,
+		return &ExportPermitResp{
+			Permits: nil,
+			Count:   0,
 		}, nil
 	}
 
@@ -124,19 +124,25 @@ func (b *backup) ExportPermit(ctx context.Context, req *ExportReq) (*ExportResp,
 		return nil, err
 	}
 
-	data := make(Object, 0, len(permits))
-	for _, permit := range permits {
-		data = append(data, permit)
-	}
-
-	return &ExportResp{
-		Data:  data,
-		Count: count,
+	return &ExportPermitResp{
+		Permits: permits,
+		Count:   count,
 	}, nil
 }
 
+type ExportTableRelationReq struct {
+	AppID string `uri:"appID"`
+	Page  int    `json:"page"`
+	Size  int    `json:"size"`
+}
+
+type ExportTableRelationResp struct {
+	TableRelations []*models.TableRelation `json:"tableRelations"`
+	Count          int64                   `json:"count"`
+}
+
 // ExportTableRelation export table relation data.
-func (b *backup) ExportTableRelation(ctx context.Context, req *ExportReq) (*ExportResp, error) {
+func (b *backup) ExportTableRelation(ctx context.Context, req *ExportTableRelationReq) (*ExportTableRelationResp, error) {
 	tableRelations, count, err := b.tableRelationRepo.List(b.db, &models.TableRelationQuery{
 		AppID: req.AppID,
 	},
@@ -146,19 +152,25 @@ func (b *backup) ExportTableRelation(ctx context.Context, req *ExportReq) (*Expo
 		return nil, err
 	}
 
-	data := make(Object, 0, len(tableRelations))
-	for _, tableRelation := range tableRelations {
-		data = append(data, tableRelation)
-	}
-
-	return &ExportResp{
-		Data:  data,
-		Count: count,
+	return &ExportTableRelationResp{
+		TableRelations: tableRelations,
+		Count:          count,
 	}, nil
 }
 
+type ExportTableSchemeReq struct {
+	AppID string `uri:"appID"`
+	Page  int    `json:"page"`
+	Size  int    `json:"size"`
+}
+
+type ExportTableSchemeResp struct {
+	TableSchemas []*models.TableSchema `json:"tableSchemas"`
+	Count        int64                 `json:"count"`
+}
+
 // ExportTableScheme export table scheme data.
-func (b *backup) ExportTableScheme(ctx context.Context, req *ExportReq) (*ExportResp, error) {
+func (b *backup) ExportTableScheme(ctx context.Context, req *ExportTableSchemeReq) (*ExportTableSchemeResp, error) {
 	tableSchemes, count, err := b.tableSchemeRepo.List(b.db, &models.TableSchemaQuery{
 		AppID: req.AppID,
 	},
@@ -168,19 +180,25 @@ func (b *backup) ExportTableScheme(ctx context.Context, req *ExportReq) (*Export
 		return nil, err
 	}
 
-	data := make(Object, 0, len(tableSchemes))
-	for _, tableScheme := range tableSchemes {
-		data = append(data, tableScheme)
-	}
-
-	return &ExportResp{
-		Data:  data,
-		Count: count,
+	return &ExportTableSchemeResp{
+		TableSchemas: tableSchemes,
+		Count:        count,
 	}, nil
 }
 
+type ExportRoleReq struct {
+	AppID string `uri:"appID"`
+	Page  int    `json:"page"`
+	Size  int    `json:"size"`
+}
+
+type ExportRoleResp struct {
+	Roles []*models.Role `json:"roles"`
+	Count int64          `json:"count"`
+}
+
 // ExportRole export role data.
-func (b *backup) ExportRole(ctx context.Context, req *ExportReq) (*ExportResp, error) {
+func (b *backup) ExportRole(ctx context.Context, req *ExportRoleReq) (*ExportRoleResp, error) {
 	roles, count, err := b.roleRepo.List(b.db, &models.RoleQuery{
 		AppID: req.AppID,
 	},
@@ -190,135 +208,93 @@ func (b *backup) ExportRole(ctx context.Context, req *ExportReq) (*ExportResp, e
 		return nil, err
 	}
 
-	data := make(Object, 0, len(roles))
-	for _, role := range roles {
-		data = append(data, role)
-	}
-
-	return &ExportResp{
-		Data:  data,
+	return &ExportRoleResp{
+		Roles: roles,
 		Count: count,
 	}, nil
 }
 
-// ImportReq import request.
-type ImportReq struct {
-	Data Object `json:"data"`
+type ImportTableReq struct {
+	Tables []*models.Table `json:"tables"`
 }
 
-// ImportResp import response.
-type ImportResp struct{}
+type ImportTableResp struct{}
 
 // ImportTable import table data.
-func (b *backup) ImportTable(ctx context.Context, req *ImportReq) (*ImportResp, error) {
-	tables := make([]*models.Table, 0, len(req.Data))
-	for _, data := range req.Data {
-		table := &models.Table{}
-		if err := decode(data, table); err != nil {
-			logger.Logger.WithName("ImportTable").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
-			return nil, err
-		}
-		tables = append(tables, table)
-	}
-
-	err := b.tableRepo.BatchCreate(b.db, tables...)
+func (b *backup) ImportTable(ctx context.Context, req *ImportTableReq) (*ImportTableResp, error) {
+	err := b.tableRepo.BatchCreate(b.db, req.Tables...)
 	if err != nil {
 		logger.Logger.WithName("ImportTable").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
 		return nil, err
 	}
 
-	return &ImportResp{}, nil
+	return &ImportTableResp{}, nil
 }
 
-// ImportPermit import permit data.
-func (b *backup) ImportPermit(ctx context.Context, req *ImportReq) (*ImportResp, error) {
-	permits := make([]*models.Permit, 0, len(req.Data))
-	for _, data := range req.Data {
-		permit := &models.Permit{}
-		if err := decode(data, permit); err != nil {
-			logger.Logger.WithName("ImportPermit").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
-			return nil, err
-		}
-		permits = append(permits, permit)
-	}
+type ImportPermitReq struct {
+	Permits []*models.Permit `json:"permits"`
+}
 
-	err := b.permitRepo.BatchCreate(b.db, permits...)
+type ImportPermitResp struct{}
+
+// ImportPermit import permit data.
+func (b *backup) ImportPermit(ctx context.Context, req *ImportPermitReq) (*ImportPermitResp, error) {
+	err := b.permitRepo.BatchCreate(b.db, req.Permits...)
 	if err != nil {
 		logger.Logger.WithName("ImportPermit").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
 		return nil, err
 	}
 
-	return &ImportResp{}, nil
+	return &ImportPermitResp{}, nil
 }
 
-// ImportTableRelation import table relation data.
-func (b *backup) ImportTableRelation(ctx context.Context, req *ImportReq) (*ImportResp, error) {
-	tableRelations := make([]*models.TableRelation, 0, len(req.Data))
-	for _, data := range req.Data {
-		tableRelation := &models.TableRelation{}
-		if err := decode(data, tableRelation); err != nil {
-			logger.Logger.WithName("ImportTableRelation").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
-			return nil, err
-		}
-		tableRelations = append(tableRelations, tableRelation)
-	}
+type ImportTableRelationReq struct {
+	Data []*models.TableRelation `json:"data"`
+}
 
-	err := b.tableRelationRepo.BatchCreate(b.db, tableRelations...)
+type ImportTableRelationResp struct{}
+
+// ImportTableRelation import table relation data.
+func (b *backup) ImportTableRelation(ctx context.Context, req *ImportTableRelationReq) (*ImportTableRelationResp, error) {
+	err := b.tableRelationRepo.BatchCreate(b.db, req.Data...)
 	if err != nil {
 		logger.Logger.WithName("ImportTableRelation").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
 		return nil, err
 	}
 
-	return &ImportResp{}, nil
+	return &ImportTableRelationResp{}, nil
 }
 
-// ImportTableScheme import table scheme data.
-func (b *backup) ImportTableScheme(ctx context.Context, req *ImportReq) (*ImportResp, error) {
-	tableSchemes := make([]*models.TableSchema, 0, len(req.Data))
-	for _, data := range req.Data {
-		tableScheme := &models.TableSchema{}
-		if err := decode(data, tableScheme); err != nil {
-			logger.Logger.WithName("ImportTableScheme").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
-			return nil, err
-		}
-		tableSchemes = append(tableSchemes, tableScheme)
-	}
+type ImportTableSchemeReq struct {
+	TableSchemas []*models.TableSchema `json:"tableSchemas"`
+}
 
-	err := b.tableSchemeRepo.BatchCreate(b.db, tableSchemes...)
+type ImportTableSchemeResp struct{}
+
+// ImportTableScheme import table scheme data.
+func (b *backup) ImportTableScheme(ctx context.Context, req *ImportTableSchemeReq) (*ImportTableSchemeResp, error) {
+	err := b.tableSchemeRepo.BatchCreate(b.db, req.TableSchemas...)
 	if err != nil {
 		logger.Logger.WithName("ImportTableScheme").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
 		return nil, err
 	}
 
-	return &ImportResp{}, nil
+	return &ImportTableSchemeResp{}, nil
 }
 
-// ImportRole import role data.
-func (b *backup) ImportRole(ctx context.Context, req *ImportReq) (*ImportResp, error) {
-	roles := make([]*models.Role, 0, len(req.Data))
-	for _, data := range req.Data {
-		role := &models.Role{}
-		if err := decode(data, role); err != nil {
-			logger.Logger.WithName("ImportRole").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
-			return nil, err
-		}
-		roles = append(roles, role)
-	}
+type ImportRoleReq struct {
+	Roles []*models.Role `json:"roles"`
+}
 
-	err := b.roleRepo.BatchCreate(b.db, roles...)
+type ImportRoleResp struct{}
+
+// ImportRole import role data.
+func (b *backup) ImportRole(ctx context.Context, req *ImportRoleReq) (*ImportRoleResp, error) {
+	err := b.roleRepo.BatchCreate(b.db, req.Roles...)
 	if err != nil {
 		logger.Logger.WithName("ImportRole").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
 		return nil, err
 	}
 
-	return &ImportResp{}, nil
-}
-
-func decode(data, obj interface{}) error {
-	bytes, err := json.Marshal(data)
-	if err != nil {
-		return err
-	}
-
-	return json.Unmarshal(bytes, obj)
+	return &ImportRoleResp{}, nil
 }
