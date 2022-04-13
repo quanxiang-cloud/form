@@ -30,7 +30,7 @@ func (r *Role) permitTag() string {
 }
 
 // Export export.
-// NOTE: roles are related to permissions and are handled in roles.
+// INFO: roles are related to permissions and are handled in roles.
 func (r *Role) Export(ctx context.Context, opts *aide.ExportOption) (map[string]aide.Object, error) {
 	roleObj, err := r.exportRole(ctx, opts)
 	if err != nil {
