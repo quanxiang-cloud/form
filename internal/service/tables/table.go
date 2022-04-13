@@ -162,7 +162,7 @@ func (t *table) FindTable(ctx context.Context, req *FindTableReq) (*FindTableRes
 		AppID:      req.AppID,
 		Title:      req.Title,
 		SourceType: req.Source,
-	}, req.Size, req.Page)
+	}, req.Page, req.Size)
 	if err != nil {
 		return nil, err
 	}

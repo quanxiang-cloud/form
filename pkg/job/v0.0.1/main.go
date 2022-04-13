@@ -23,6 +23,7 @@ var (
 
 //处理旧版本的已经保存的过滤规则
 func main() {
+	flag.Parse()
 	conf, err := config.NewConfig(*configPath)
 	if err != nil {
 		panic(err)
@@ -66,7 +67,7 @@ func main() {
 			CreatedAt: time2.NowUnix(),
 		}
 
-		err = mysqlDB.Table("table").Create(table).Error
+		err = mysqlDB.Table("table1").Create(table).Error
 		if err != nil {
 			failTable++
 			msg := []string{"table_schema", value.ID, err.Error()}
@@ -100,7 +101,7 @@ func main() {
 		if value.SubTableType == "AssociatedRecords" {
 			tableRelation.SubTableType = "associated_records"
 		}
-		err = mysqlDB.Table("table_relation").Create(tableRelation).Error
+		err = mysqlDB.Table("table_relation1").Create(tableRelation).Error
 		if err != nil {
 			failSubTable++
 			msg := []string{"sub_table_relation", value.ID, err.Error()}
@@ -140,8 +141,9 @@ func main() {
 			CreatorName: value.CreatorName,
 			EditorID:    value.EditorID,
 			EditorName:  value.EditorName,
+			Schema:      value.Schema,
 		}
-		err = mysqlDB.Table("table_schema").Create(tableSchema).Error
+		err = mysqlDB.Table("table_schema1").Create(tableSchema).Error
 		if err != nil {
 			failTableSchema++
 			msg := []string{"table_schema", value.ID, err.Error()}
