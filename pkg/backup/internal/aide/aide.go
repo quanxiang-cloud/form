@@ -44,6 +44,7 @@ type ExportReq struct {
 }
 
 // ExportResp is the response of export.
+// NOTE: the export interface data key must be data.
 type ExportResp struct {
 	Data  Object `json:"data"`
 	Count int    `json:"count"`
@@ -95,6 +96,7 @@ func ExportObject(ctx context.Context, url string, opts *ExportOption) (Object, 
 }
 
 // ImportReq is the request of import.
+// NOTE: the import interface data key must be data.
 type ImportReq struct {
 	Data Object `json:"data"`
 }
