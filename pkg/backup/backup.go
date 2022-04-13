@@ -6,6 +6,9 @@ import (
 	"os"
 
 	"github.com/quanxiang-cloud/cabin/tailormade/client"
+	"github.com/quanxiang-cloud/form/internal/models"
+	"github.com/quanxiang-cloud/form/pkg/backup/internal/aide"
+	"github.com/quanxiang-cloud/form/pkg/backup/internal/aide/impl"
 )
 
 var formHost string
@@ -13,52 +16,90 @@ var formHost string
 func init() {
 	formHost = os.Getenv("FORM_HOST")
 	if formHost == "" {
-		formHost = "http://form:8080"
+		formHost = "http://127.0.0.1:8080"
 	}
 }
 
 // Backup backup.
 type Backup struct {
-	client http.Client
+	formHost string
+	client   http.Client
 }
 
 // NewBackup create a backup instance.
 func NewBackup(conf client.Config) *Backup {
 	return &Backup{
-		client: client.New(conf),
+		client:   client.New(conf),
+		formHost: formHost,
 	}
 }
 
-// Export export.
-func (b *Backup) Export(ctx context.Context, appID string) (*Result, error) {
-	result := &Result{}
+var aides = []aide.Aide{
+	&impl.Table{},
+	&impl.TableRelation{},
+	&impl.TableSchema{},
+	&impl.Role{},
+}
 
-	for _, backup := range backups {
-		err := backup.Export(ctx, result, &ExportOption{
-			AppID:  appID,
-			Page:   startPage,
-			Size:   maxSize,
-			Client: b.client,
-		})
+// Result is the result of export.
+type Result struct {
+	Permits        []*models.Permit        `json:"permits"`
+	TableSchemas   []*models.TableSchema   `json:"tableSchemas"`
+	Roles          []*models.Role          `json:"roles"`
+	Tables         []*models.Table         `json:"tables"`
+	TableRelations []*models.TableRelation `json:"tableRelations"`
+}
+
+// Export export.
+func (b *Backup) Export(ctx context.Context, opts *aide.ExportOption) (*Result, error) {
+	result := &Result{}
+	dataes := make(map[string]interface{})
+
+	opts.Client = b.client
+	opts.Host = b.formHost
+
+	for _, a := range aides {
+		objs, err := a.Export(ctx, opts)
 		if err != nil {
 			return nil, err
 		}
+
+		for key, val := range objs {
+			dataes[key] = val
+		}
+	}
+
+	err := aide.Serialize(dataes, result)
+	if err != nil {
+		return nil, err
 	}
 
 	return result, nil
 }
 
 // Import import.
-func (b *Backup) Import(ctx context.Context, result *Result, appID string) error {
-	for _, backup := range backups {
-		err := backup.Import(ctx, result, &ImportOption{
-			AppID:  appID,
-			Client: b.client,
-		})
+func (b *Backup) Import(ctx context.Context, result *Result, opts *aide.ImportOption) (map[string]string, error) {
+	ids := make(map[string]string)
+
+	var objs map[string]aide.Object
+	err := aide.Serialize(result, &objs)
+	if err != nil {
+		return nil, err
+	}
+
+	opts.Client = b.client
+	opts.Host = b.formHost
+
+	for _, a := range aides {
+		idMap, err := a.Import(ctx, objs, opts)
 		if err != nil {
-			return err
+			return nil, err
+		}
+
+		for key, val := range idMap {
+			ids[key] = val
 		}
 	}
 
-	return nil
+	return ids, nil
 }
