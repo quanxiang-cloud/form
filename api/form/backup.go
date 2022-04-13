@@ -31,7 +31,7 @@ func NewBackup(conf *config.Config) (Backup, error) {
 
 // ExportTable export table.
 func (b *Backup) ExportTable(c *gin.Context) {
-	req := &service.ExportReq{}
+	req := &service.ExportTableReq{}
 
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
@@ -45,7 +45,7 @@ func (b *Backup) ExportTable(c *gin.Context) {
 
 // ExportPermit export permit.
 func (b *Backup) ExportPermit(c *gin.Context) {
-	req := &service.ExportReq{}
+	req := &service.ExportPermitReq{}
 
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
@@ -59,7 +59,7 @@ func (b *Backup) ExportPermit(c *gin.Context) {
 
 // ExportRole export role.
 func (b *Backup) ExportRole(c *gin.Context) {
-	req := &service.ExportReq{}
+	req := &service.ExportRoleReq{}
 
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
@@ -73,7 +73,7 @@ func (b *Backup) ExportRole(c *gin.Context) {
 
 // ExportTableSchema export table schema.
 func (b *Backup) ExportTableSchema(c *gin.Context) {
-	req := &service.ExportReq{}
+	req := &service.ExportTableSchemeReq{}
 
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
@@ -87,7 +87,7 @@ func (b *Backup) ExportTableSchema(c *gin.Context) {
 
 // ExportTableRelation export table relation.
 func (b *Backup) ExportTableRelation(c *gin.Context) {
-	req := &service.ExportReq{}
+	req := &service.ExportTableRelationReq{}
 
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
@@ -101,7 +101,7 @@ func (b *Backup) ExportTableRelation(c *gin.Context) {
 
 // ImportTable import table.
 func (b *Backup) ImportTable(c *gin.Context) {
-	req := &service.ImportReq{}
+	req := &service.ImportTableReq{}
 
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
@@ -115,7 +115,7 @@ func (b *Backup) ImportTable(c *gin.Context) {
 
 // ImportPermit import permit.
 func (b *Backup) ImportPermit(c *gin.Context) {
-	req := &service.ImportReq{}
+	req := &service.ImportPermitReq{}
 
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
@@ -129,7 +129,7 @@ func (b *Backup) ImportPermit(c *gin.Context) {
 
 // ImportRole import role.
 func (b *Backup) ImportRole(c *gin.Context) {
-	req := &service.ImportReq{}
+	req := &service.ImportRoleReq{}
 
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
@@ -143,7 +143,7 @@ func (b *Backup) ImportRole(c *gin.Context) {
 
 // ImportTableSchema import table schema.
 func (b *Backup) ImportTableSchema(c *gin.Context) {
-	req := &service.ImportReq{}
+	req := &service.ImportTableSchemeReq{}
 
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
@@ -157,7 +157,7 @@ func (b *Backup) ImportTableSchema(c *gin.Context) {
 
 // ImportTableRelation import table relation.
 func (b *Backup) ImportTableRelation(c *gin.Context) {
-	req := &service.ImportReq{}
+	req := &service.ImportTableRelationReq{}
 
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
