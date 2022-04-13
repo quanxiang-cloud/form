@@ -98,6 +98,7 @@ func (t *Table) replaceParam(tables []*models.Table, opts *aide.ImportOption) (m
 
 		tables[i].ID = id
 		tables[i].AppID = opts.AppID
+		tables[i].Schema = temp[i].Schema
 		tables[i].CreatedAt = time2.NowUnix()
 	}
 

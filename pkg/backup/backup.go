@@ -13,6 +13,7 @@ import (
 
 var formHost string
 
+// nolint:gochecknoinits
 func init() {
 	formHost = os.Getenv("FORM_HOST")
 	if formHost == "" {
