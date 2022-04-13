@@ -10,8 +10,6 @@ import (
 )
 
 const (
-
-	//appCenterHost = "http://127.0.0.1:9012/api/v1/app-center"
 	appCenterHost = "http://app-center/api/v1/app-center"
 	checkIsAdmin  = "/checkIsAdmin"
 	addAppScope   = "/addAppScope"

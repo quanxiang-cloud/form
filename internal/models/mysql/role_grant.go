@@ -26,13 +26,11 @@ func (t *roleGrantRepo) List(db *gorm.DB, query *models.RoleGrantQuery, page, si
 	if len(query.RoleIDs) != 0 {
 		ql = ql.Where("role_id in ?", query.RoleIDs)
 	}
-	ql = ql.Order("created_at DESC")
-
 	err := ql.Count(&count).Error
 	if err != nil {
 		return nil, 0, err
 	}
-	err = ql.Order("created_at desc").Offset((page - 1) * size).Limit(size).Find(&tableRelations).Error
+	err = ql.Order("created_at asc").Offset((page - 1) * size).Limit(size).Find(&tableRelations).Error
 	if err != nil {
 		return nil, 0, err
 	}

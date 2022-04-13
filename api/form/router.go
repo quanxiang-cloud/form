@@ -1,8 +1,6 @@
 package api
 
 import (
-	"net/http"
-
 	"github.com/quanxiang-cloud/form/internal/service/form"
 	config2 "github.com/quanxiang-cloud/form/pkg/misc/config"
 
@@ -40,7 +38,6 @@ var routers = []router{
 	innerRouter,
 	permitRouter,
 	tableRouter,
-	dataSetRouter,
 }
 
 // NewRouter enable routing.
@@ -81,28 +78,27 @@ func permitRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 	}
 	role := r[managerPath].Group("/apiRole")
 	{
-		role.POST("/create", permits.CreateRole)                    //  创建角色
-		role.POST("/update", permits.UpdateRole)                    //  更新角色
-		role.POST("/get/:id", permits.GetRole)                      // 获取单条角色
-		role.POST("/delete/:id", permits.DeleteRole)                // 删除对应的角色
-		role.POST("/find", permits.FindRole)                        // 获取角色列表
-		role.POST("/grant/list/:roleID", permits.FindGrantRole)     // 获取某个角色对应的人或者部门
-		role.POST("/grant/assign/:roleID", permits.AssignRoleGrant) // 给某个角色加人 、减人
+		role.POST("/create", permits.CreateRole)
+		role.POST("/update", permits.UpdateRole)
+		role.POST("/get/:id", permits.GetRole)
+		role.POST("/delete/:id", permits.DeleteRole)
+		role.POST("/find", permits.FindRole)
+		role.POST("/grant/list/:roleID", permits.FindGrantRole)
+		role.POST("/grant/assign/:roleID", permits.AssignRoleGrant)
 	}
 	apiPermit := r[managerPath].Group("/apiPermit")
 	{
-		apiPermit.POST("/create", permits.CratePermit)      // 创建权限
-		apiPermit.POST("/update/:id", permits.UpdatePermit) // 更新权限
-		apiPermit.POST("/get", permits.GetPermit)           // 获取权限
-		apiPermit.POST("/delete", permits.DeletePermit)     // 删除权限
-
-		apiPermit.POST("/list", permits.ListPermit) // 获取权限 前端在用
+		apiPermit.POST("/create", permits.CratePermit)
+		apiPermit.POST("/update/:id", permits.UpdatePermit)
+		apiPermit.POST("/get", permits.GetPermit)
+		apiPermit.POST("/delete", permits.DeletePermit)
+		apiPermit.POST("/list", permits.ListPermit)
 	}
 	home := r[homePath].Group("/apiRole") //
 	{
-		home.POST("/userRole/create", permits.CreateUserRole)   // 保存用户匹配的权限组
-		home.POST("/list", permits.ListAndSelect)               // 查看这个人下面，有哪些，角色
-		r[homePath].POST("/apiPermit/list", permits.PathPermit) //  看这个人下有那些path 权限。
+		home.POST("/userRole/create", permits.CreateUserRole)
+		home.POST("/list", permits.ListAndSelect)
+		r[homePath].POST("/apiPermit/list", permits.PathPermit)
 	}
 
 	// inner 接口，permit 调用
@@ -200,36 +196,6 @@ func newRouter(c *config2.Config) (*gin.Engine, error) {
 	engine.Use(gin2.LoggerFunc(), gin2.RecoveryFunc())
 
 	return engine, nil
-}
-
-func dataSetRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
-	dataset, err := NewDataSet(c)
-	if err != nil {
-		return err
-	}
-
-	datasetHome := r[homePath].Group("", func(c *gin.Context) {
-		if c.Param("appID") != "dataset" {
-			c.AbortWithStatus(http.StatusNotFound)
-			return
-		}
-	})
-	datasetManager := r[managerPath].Group("", func(c *gin.Context) {
-		if c.Param("appID") != "dataset" {
-			c.AbortWithStatus(http.StatusNotFound)
-			return
-		}
-	})
-	{
-		datasetHome.POST("/get", dataset.GetDataSet)
-		datasetManager.POST("/create", dataset.CreateDataSet)
-		datasetManager.POST("/get", dataset.GetDataSet)
-		datasetManager.POST("/update", dataset.UpdateDataSet)
-		datasetManager.POST("/getByCondition", dataset.GetByConditionSet)
-		datasetManager.POST("/delete", dataset.DeleteDataSet)
-	}
-
-	return nil
 }
 
 // Run router.
