@@ -17,7 +17,7 @@ var formHost string
 func init() {
 	formHost = os.Getenv("FORM_HOST")
 	if formHost == "" {
-		formHost = "http://127.0.0.1:8080"
+		formHost = "http://form:8080"
 	}
 }
 
