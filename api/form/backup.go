@@ -31,7 +31,9 @@ func NewBackup(conf *config.Config) (Backup, error) {
 
 // ExportTable export table.
 func (b *Backup) ExportTable(c *gin.Context) {
-	req := &service.ExportTableReq{}
+	req := &service.ExportTableReq{
+		AppID: c.Param("appID"),
+	}
 
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
@@ -45,7 +47,9 @@ func (b *Backup) ExportTable(c *gin.Context) {
 
 // ExportPermit export permit.
 func (b *Backup) ExportPermit(c *gin.Context) {
-	req := &service.ExportPermitReq{}
+	req := &service.ExportPermitReq{
+		AppID: c.Param("appID"),
+	}
 
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
@@ -59,7 +63,9 @@ func (b *Backup) ExportPermit(c *gin.Context) {
 
 // ExportRole export role.
 func (b *Backup) ExportRole(c *gin.Context) {
-	req := &service.ExportRoleReq{}
+	req := &service.ExportRoleReq{
+		AppID: c.Param("appID"),
+	}
 
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
@@ -73,7 +79,9 @@ func (b *Backup) ExportRole(c *gin.Context) {
 
 // ExportTableSchema export table schema.
 func (b *Backup) ExportTableSchema(c *gin.Context) {
-	req := &service.ExportTableSchemeReq{}
+	req := &service.ExportTableSchemeReq{
+		AppID: c.Param("appID"),
+	}
 
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
@@ -87,7 +95,9 @@ func (b *Backup) ExportTableSchema(c *gin.Context) {
 
 // ExportTableRelation export table relation.
 func (b *Backup) ExportTableRelation(c *gin.Context) {
-	req := &service.ExportTableRelationReq{}
+	req := &service.ExportTableRelationReq{
+		AppID: c.Param("appID"),
+	}
 
 	ctx := header.MutateContext(c)
 	if err := c.ShouldBind(req); err != nil {
