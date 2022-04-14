@@ -50,6 +50,7 @@ func (a *Auth) Do(ctx context.Context, req *permit.Request) (*permit.Response, e
 	if p == nil {
 		return nil, nil
 	}
+	req.Permit = p
 	if p.Types == models.InitType {
 		return a.next.Do(ctx, req)
 	}
@@ -66,7 +67,6 @@ func (a *Auth) Do(ctx context.Context, req *permit.Request) (*permit.Response, e
 			return nil, nil
 		}
 	}
-	req.Permit = p
 
 	return a.next.Do(ctx, req)
 }
