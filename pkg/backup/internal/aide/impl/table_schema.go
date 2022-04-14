@@ -38,16 +38,16 @@ func (ts *TableSchema) Export(ctx context.Context, opts *aide.ExportOption) (map
 
 // Import import.
 // nolint: dupl
-func (ts *TableSchema) Import(ctx context.Context, objs map[string]aide.Object, opts *aide.ImportOption) (map[string]string, error) {
+func (ts *TableSchema) Import(ctx context.Context, objs map[string]aide.Object, opts *aide.ImportOption) error {
 	obj := objs[ts.tag()]
 
 	var tables []*models.TableSchema
 	err := aide.Serialize(obj, &tables)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	ids := ts.replaceParam(tables, opts)
+	ts.replaceParam(tables, opts)
 
 	data := make(aide.Object, len(obj))
 	for i := 0; i < len(obj); i++ {
@@ -58,20 +58,15 @@ func (ts *TableSchema) Import(ctx context.Context, objs map[string]aide.Object, 
 
 	err = aide.ImportObject(ctx, url, data, opts)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return ids, nil
+	return nil
 }
 
-func (ts *TableSchema) replaceParam(tableSchemas []*models.TableSchema, opts *aide.ImportOption) map[string]string {
-	ids := make(map[string]string)
-
+func (ts *TableSchema) replaceParam(tableSchemas []*models.TableSchema, opts *aide.ImportOption) {
 	for i := 0; i < len(tableSchemas); i++ {
-		id := id2.HexUUID(true)
-		ids[tableSchemas[i].ID] = id
-
-		tableSchemas[i].ID = id
+		tableSchemas[i].ID = id2.HexUUID(true)
 		tableSchemas[i].AppID = opts.AppID
 		tableSchemas[i].CreatorID = opts.UserID
 		tableSchemas[i].CreatorName = opts.UserName
@@ -80,6 +75,4 @@ func (ts *TableSchema) replaceParam(tableSchemas []*models.TableSchema, opts *ai
 		tableSchemas[i].CreatedAt = time2.NowUnix()
 		tableSchemas[i].UpdatedAt = time2.NowUnix()
 	}
-
-	return ids
 }

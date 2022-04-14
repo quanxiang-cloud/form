@@ -38,16 +38,16 @@ func (tr *TableRelation) Export(ctx context.Context, opts *aide.ExportOption) (m
 
 // Import import.
 // nolint: dupl
-func (tr *TableRelation) Import(ctx context.Context, objs map[string]aide.Object, opts *aide.ImportOption) (map[string]string, error) {
+func (tr *TableRelation) Import(ctx context.Context, objs map[string]aide.Object, opts *aide.ImportOption) error {
 	obj := objs[tr.tag()]
 
 	var tables []*models.TableRelation
 	err := aide.Serialize(obj, &tables)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	ids := tr.replaceParam(tables, opts)
+	tr.replaceParam(tables, opts)
 
 	data := make(aide.Object, len(obj))
 	for i := 0; i < len(obj); i++ {
@@ -58,23 +58,16 @@ func (tr *TableRelation) Import(ctx context.Context, objs map[string]aide.Object
 
 	err = aide.ImportObject(ctx, url, data, opts)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return ids, nil
+	return nil
 }
 
-func (tr *TableRelation) replaceParam(tableRelations []*models.TableRelation, opts *aide.ImportOption) map[string]string {
-	ids := make(map[string]string)
-
+func (tr *TableRelation) replaceParam(tableRelations []*models.TableRelation, opts *aide.ImportOption) {
 	for i := 0; i < len(tableRelations); i++ {
-		id := id2.HexUUID(true)
-		ids[tableRelations[i].ID] = id
-
-		tableRelations[i].ID = id
+		tableRelations[i].ID = id2.HexUUID(true)
 		tableRelations[i].AppID = opts.AppID
 		tableRelations[i].CreatedAt = time2.NowUnix()
 	}
-
-	return ids
 }

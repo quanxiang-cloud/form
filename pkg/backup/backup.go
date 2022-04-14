@@ -79,28 +79,23 @@ func (b *Backup) Export(ctx context.Context, opts *aide.ExportOption) (*Result, 
 }
 
 // Import import.
-func (b *Backup) Import(ctx context.Context, result *Result, opts *aide.ImportOption) (map[string]string, error) {
-	ids := make(map[string]string)
-
+func (b *Backup) Import(ctx context.Context, result *Result, opts *aide.ImportOption) error {
 	var objs map[string]aide.Object
 	err := aide.Serialize(result, &objs)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	opts.Client = b.client
 	opts.Host = b.formHost
 
 	for _, a := range aides {
-		idMap, err := a.Import(ctx, objs, opts)
+		err := a.Import(ctx, objs, opts)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-		for key, val := range idMap {
-			ids[key] = val
-		}
 	}
 
-	return ids, nil
+	return nil
 }

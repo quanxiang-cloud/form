@@ -22,7 +22,7 @@ var defaultReq = ExportReq{
 // Aide is the interface of aide.
 type Aide interface {
 	Export(ctx context.Context, opts *ExportOption) (map[string]Object, error)
-	Import(ctx context.Context, objs map[string]Object, opts *ImportOption) (map[string]string, error)
+	Import(ctx context.Context, objs map[string]Object, opts *ImportOption) error
 }
 
 // Object is a slice of interface{}.

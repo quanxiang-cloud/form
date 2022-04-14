@@ -39,18 +39,18 @@ func (t *Table) Export(ctx context.Context, opts *aide.ExportOption) (map[string
 }
 
 // Import import.
-func (t *Table) Import(ctx context.Context, objs map[string]aide.Object, opts *aide.ImportOption) (map[string]string, error) {
+func (t *Table) Import(ctx context.Context, objs map[string]aide.Object, opts *aide.ImportOption) error {
 	obj := objs[t.tag()]
 
 	var tables []*models.Table
 	err := aide.Serialize(obj, &tables)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	ids, err := t.replaceParam(tables, opts)
+	err = t.replaceParam(tables, opts)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	data := make(aide.Object, len(obj))
@@ -62,22 +62,21 @@ func (t *Table) Import(ctx context.Context, objs map[string]aide.Object, opts *a
 
 	err = aide.ImportObject(ctx, url, data, opts)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return ids, nil
+	return nil
 }
 
-func (t *Table) replaceParam(tables []*models.Table, opts *aide.ImportOption) (map[string]string, error) {
-	ids := make(map[string]string)
+func (t *Table) replaceParam(tables []*models.Table, opts *aide.ImportOption) error {
 	if len(tables) == 0 {
-		return nil, nil
+		return nil
 	}
 
 	oldAppID := tables[0].AppID
 	bytes, err := json.Marshal(tables)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	str := strings.ReplaceAll(
@@ -89,20 +88,17 @@ func (t *Table) replaceParam(tables []*models.Table, opts *aide.ImportOption) (m
 	temp := make([]*models.Table, 0, len(tables))
 	err = json.Unmarshal([]byte(str), &temp)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	for i := 0; i < len(tables); i++ {
-		id := id2.HexUUID(true)
-		ids[tables[i].ID] = id
-
-		tables[i].ID = id
+		tables[i].ID = id2.HexUUID(true)
 		tables[i].AppID = opts.AppID
 		tables[i].Schema = temp[i].Schema
 		tables[i].CreatedAt = time2.NowUnix()
 	}
 
-	return ids, nil
+	return nil
 }
 
 func genTrimAppID(appID string) string {

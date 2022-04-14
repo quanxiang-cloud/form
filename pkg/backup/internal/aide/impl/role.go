@@ -74,32 +74,20 @@ func (r *Role) exportPermit(ctx context.Context, opts *aide.ExportOption) (aide.
 }
 
 // Import import.
-func (r *Role) Import(ctx context.Context, objs map[string]aide.Object, opts *aide.ImportOption) (map[string]string, error) {
-	ids := make(map[string]string)
-
+func (r *Role) Import(ctx context.Context, objs map[string]aide.Object, opts *aide.ImportOption) error {
 	roleObj := objs[r.roleTag()]
-
 	roleIDs, err := r.importRole(ctx, roleObj, opts)
 	if err != nil {
-		return nil, err
-	}
-
-	for k, v := range roleIDs {
-		ids[k] = v
+		return err
 	}
 
 	permitObj := objs[r.permitTag()]
-
-	permitIDs, err := r.importPermit(ctx, permitObj, roleIDs, opts)
+	err = r.importPermit(ctx, permitObj, roleIDs, opts)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	for k, v := range permitIDs {
-		ids[k] = v
-	}
-
-	return ids, nil
+	return nil
 }
 
 func (r *Role) importRole(ctx context.Context, obj aide.Object, opts *aide.ImportOption) (map[string]string, error) {
@@ -147,14 +135,14 @@ func (r *Role) replaceRoleParam(roles []*models.Role, opts *aide.ImportOption) m
 	return ids
 }
 
-func (r *Role) importPermit(ctx context.Context, obj aide.Object, roleIDs map[string]string, opts *aide.ImportOption) (map[string]string, error) {
+func (r *Role) importPermit(ctx context.Context, obj aide.Object, roleIDs map[string]string, opts *aide.ImportOption) error {
 	var permits []*models.Permit
 	err := aide.Serialize(obj, &permits)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	ids := r.replacePermitParam(permits, roleIDs, opts)
+	r.replacePermitParam(permits, roleIDs, opts)
 
 	data := make(aide.Object, len(obj))
 	for i := 0; i < len(obj); i++ {
@@ -165,28 +153,21 @@ func (r *Role) importPermit(ctx context.Context, obj aide.Object, roleIDs map[st
 
 	err = aide.ImportObject(ctx, url, data, opts)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return ids, nil
+	return nil
 }
 
-func (r *Role) replacePermitParam(permits []*models.Permit, roleIDs map[string]string, opts *aide.ImportOption) map[string]string {
-	ids := make(map[string]string)
-
+func (r *Role) replacePermitParam(permits []*models.Permit, roleIDs map[string]string, opts *aide.ImportOption) {
 	for i := 0; i < len(permits); i++ {
-		id := id2.HexUUID(true)
-		ids[permits[i].ID] = id
-
 		permits[i].RoleID = roleIDs[permits[i].RoleID]
-		permits[i].ID = id
+		permits[i].ID = id2.HexUUID(true)
 		permits[i].Path = r.replacePath(permits[i].Path, opts.AppID)
 		permits[i].CreatorID = opts.UserID
 		permits[i].CreatorName = opts.UserName
 		permits[i].CreatedAt = time2.NowUnix()
 	}
-
-	return ids
 }
 
 func (r *Role) replacePath(path, appID string) string {

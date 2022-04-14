@@ -65,7 +65,7 @@ func (c *Condition) Do(ctx context.Context, req *permit.Request) (*permit.Respon
 		dataes = append(dataes, query)
 	}
 	condition := req.Permit.Condition
-	println(len(condition))
+
 	if condition != nil && len(condition) != 0 {
 		err = c.cond.ParseCondition(condition)
 		if err != nil {
@@ -100,7 +100,7 @@ func (c *Condition) Do(ctx context.Context, req *permit.Request) (*permit.Respon
 			return nil, err
 		}
 
-		v.Set("query", string(queryBytes))
+		v.Set(_query, string(queryBytes))
 
 		req.Request.URL.RawQuery = v.Encode()
 	case http.MethodPost:
