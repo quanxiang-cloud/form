@@ -93,6 +93,7 @@ func formRouter(c *config2.Config, r map[string]*echo.Group) error {
 		group.Any("/*", ProxyForm(p))
 		group.Any("/:appID/home/form/:tableID/:action", ProxyForm(cor))
 	}
+
 	return nil
 }
 
@@ -103,8 +104,9 @@ func perCacheRouter(c *config2.Config, r map[string]*echo.Group) error {
 		logger.Logger.WithName("instantiation cache").Error(err)
 		return err
 	}
-	r[cache].Any("/role", caches.UserRole)
-	r[cache].Any("/permit", caches.Permit)
+
+	r[cache].POST("/role", caches.UserRole)
+	r[cache].POST("/permit", caches.Permit)
 
 	return nil
 }
