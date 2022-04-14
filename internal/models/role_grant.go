@@ -17,6 +17,7 @@ type RoleGrantQuery struct {
 	RoleIDs []string
 	Owners  []string
 	AppID   string
+	Types   int
 }
 
 // RoleRantRepo RoleRantRepo

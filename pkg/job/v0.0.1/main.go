@@ -97,6 +97,7 @@ func main() {
 			FieldName:  value.FieldName,
 			SubTableID: value.SubTableID,
 			Filter:     value.Filter,
+			CreatedAt:  time2.NowUnix(),
 		}
 		if value.SubTableType == "AssociatedRecords" {
 			tableRelation.SubTableType = "associated_records"
@@ -135,8 +136,8 @@ func main() {
 			Title:       value.Title,
 			Description: value.Description,
 			Source:      value.Source,
-			CreatedAt:   value.CreatedAt,
-			UpdatedAt:   value.UpdatedAt,
+			CreatedAt:   value.CreatedAt * 1000,
+			UpdatedAt:   value.UpdatedAt * 1000,
 			CreatorID:   value.CreatorID,
 			CreatorName: value.CreatorName,
 			EditorID:    value.EditorID,

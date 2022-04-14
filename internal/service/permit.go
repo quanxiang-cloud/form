@@ -259,6 +259,7 @@ type FindGrantRoleReq struct {
 	RoleID string   `json:"roleID"`
 	Page   int      `json:"page"`
 	Size   int      `json:"size"`
+	Types  int      `json:"types"`
 }
 
 type FindGrantRoleResp struct {
@@ -278,6 +279,7 @@ func (p *permit) FindGrantRole(ctx context.Context, req *FindGrantRoleReq) (*Fin
 		Owners: req.Owners,
 		AppID:  req.AppID,
 		RoleID: req.RoleID,
+		Types:  req.Types,
 	}, req.Page, req.Size)
 	if err != nil {
 		return nil, err
