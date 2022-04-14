@@ -35,7 +35,6 @@ func (a *Auth) Do(ctx context.Context, req *permit.Request) (*permit.Response, e
 	if err != nil {
 		return nil, err
 	}
-
 	if p == nil {
 		return nil, nil
 	}

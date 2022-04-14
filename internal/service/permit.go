@@ -259,7 +259,7 @@ type FindGrantRoleReq struct {
 	RoleID string   `json:"roleID"`
 	Page   int      `json:"page"`
 	Size   int      `json:"size"`
-	Types  int      `json:"types"`
+	Types  int      `json:"type"`
 }
 
 type FindGrantRoleResp struct {

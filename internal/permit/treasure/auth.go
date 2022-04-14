@@ -49,7 +49,9 @@ func (a *Auth) Auth(ctx context.Context, req *permit.Request) (*consensus.Permit
 		return nil, err
 	}
 	if match.RoleID == models.RoleInit {
-		return nil, nil
+		return &consensus.Permit{
+			Types: models.InitType,
+		}, nil
 	}
 	permits, err := a.getCachePermit(ctx, match.RoleID, req)
 	if err != nil || permits == nil {

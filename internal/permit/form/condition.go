@@ -3,6 +3,7 @@ package guard
 import (
 	"context"
 	"encoding/json"
+	"github.com/quanxiang-cloud/form/internal/models"
 	"net/http"
 	"net/url"
 
@@ -42,6 +43,9 @@ func NewCondition(conf *config.Config) (*Condition, error) {
 
 // Do is a guard for permit.
 func (c *Condition) Do(ctx context.Context, req *permit.Request) (*permit.Response, error) {
+	if req.Permit.Types == models.InitType {
+		return c.next.Do(ctx, req)
+	}
 	var query permit.Object
 	switch req.Request.Method {
 	case http.MethodGet:
