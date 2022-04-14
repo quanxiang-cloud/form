@@ -93,7 +93,7 @@ func (t *Table) replaceParam(tables []*models.Table, opts *aide.ImportOption) (m
 	}
 
 	for i := 0; i < len(tables); i++ {
-		id := id2.StringUUID()
+		id := id2.HexUUID(true)
 		ids[tables[i].ID] = id
 
 		tables[i].ID = id

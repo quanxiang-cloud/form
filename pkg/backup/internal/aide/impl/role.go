@@ -3,6 +3,7 @@ package impl
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	id2 "github.com/quanxiang-cloud/cabin/id"
 	time2 "github.com/quanxiang-cloud/cabin/time"
@@ -19,7 +20,9 @@ var (
 )
 
 // Role role.
-type Role struct{}
+type Role struct {
+	appID string
+}
 
 func (r *Role) roleTag() string {
 	return "roles"
@@ -127,8 +130,12 @@ func (r *Role) replaceRoleParam(roles []*models.Role, opts *aide.ImportOption) m
 	ids := make(map[string]string)
 
 	for i := 0; i < len(roles); i++ {
-		id := id2.StringUUID()
+		id := id2.HexUUID(true)
 		ids[roles[i].ID] = id
+
+		if r.appID == "" {
+			r.appID = roles[i].AppID
+		}
 
 		roles[i].ID = id
 		roles[i].AppID = opts.AppID
@@ -168,15 +175,20 @@ func (r *Role) replacePermitParam(permits []*models.Permit, roleIDs map[string]s
 	ids := make(map[string]string)
 
 	for i := 0; i < len(permits); i++ {
-		id := id2.StringUUID()
+		id := id2.HexUUID(true)
 		ids[permits[i].ID] = id
 
 		permits[i].RoleID = roleIDs[permits[i].RoleID]
 		permits[i].ID = id
+		permits[i].Path = r.replacePath(permits[i].Path, opts.AppID)
 		permits[i].CreatorID = opts.UserID
 		permits[i].CreatorName = opts.UserName
 		permits[i].CreatedAt = time2.NowUnix()
 	}
 
 	return ids
+}
+
+func (r *Role) replacePath(path, appID string) string {
+	return strings.Replace(path, r.appID, appID, -1)
 }
