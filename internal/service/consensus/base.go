@@ -1,6 +1,7 @@
 package consensus
 
 import (
+	"fmt"
 	"reflect"
 )
 
@@ -77,4 +78,11 @@ func Term(data interface{}) interface{} {
 		}
 	}
 	return nil
+}
+
+func GetTableID(appID, tableID string) string {
+	if len(appID) == 36 {
+		return fmt.Sprintf("%s%s%s", "A", appID, tableID)
+	}
+	return fmt.Sprintf("%s%s%s", "a", appID, tableID)
 }

@@ -542,7 +542,7 @@ func (p *permit) AssignRoleGrant(ctx context.Context, req *AssignRoleGrantReq) (
 	roleGrants := make([]*models.RoleGrant, len(req.Add))
 	for index, value := range req.Add {
 		roleGrants[index] = &models.RoleGrant{
-			ID:        id2.HexUUID(true),
+			ID:        id2.StringUUID(),
 			RoleID:    req.RoleID,
 			Owner:     value.Owner,
 			OwnerName: value.OwnerName,
@@ -586,7 +586,7 @@ func (p *permit) CreatePermit(ctx context.Context, req *CreatePerReq) (*CreatePe
 	permitArr := make([]*models.Permit, 0)
 	if IsFormAPI(req.AccessPath) {
 		permitArr = append(permitArr, &models.Permit{
-			ID:          id2.HexUUID(true),
+			ID:          id2.StringUUID(),
 			Path:        req.AccessPath,
 			Params:      req.Params,
 			Response:    req.Response,

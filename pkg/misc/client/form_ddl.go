@@ -78,6 +78,27 @@ func (f *FormDDLAPI) AlterADD(ctx context.Context, tableName string, field []*Fi
 	}, nil
 }
 
+type IndexResp struct {
+	IndexName string
+}
+
+func (f *FormDDLAPI) Index(ctx context.Context, tableID, fieldName, indexName string) (*IndexResp, error) {
+	req := &pb.IndexReq{
+		TableName: tableID,
+		IndexName: indexName,
+		Titles:    []string{fieldName},
+	}
+	indexResp, err := f.client.Index(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return &IndexResp{
+		IndexName: indexResp.IndexName,
+	}, nil
+
+}
+
 func toPbField(field []*Field) []*pb.Field {
 	fields := make([]*pb.Field, len(field))
 	for index, value := range field {
