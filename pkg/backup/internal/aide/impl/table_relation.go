@@ -68,7 +68,7 @@ func (tr *TableRelation) replaceParam(tableRelations []*models.TableRelation, op
 	ids := make(map[string]string)
 
 	for i := 0; i < len(tableRelations); i++ {
-		id := id2.StringUUID()
+		id := id2.HexUUID(true)
 		ids[tableRelations[i].ID] = id
 
 		tableRelations[i].ID = id

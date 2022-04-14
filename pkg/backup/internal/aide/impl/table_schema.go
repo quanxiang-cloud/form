@@ -68,7 +68,7 @@ func (ts *TableSchema) replaceParam(tableSchemas []*models.TableSchema, opts *ai
 	ids := make(map[string]string)
 
 	for i := 0; i < len(tableSchemas); i++ {
-		id := id2.StringUUID()
+		id := id2.HexUUID(true)
 		ids[tableSchemas[i].ID] = id
 
 		tableSchemas[i].ID = id
