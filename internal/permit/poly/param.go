@@ -28,7 +28,7 @@ const (
 )
 
 func (p *Param) Do(ctx context.Context, req *permit.Request) (*permit.Response, error) {
-	pathArr := strings.Split(req.Request.URL.Path, "/")
+	pathArr := strings.Split(req.Echo.Request().URL.Path, "/")
 
 	if len(pathArr) > minAPILength {
 		req.AppID = pathArr[minAPILength-1]

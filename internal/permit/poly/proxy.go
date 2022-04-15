@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/quanxiang-cloud/cabin/logger"
 	"io"
 	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+
+	"github.com/quanxiang-cloud/cabin/logger"
 
 	"github.com/quanxiang-cloud/form/internal/permit"
 	"github.com/quanxiang-cloud/form/pkg/misc/config"
@@ -22,8 +23,8 @@ type Proxy struct {
 	next permit.Permit
 }
 
-func NewProxy(conf *config.Config) (*Proxy, error) {
-	url, err := url.Parse(conf.Endpoint.Poly)
+func NewProxy(conf *config.Config, rawURL string) (*Proxy, error) {
+	url, err := url.Parse(rawURL)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +50,7 @@ func (p *Proxy) Do(ctx context.Context, req *permit.Request) (*permit.Response, 
 	proxy := httputil.NewSingleHostReverseProxy(p.url)
 	proxy.Transport = p.transport
 
-	r := req.Request
+	r := req.Echo.Request()
 	r.Host = p.url.Host
 	data, err := json.Marshal(req.Body)
 	if err != nil {
@@ -59,7 +60,7 @@ func (p *Proxy) Do(ctx context.Context, req *permit.Request) (*permit.Response, 
 
 	r.Body = io.NopCloser(bytes.NewReader(data))
 	r.ContentLength = int64(len(data))
-	proxy.ServeHTTP(req.Writer, r)
+	proxy.ServeHTTP(req.Echo.Response(), r)
 
 	return &permit.Response{}, nil
 }

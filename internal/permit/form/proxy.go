@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/quanxiang-cloud/form/internal/permit/treasure"
 	"io"
 	"net"
 	"net/http"
@@ -18,6 +17,7 @@ import (
 	"github.com/quanxiang-cloud/cabin/tailormade/header"
 	cabinr "github.com/quanxiang-cloud/cabin/tailormade/resp"
 	"github.com/quanxiang-cloud/form/internal/permit"
+	"github.com/quanxiang-cloud/form/internal/permit/treasure"
 	"github.com/quanxiang-cloud/form/internal/service/consensus"
 	"github.com/quanxiang-cloud/form/pkg/misc/config"
 )
@@ -65,7 +65,7 @@ func (p *Proxy) Do(ctx context.Context, req *permit.Request) (*permit.Response, 
 		return
 	}
 
-	r := req.Request
+	r := req.Echo.Request()
 	r.Host = p.url.Host
 	data, err := json.Marshal(req.Body)
 	if err != nil {
@@ -75,7 +75,7 @@ func (p *Proxy) Do(ctx context.Context, req *permit.Request) (*permit.Response, 
 
 	r.Body = io.NopCloser(bytes.NewReader(data))
 	r.ContentLength = int64(len(data))
-	proxy.ServeHTTP(req.Writer, r)
+	proxy.ServeHTTP(req.Echo.Response(), r)
 
 	return &permit.Response{}, nil
 }

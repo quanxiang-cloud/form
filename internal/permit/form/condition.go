@@ -3,12 +3,12 @@ package guard
 import (
 	"context"
 	"encoding/json"
-	"github.com/quanxiang-cloud/form/internal/models"
 	"net/http"
 	"net/url"
 
 	"github.com/quanxiang-cloud/cabin/logger"
 	"github.com/quanxiang-cloud/cabin/tailormade/header"
+	"github.com/quanxiang-cloud/form/internal/models"
 	"github.com/quanxiang-cloud/form/internal/permit"
 	"github.com/quanxiang-cloud/form/internal/permit/treasure"
 	"github.com/quanxiang-cloud/form/internal/service/types"
@@ -47,7 +47,7 @@ func (c *Condition) Do(ctx context.Context, req *permit.Request) (*permit.Respon
 		return c.next.Do(ctx, req)
 	}
 	var query permit.Object
-	switch req.Request.Method {
+	switch req.Echo.Request().Method {
 	case http.MethodGet:
 		query = req.Query
 	case http.MethodPost:
@@ -87,14 +87,14 @@ func (c *Condition) Do(ctx context.Context, req *permit.Request) (*permit.Respon
 			},
 		}
 	}
-	switch req.Request.Method {
+	switch req.Echo.Request().Method {
 	case http.MethodGet:
 		queryBytes, err := json.Marshal(newQuery)
 		if err != nil {
 			return nil, err
 		}
 
-		str, err := url.QueryUnescape(req.Request.URL.RawQuery)
+		str, err := url.QueryUnescape(req.Echo.Request().URL.RawQuery)
 		if err != nil {
 			return nil, err
 		}
@@ -106,7 +106,7 @@ func (c *Condition) Do(ctx context.Context, req *permit.Request) (*permit.Respon
 
 		v.Set("query", string(queryBytes))
 
-		req.Request.URL.RawQuery = v.Encode()
+		req.Echo.Request().URL.RawQuery = v.Encode()
 	case http.MethodPost:
 		req.Body[_query] = newQuery
 	}

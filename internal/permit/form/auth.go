@@ -2,8 +2,9 @@ package guard
 
 import (
 	"context"
-	"github.com/quanxiang-cloud/form/internal/models"
 	"net/http"
+
+	"github.com/quanxiang-cloud/form/internal/models"
 
 	"github.com/quanxiang-cloud/cabin/logger"
 	"github.com/quanxiang-cloud/cabin/tailormade/header"
@@ -55,7 +56,7 @@ func (a *Auth) Do(ctx context.Context, req *permit.Request) (*permit.Response, e
 		return a.next.Do(ctx, req)
 	}
 	var entity interface{}
-	switch req.Request.Method {
+	switch req.Echo.Request().Method {
 	case http.MethodGet:
 		entity = req.Entity
 	case http.MethodPost:
