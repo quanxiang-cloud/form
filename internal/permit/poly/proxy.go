@@ -23,7 +23,7 @@ type Proxy struct {
 }
 
 func NewProxy(conf *config.Config) (*Proxy, error) {
-	url, err := url.Parse(conf.Endpoint.Form)
+	url, err := url.Parse(conf.Endpoint.Poly)
 	if err != nil {
 		return nil, err
 	}
