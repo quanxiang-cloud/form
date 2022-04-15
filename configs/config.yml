@@ -1,0 +1,71 @@
+# port 端口
+# e.g :80
+port: :80
+portInner: :8080
+
+# model 模式 debug|release
+# debug模式，可以输出更加详细的日志，但是运行速度会减慢
+model: debug
+
+#  -------------------- log --------------------
+# comply with zap log specification
+log:
+  level: -1
+  development: false
+  sampling:
+    initial: 100
+    thereafter: 100
+  outputPath:
+    - stderr
+  errorOutputPath:
+    - stderr
+
+# -------------------- mysql --------------------  
+mysql:
+  host: 192.168.200.13:32258
+  db: form
+  user: root
+  password: qxp1234
+  log: true
+# -------------------- mongo --------------------
+mongo:
+  hosts:
+    - 192.168.200.19:27017
+  direct: true
+  credential:
+    authMechanism: SCRAM-SHA-1
+    authSource: admin
+    username: root
+    password: uyWxtvt6gCOy3VPLB3rTpa0rQ
+    passwordSet: false
+
+#  -------------------- internalNet --------------------
+internalNet:
+  timeout: 20
+  maxIdleConns: 10
+
+# -------------------- service --------------------
+service:
+  db: structor
+# -------------------- service --------------------
+redis:
+  addrs:
+    - 192.168.200.18:6379
+    - 192.168.200.19:6379
+    - 192.168.200.20:6379
+  username:
+  password:
+
+
+# -------------------- kafka --------------------
+kafka:
+  broker:
+    - 192.168.200.18:9092
+    - 192.168.200.19:9092
+    - 192.168.200.20:9092
+
+
+# --------------------- swagger host -------------
+swaggerPath: ../configs/swagger
+
+pubSubName : form-kafka-pubsub

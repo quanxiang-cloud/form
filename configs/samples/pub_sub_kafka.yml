@@ -1,0 +1,15 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: form-kafka-pubsub
+spec:
+  type: pubsub.kafka
+  version: v1
+  metadata:
+    # Kafka broker connection setting
+    - name: brokers
+      value: "192.168.200.18:9092,192.168.200.19:9092,192.168.200.20:9092"
+    - name: authRequired
+      value: "false"
+    - name: maxMessageBytes
+      value: 1024
