@@ -83,7 +83,7 @@ func formRouter(c *config2.Config, r map[string]*echo.Group) error {
 		logger.Logger.WithName("instantiation form cor").Error(err)
 		return err
 	}
-	p, err := defender.NewProxy(c)
+	p, err := defender.NewProxy(c, c.Endpoint.Form)
 	if err != nil {
 		return err
 	}

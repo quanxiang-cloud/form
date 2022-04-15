@@ -19,7 +19,7 @@ func NewAuth(conf *config.Config) (*Auth, error) {
 		return nil, err
 	}
 
-	next, err := NewProxy(conf)
+	next, err := NewProxy(conf, conf.Endpoint.Poly)
 	if err != nil {
 		return nil, err
 	}
