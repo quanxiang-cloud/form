@@ -43,6 +43,9 @@ func (t *permitRepo) Update(db *gorm.DB, id string, permit *models.Permit) error
 	if permit.Response != nil {
 		setMap["response"] = permit.Response
 	}
+	if permit.Condition != nil {
+		setMap["condition"] = permit.Condition
+	}
 	return db.Table(t.TableName()).Where("id = ? ", id).Updates(
 		setMap).Error
 }

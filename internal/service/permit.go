@@ -643,8 +643,9 @@ type UpdatePerResp struct{}
 
 func (p *permit) UpdatePermit(ctx context.Context, req *UpdatePerReq) (*UpdatePerResp, error) {
 	err := p.permitRepo.Update(p.db, req.ID, &models.Permit{
-		Params:   req.Params,
-		Response: req.Response,
+		Params:    req.Params,
+		Response:  req.Response,
+		Condition: req.Condition,
 	})
 	if err != nil {
 		return nil, err
