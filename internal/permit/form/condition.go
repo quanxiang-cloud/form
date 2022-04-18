@@ -36,7 +36,7 @@ func NewCondition(conf *config.Config) (*Condition, error) {
 	}
 
 	return &Condition{
-		cond: treasure.NewCondition(),
+		cond: treasure.NewCondition(conf),
 		next: next,
 	}, nil
 }

@@ -28,11 +28,14 @@ func (r *userRoleRepo) Delete(db *gorm.DB, query *models.UserRoleQuery) error {
 	if query.RoleID != "" {
 		ql = ql.Where("role_id = ?", query.RoleID)
 	}
+	if len(query.UserIDS) != 0 {
+		ql = ql.Where("user_id in ?", query.UserIDS)
+	}
 	return ql.Delete(resp).Error
 }
 
 func (r *userRoleRepo) List(db *gorm.DB, query *models.UserRoleQuery, page, size int) ([]*models.UserRole, int64, error) {
-	panic("implement me")
+	return nil, 0, nil
 }
 
 func (r *userRoleRepo) TableName() string {
