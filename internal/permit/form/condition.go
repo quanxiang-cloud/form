@@ -71,12 +71,12 @@ func (c *Condition) Do(ctx context.Context, req *permit.Request) (*permit.Respon
 	condition := req.Permit.Condition
 	println(len(condition))
 	if condition != nil && len(condition) != 0 {
-		err = c.cond.ParseCondition(condition)
+		err = c.cond.ParseCondition(condition[_query])
 		if err != nil {
 			logger.Logger.WithName("form condition").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
 			return nil, err
 		}
-		dataes = append(dataes, condition)
+		dataes = append(dataes, condition[_query])
 	}
 
 	var newQuery permit.Object
