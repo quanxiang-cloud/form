@@ -159,6 +159,7 @@ func tableRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 	{
 		managerConfig.POST("/create", table.UpdateConfig)
 	}
+	r[internalPath].POST("/schema/:tableName", table.GetTable)
 	return nil
 }
 
