@@ -34,12 +34,15 @@ func NewAppriseFlow(conf *config.Config) (consensus.Guidance, error) {
 
 // Do 可以用策略模式改，可以先用switch.
 func (a *appriseFlow) Do(ctx context.Context, bus *consensus.Bus) (*consensus.Response, error) {
-	// 先去创建数据
+	//	先去创建数据
 	do, err := a.next.Do(ctx, bus)
 	if err != nil {
 		return nil, err
 	}
-	// create update delete
+	if do.Total == 0 {
+		return do, err
+	}
+	//create update delete
 	switch bus.Method {
 	case "create":
 		a.createApprise(ctx, bus)
@@ -61,7 +64,11 @@ func (a *appriseFlow) createApprise(ctx context.Context, bus *consensus.Bus) {
 }
 
 func (a *appriseFlow) deleteApprise(ctx context.Context, bus *consensus.Bus) {
-	ids := consensus.GetIDByQuery(bus.Get.Query)
+	ids := make([]string, 0)
+	if len(bus.Get.OldQuery) == 0 {
+		ids = consensus.GetIDByQuery(bus.Get.Query)
+	}
+	ids = consensus.GetIDByQuery(bus.Get.OldQuery)
 	data := &inform.FormData{
 		TableID: bus.TableID,
 		Entity: map[string]interface{}{
@@ -75,8 +82,11 @@ func (a *appriseFlow) deleteApprise(ctx context.Context, bus *consensus.Bus) {
 }
 
 func (a *appriseFlow) updateApprise(ctx context.Context, bus *consensus.Bus) {
-	ids := consensus.GetIDByQuery(bus.Get.Query)
-
+	ids := make([]string, 0)
+	if len(bus.Get.OldQuery) == 0 {
+		ids = consensus.GetIDByQuery(bus.Get.Query)
+	}
+	ids = consensus.GetIDByQuery(bus.Get.OldQuery)
 	for _, id := range ids {
 		entity := consensus.DefaultField(bus.CreatedOrUpdate.Entity,
 			consensus.WithUpdateID(id),

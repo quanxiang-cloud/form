@@ -85,7 +85,14 @@ func (s *subordinate) GetTag() string {
 
 func (s *subordinate) SetValue(ctx context.Context, c *Condition, req *permit.Request) error {
 	// TODO set subordinate value
-	ids := make([]string, 0)
+	resp, err := c.searchAPI.Subordinate(ctx, req.UserID)
+	if err != nil {
+		return err
+	}
+	ids := make([]string, resp.Total)
+	for index, value := range resp.Users {
+		ids[index] = value.ID
+	}
 	s.value = ids
 	return nil
 }

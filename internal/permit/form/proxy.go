@@ -115,9 +115,9 @@ func (p *Proxy) filter(resp *http.Response, req *permit.Request) error {
 
 	switch req.Action {
 	case "get":
-		treasure.Post(conResp.GetResp.Entity, req.Permit.Response)
+		treasure.Post(conResp.Entity, req.Permit.Response)
 	case "search":
-		treasure.Post(conResp.ListResp.Entities, req.Permit.Response)
+		treasure.Post(conResp.Entities, req.Permit.Response)
 	}
 
 	data, err := json.Marshal(cabinResp)

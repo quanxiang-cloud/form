@@ -96,8 +96,8 @@ func (c *comet) callSearch(ctx context.Context, req *SearchReq) (*consensus.Resp
 		return nil, err
 	}
 	resp := new(consensus.Response)
-	resp.ListResp.Total = searchResp.Total
-	resp.ListResp.Entities = searchResp.Entities
+	resp.Total = searchResp.Total
+	resp.Entities = searchResp.Entities
 	return resp, nil
 }
 
@@ -111,8 +111,8 @@ func (c *comet) callCreate(ctx context.Context, req *CreateReq) (*consensus.Resp
 		return nil, err
 	}
 	resp := new(consensus.Response)
-	resp.CreatedOrUpdateResp.Count = insert.SuccessCount
-	resp.CreatedOrUpdateResp.Data = req.Entity
+	resp.Total = insert.SuccessCount
+	//resp.Entity = req.Entity
 	return resp, nil
 }
 
@@ -137,8 +137,7 @@ func (c *comet) callUpdate(ctx context.Context, req *UpdateReq) (*consensus.Resp
 		return nil, err
 	}
 	resp := &consensus.Response{}
-	resp.CreatedOrUpdateResp.Count = update.SuccessCount
-	resp.CreatedOrUpdateResp.Data = req.Entity
+	resp.Total = update.SuccessCount
 	return resp, nil
 }
 
@@ -167,7 +166,7 @@ func (c *comet) callGet(ctx context.Context, req *GetReq) (*consensus.Response, 
 		return nil, err
 	}
 	resp := &consensus.Response{}
-	resp.GetResp.Entity = gets.Entity
+	resp.Entity = gets.Entity
 	return resp, nil
 }
 
@@ -188,6 +187,6 @@ func (c *comet) callDelete(ctx context.Context, req *DeleteReq) (*consensus.Resp
 		return nil, err
 	}
 	resp := &consensus.Response{}
-	resp.DeleteResp.Count = deletes.SuccessCount
+	resp.Total = deletes.SuccessCount
 	return resp, nil
 }

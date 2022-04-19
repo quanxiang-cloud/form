@@ -46,12 +46,13 @@ func (c *Condition) Do(ctx context.Context, req *permit.Request) (*permit.Respon
 	if req.Permit.Types == models.InitType {
 		return c.next.Do(ctx, req)
 	}
+	oldQuery := req.Body[_query]
 	var query permit.Object
 	switch req.Echo.Request().Method {
 	case http.MethodGet:
 		query = req.Query
 	case http.MethodPost:
-		bytes, err := json.Marshal(req.Body[_query])
+		bytes, err := json.Marshal(oldQuery)
 		if err != nil {
 			return nil, err
 		}
@@ -110,6 +111,6 @@ func (c *Condition) Do(ctx context.Context, req *permit.Request) (*permit.Respon
 	case http.MethodPost:
 		req.Body[_query] = newQuery
 	}
-
+	req.Body["oldQuery"] = oldQuery
 	return c.next.Do(ctx, req)
 }
