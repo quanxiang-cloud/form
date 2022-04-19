@@ -276,3 +276,7 @@ func (p *Permit) GetUserRole(c *gin.Context) {
 	}
 	resp.Format(p.permit.GetUserRole(ctx, req)).Context(c)
 }
+
+func (p *Permit) CopyRole(context *gin.Context) {
+	// copy role
+}
