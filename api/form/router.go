@@ -20,6 +20,7 @@ const (
 	homePath     = "home"
 	internalPath = "internal"
 	v2HomePath   = "v2Home"
+	internalHome = "internalHome"
 )
 
 // Router routing.
@@ -56,6 +57,7 @@ func NewRouter(c *config2.Config) (*Router, error) {
 		homePath:     engine.Group("/api/v1/form/:appID/home"),
 		v2HomePath:   engine.Group("/api/v2/form/:appID/home"),
 		internalPath: engineInner.Group("/api/v1/form/:appID/internal"),
+		internalHome: engineInner.Group("/api/v1/form/:appID/home"),
 	}
 	for _, f := range routers {
 		err = f(c, r)
@@ -85,6 +87,7 @@ func permitRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 		role.POST("/find", permits.FindRole)
 		role.POST("/grant/list/:roleID", permits.FindGrantRole)
 		role.POST("/grant/assign/:roleID", permits.AssignRoleGrant)
+		role.POST("/duplicatePer", permits.CopyRole)
 	}
 	apiPermit := r[managerPath].Group("/apiPermit")
 	{
@@ -118,6 +121,7 @@ func cometRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 	cometHome := r[homePath].Group("/form/:tableName")
 	v2Path := r[v2HomePath].Group("/form/:tableName")
 	inner := r[internalPath].Group("/form/:tableName")
+	innerHome := r[internalHome].Group("/form/:tableName")
 	guide, err := form.NewRefs(c)
 	if err != nil {
 		return err
@@ -129,7 +133,8 @@ func cometRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 		v2Path.PUT("/:id", update(guide))
 		v2Path.POST("", create(guide))
 		v2Path.GET("", search(guide))
-		inner.POST("/:action", action(guide))
+		inner.POST("/:action", action(guide))     // inner use。
+		innerHome.POST("/:action", action(guide)) // poly use
 	}
 	table, err := NewTable(c)
 	if err != nil {

@@ -33,7 +33,11 @@ type DeleteNamespaceResp struct {
 func (p *polyapi) DeleteNamespace(ctx context.Context, appID, tableID string) (*DeleteNamespaceResp, error) {
 	namespace := fmt.Sprintf("/system/app/%s/raw/inner/form/%s", appID, tableID)
 	url := fmt.Sprintf("%s%s%s", p.conf.Endpoint.PolyInner, delete, namespace)
-	params := struct{}{}
+	params := struct {
+		ForceDelAPI bool `json:"forceDelAPI"`
+	}{
+		ForceDelAPI: true,
+	}
 	resp := &DeleteNamespaceResp{}
 	err := client.POST(ctx, &p.client, url, params, resp)
 	if err != nil {
