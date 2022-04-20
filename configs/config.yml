@@ -1,5 +1,7 @@
-# port 端口
-# e.g :80
+
+
+  # port 端口
+  # e.g :80
 port: :80
 portInner: :8080
 
@@ -20,34 +22,19 @@ log:
   errorOutputPath:
     - stderr
 
-# -------------------- mysql --------------------  
+# -------------------- mysql --------------------
 mysql:
   host: 192.168.200.13:32258
   db: form
   user: root
   password: qxp1234
   log: true
-# -------------------- mongo --------------------
-mongo:
-  hosts:
-    - 192.168.200.19:27017
-  direct: true
-  credential:
-    authMechanism: SCRAM-SHA-1
-    authSource: admin
-    username: root
-    password: uyWxtvt6gCOy3VPLB3rTpa0rQ
-    passwordSet: false
-
 #  -------------------- internalNet --------------------
 internalNet:
   timeout: 20
   maxIdleConns: 10
 
-# -------------------- service --------------------
-service:
-  db: structor
-# -------------------- service --------------------
+# -------------------- redis --------------------
 redis:
   addrs:
     - 192.168.200.18:6379
@@ -55,17 +42,26 @@ redis:
     - 192.168.200.20:6379
   username:
   password:
+# -------------------- dapr --------------------
+dapr:
+  pubSubName : form-redis-pubsub
+  topicFlow: form.Flow
+# -------------------- other service --------------------
+endpoint:
+  appCenter: "http://app-center"
+  org: "http://org"
+  search: "http://127.0.0.1:81"
+  polyInner: "http://polyapi:9090"
 
+# -------------------- mongo --------------------
+mongo:
+  hosts:
+    - 192.168.200.19:27017
+  direct: true
+  credential:
+  authMechanism: SCRAM-SHA-1
+  authSource: admin
+  username: root
+  password: uyWxtvt6gCOy3VPLB3rTpa0rQ
+  passwordSet: false
 
-# -------------------- kafka --------------------
-kafka:
-  broker:
-    - 192.168.200.18:9092
-    - 192.168.200.19:9092
-    - 192.168.200.20:9092
-
-
-# --------------------- swagger host -------------
-swaggerPath: ../configs/swagger
-
-pubSubName : form-kafka-pubsub

@@ -14,7 +14,7 @@ import (
 var configPath string
 
 func main() {
-	flag.StringVar(&configPath, "config", "../../configs/permit.yml", "profile address")
+	flag.StringVar(&configPath, "config", "./configs/permit.yml", "profile address")
 
 	flag.Parse()
 

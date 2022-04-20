@@ -36,7 +36,7 @@ func NewCondition(conf *config.Config) (*Condition, error) {
 	}
 
 	return &Condition{
-		cond: treasure.NewCondition(),
+		cond: treasure.NewCondition(conf),
 		next: next,
 	}, nil
 }
@@ -46,12 +46,13 @@ func (c *Condition) Do(ctx context.Context, req *permit.Request) (*permit.Respon
 	if req.Permit.Types == models.InitType {
 		return c.next.Do(ctx, req)
 	}
+	oldQuery := req.Body[_query]
 	var query permit.Object
 	switch req.Echo.Request().Method {
 	case http.MethodGet:
 		query = req.Query
 	case http.MethodPost:
-		bytes, err := json.Marshal(req.Body[_query])
+		bytes, err := json.Marshal(oldQuery)
 		if err != nil {
 			return nil, err
 		}
@@ -71,12 +72,12 @@ func (c *Condition) Do(ctx context.Context, req *permit.Request) (*permit.Respon
 	condition := req.Permit.Condition
 	println(len(condition))
 	if condition != nil && len(condition) != 0 {
-		err = c.cond.ParseCondition(condition)
+		err = c.cond.ParseCondition(condition[_query])
 		if err != nil {
 			logger.Logger.WithName("form condition").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
 			return nil, err
 		}
-		dataes = append(dataes, condition)
+		dataes = append(dataes, condition[_query])
 	}
 
 	var newQuery permit.Object
@@ -110,6 +111,6 @@ func (c *Condition) Do(ctx context.Context, req *permit.Request) (*permit.Respon
 	case http.MethodPost:
 		req.Body[_query] = newQuery
 	}
-
+	req.Body["oldQuery"] = oldQuery
 	return c.next.Do(ctx, req)
 }

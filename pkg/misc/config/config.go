@@ -7,7 +7,6 @@ import (
 
 	"github.com/quanxiang-cloud/cabin/logger"
 	"github.com/quanxiang-cloud/cabin/tailormade/client"
-	"github.com/quanxiang-cloud/cabin/tailormade/db/kafka"
 	mysql2 "github.com/quanxiang-cloud/cabin/tailormade/db/mysql"
 	redis2 "github.com/quanxiang-cloud/cabin/tailormade/db/redis"
 	"gopkg.in/yaml.v2"
@@ -28,23 +27,25 @@ type Config struct {
 	Log         logger.Config `yaml:"log"`
 	Mysql       mysql2.Config `yaml:"mysql"`
 	Mongo       mongo2.Config `yaml:"mongo"`
-	PubSubName  string        `yaml:"pubSubName"`
 	Redis       redis2.Config `yaml:"redis"`
-	Kafka       kafka.Config  `yaml:"kafka"`
-	SwaggerPath string        `yaml:"swaggerPath"`
 	Endpoint    Endpoint      `yaml:"endpoint"`
 	Transport   Transport     `yaml:"transport"`
+	Dapr        Dapr          `yaml:"dapr"`
 }
 
-// Service service config
-type Service struct {
-	DB string `yaml:"db"`
+type Dapr struct {
+	PubSubName string `yaml:"pubSubName"`
+	TopicFlow  string `yaml:"topicFlow"`
 }
 
 type Endpoint struct {
 	Poly      string `yaml:"poly"`
 	Form      string `yaml:"form"`
 	FormInner string `yaml:"formInner"`
+	PolyInner string `yaml:"polyInner"`
+	Org       string `yaml:"org"`
+	AppCenter string `yaml:"appCenter"`
+	Search    string `yaml:"search"`
 }
 
 type Transport struct {

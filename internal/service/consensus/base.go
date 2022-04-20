@@ -39,7 +39,6 @@ func GetIDByQuery(query map[string]interface{}) []string {
 	if term == nil {
 		return nil
 	}
-
 	val := reflect.ValueOf(term)
 	if !val.CanInterface() {
 		return nil
@@ -79,6 +78,18 @@ func Term(data interface{}) interface{} {
 	}
 	return nil
 }
+
+/*
+ {"bool":{
+	"must":[
+
+	]
+	}}
+
+
+
+
+*/
 
 func GetTableID(appID, tableID string) string {
 	if len(appID) == 36 {

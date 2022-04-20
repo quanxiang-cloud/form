@@ -39,6 +39,6 @@ func newRegisterSwagger(conf *config.Config) (Guidance, error) {
 	return &registerSwagger{
 		conf:    conf,
 		next:    index,
-		polyAPI: client.NewPolyAPI(conf.InternalNet),
+		polyAPI: client.NewPolyAPI(conf),
 	}, nil
 }

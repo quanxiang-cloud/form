@@ -129,7 +129,7 @@ func (c *refs) get(ctx context.Context, bus *consensus.Bus) (*consensus.Response
 				tag:           reflect.ValueOf(t).String(),
 				key:           fieldKey,
 				refValue:      fieldValue,
-				primaryEntity: resp.GetResp.Entity,
+				primaryEntity: resp.Entity,
 				extraValue: types.M{
 					appIDKey:   bus.AppID,
 					tableIDKey: bus.TableID,

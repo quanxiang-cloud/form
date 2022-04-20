@@ -539,6 +539,7 @@ type Owners struct {
 type AssignRoleGrantResp struct{}
 
 func (p *permit) AssignRoleGrant(ctx context.Context, req *AssignRoleGrantReq) (*AssignRoleGrantResp, error) {
+	tx := p.db.Begin()
 	roleGrants := make([]*models.RoleGrant, len(req.Add))
 	for index, value := range req.Add {
 		roleGrants[index] = &models.RoleGrant{
@@ -551,12 +552,13 @@ func (p *permit) AssignRoleGrant(ctx context.Context, req *AssignRoleGrantReq) (
 			CreatedAt: time2.NowUnix() + int64(index),
 		}
 	}
-	err := p.roleGrantRepo.BatchCreate(p.db, roleGrants...)
+	err := p.roleGrantRepo.BatchCreate(tx, roleGrants...)
 	if err != nil {
+		tx.Rollback()
 		return nil, err
 	}
-
 	if len(req.Removes) == 0 {
+		tx.Commit()
 		return &AssignRoleGrantResp{}, nil
 	}
 	err = p.roleGrantRepo.Delete(p.db, &models.RoleGrantQuery{
@@ -564,8 +566,20 @@ func (p *permit) AssignRoleGrant(ctx context.Context, req *AssignRoleGrantReq) (
 		Owners: req.Removes,
 	})
 	if err != nil {
+		tx.Rollback()
 		return nil, err
 	}
+	// 删除关联关系
+	err = p.userRoleRepo.Delete(p.db, &models.UserRoleQuery{
+		UserIDS: req.Removes,
+		AppID:   req.AppID,
+		RoleID:  req.RoleID,
+	})
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	tx.Commit()
 	return &AssignRoleGrantResp{}, nil
 }
 
@@ -643,8 +657,9 @@ type UpdatePerResp struct{}
 
 func (p *permit) UpdatePermit(ctx context.Context, req *UpdatePerReq) (*UpdatePerResp, error) {
 	err := p.permitRepo.Update(p.db, req.ID, &models.Permit{
-		Params:   req.Params,
-		Response: req.Response,
+		Params:    req.Params,
+		Response:  req.Response,
+		Condition: req.Condition,
 	})
 	if err != nil {
 		return nil, err
