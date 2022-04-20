@@ -7,7 +7,6 @@ import (
 	id2 "github.com/quanxiang-cloud/cabin/id"
 	"github.com/quanxiang-cloud/cabin/logger"
 	redis2 "github.com/quanxiang-cloud/cabin/tailormade/db/redis"
-	"github.com/quanxiang-cloud/cabin/tailormade/header"
 	time2 "github.com/quanxiang-cloud/cabin/time"
 	"github.com/quanxiang-cloud/form/internal/component/event"
 	"github.com/quanxiang-cloud/form/internal/models"
@@ -588,14 +587,16 @@ type CreatePerReq struct {
 	URI        string             `json:"uri"`
 	Params     models.FiledPermit `json:"params"`
 	Response   models.FiledPermit `json:"response"`
+	Condition  models.Condition   `json:"condition"`
 	RoleID     string             `json:"roleID"`
 	UserID     string             `json:"userID"`
 	UserName   string             `json:"userName"`
-	Condition  models.Condition   `json:"condition"`
+	Method     string             `json:"method"`
 }
 
 type CreatePerResp struct{}
 
+// CreatePermit CreatePermit 如果是表单， (uri , post)    (accessPath , post ,get)
 func (p *permit) CreatePermit(ctx context.Context, req *CreatePerReq) (*CreatePerResp, error) {
 	permitArr := make([]*models.Permit, 0)
 	if IsFormAPI(req.AccessPath) {
@@ -609,11 +610,13 @@ func (p *permit) CreatePermit(ctx context.Context, req *CreatePerReq) (*CreatePe
 			CreatorName: req.UserName,
 			CreatedAt:   time2.NowUnix(),
 			Condition:   req.Condition,
+			ParamsAll:   true,
+			ResponseAll: true,
 		})
 		req.AccessPath = req.URI
 	}
 	permits := &models.Permit{
-		ID:          id2.HexUUID(true),
+		ID:          id2.StringUUID(),
 		Path:        req.AccessPath,
 		Params:      req.Params,
 		Response:    req.Response,
@@ -622,44 +625,35 @@ func (p *permit) CreatePermit(ctx context.Context, req *CreatePerReq) (*CreatePe
 		CreatorName: req.UserName,
 		CreatedAt:   time2.NowUnix(),
 		Condition:   req.Condition,
+		ParamsAll:   true,
+		ResponseAll: true,
 	}
 	permitArr = append(permitArr, permits)
 	err := p.permitRepo.BatchCreate(p.db, permitArr...)
 	if err != nil {
 		return nil, err
 	}
-	spec := &event.PermitSpec{
-		RoleID:    req.RoleID,
-		Path:      req.AccessPath,
-		Condition: req.Condition,
-		Response:  req.Response,
-		Params:    req.Params,
-		Action:    "create",
-	}
-	err = p.publish(ctx, form_permit, &event.Data{
-		PermitSpec: spec,
-	})
-	if err != nil {
-		logger.Logger.WithName("publish permit create ").Errorw("publish", "topic", form_permit, header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
-	}
-	logger.Logger.Info("is ok  ", "topic", form_permit, "data", spec)
 	return &CreatePerResp{}, nil
 }
 
 type UpdatePerReq struct {
-	ID        string             `json:"id"`
-	Params    models.FiledPermit `json:"params"`
-	Response  models.FiledPermit `json:"response"`
-	Condition models.Condition   `json:"condition"`
+	ID          string             `json:"id"`
+	Params      models.FiledPermit `json:"params"`
+	Response    models.FiledPermit `json:"response"`
+	Condition   models.Condition   `json:"condition"`
+	ParamsAll   bool               `json:"paramsAll"`
+	ResponseAll bool               `json:"responseAll"`
 }
 
 type UpdatePerResp struct{}
 
 func (p *permit) UpdatePermit(ctx context.Context, req *UpdatePerReq) (*UpdatePerResp, error) {
 	err := p.permitRepo.Update(p.db, req.ID, &models.Permit{
-		Params:    req.Params,
-		Response:  req.Response,
-		Condition: req.Condition,
+		Params:      req.Params,
+		Response:    req.Response,
+		Condition:   req.Condition,
+		ParamsAll:   req.ParamsAll,
+		ResponseAll: req.ResponseAll,
 	})
 	if err != nil {
 		return nil, err
@@ -717,12 +711,14 @@ type GetPermitReq struct {
 }
 
 type GetPermitResp struct {
-	ID        string             `json:"id"`
-	RoleID    string             `json:"roleID"`
-	Path      string             `json:"path,omitempty"`
-	Params    models.FiledPermit `json:"params,omitempty"`
-	Response  models.FiledPermit `json:"response,omitempty"`
-	Condition models.Condition   `json:"condition,omitempty"`
+	ID          string             `json:"id"`
+	RoleID      string             `json:"roleID"`
+	Path        string             `json:"path,omitempty"`
+	Params      models.FiledPermit `json:"params,omitempty"`
+	Response    models.FiledPermit `json:"response,omitempty"`
+	Condition   models.Condition   `json:"condition,omitempty"`
+	ResponseAll bool               `json:"responseAll"`
+	ParamsAll   bool               `json:"paramsAll"`
 }
 
 func (p *permit) GetPermit(ctx context.Context, req *GetPermitReq) (*GetPermitResp, error) {
@@ -734,12 +730,14 @@ func (p *permit) GetPermit(ctx context.Context, req *GetPermitReq) (*GetPermitRe
 		return nil, err
 	}
 	return &GetPermitResp{
-		ID:        permits.ID,
-		RoleID:    permits.RoleID,
-		Path:      permits.Path,
-		Params:    permits.Params,
-		Response:  permits.Response,
-		Condition: permits.Condition,
+		ID:          permits.ID,
+		RoleID:      permits.RoleID,
+		Path:        permits.Path,
+		Params:      permits.Params,
+		Response:    permits.Response,
+		Condition:   permits.Condition,
+		ResponseAll: permits.ResponseAll,
+		ParamsAll:   permits.ParamsAll,
 	}, nil
 }
 
