@@ -15,6 +15,8 @@ type Permit struct {
 	Params      FiledPermit
 	Response    FiledPermit
 	Condition   Condition
+	ParamsAll   bool
+	ResponseAll bool
 	CreatedAt   int64
 	CreatorID   string
 	CreatorName string
