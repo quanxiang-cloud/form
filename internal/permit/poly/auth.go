@@ -19,7 +19,7 @@ func NewAuth(conf *config.Config) (*Auth, error) {
 		return nil, err
 	}
 
-	next, err := NewProxy(conf)
+	next, err := NewProxy(conf, conf.Endpoint.Poly)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +35,6 @@ func (a *Auth) Do(ctx context.Context, req *permit.Request) (*permit.Response, e
 	if err != nil {
 		return nil, err
 	}
-
 	if p == nil {
 		return nil, nil
 	}

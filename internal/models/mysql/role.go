@@ -73,7 +73,7 @@ func (t *roleRepo) List(db *gorm.DB, query *models.RoleQuery, page, size int) ([
 		return nil, 0, err
 	}
 
-	err = db.Order("created_at DESC").Offset((page - 1) * size).Limit(size).Find(&roles).Error
+	err = db.Order("created_at asc").Offset((page - 1) * size).Limit(size).Find(&roles).Error
 	if err != nil {
 		return nil, 0, err
 	}

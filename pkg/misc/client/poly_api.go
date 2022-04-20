@@ -4,23 +4,46 @@ import (
 	"context"
 	"fmt"
 	"github.com/quanxiang-cloud/cabin/tailormade/client"
+	"github.com/quanxiang-cloud/form/pkg/misc/config"
 	"net/http"
 )
 
 const (
-	polyapiHost = "http://polyapi:9090/api/v1/polyapi/inner/regSwagger/system/app/form"
-	version     = "last"
+	register = "/api/v1/polyapi/inner/regSwagger/system/app/form"
+	delete   = "/api/v1/polyapi/inner/deleteNamespace"
+	version  = "last"
 )
 
 // NewPolyAPI 生成编排对象
-func NewPolyAPI(conf client.Config) PolyAPI {
+func NewPolyAPI(conf *config.Config) PolyAPI {
 	return &polyapi{
-		client: client.New(conf),
+		client: client.New(conf.InternalNet),
+		conf:   conf,
 	}
 }
 
 type polyapi struct {
 	client http.Client
+	conf   *config.Config
+}
+
+type DeleteNamespaceResp struct {
+}
+
+func (p *polyapi) DeleteNamespace(ctx context.Context, appID, tableID string) (*DeleteNamespaceResp, error) {
+	namespace := fmt.Sprintf("/system/app/%s/raw/inner/form/%s", appID, tableID)
+	url := fmt.Sprintf("%s%s%s", p.conf.Endpoint.PolyInner, delete, namespace)
+	params := struct {
+		ForceDelAPI bool `json:"forceDelAPI"`
+	}{
+		ForceDelAPI: true,
+	}
+	resp := &DeleteNamespaceResp{}
+	err := client.POST(ctx, &p.client, url, params, resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
 }
 
 // RegSwaggerResp RegSwaggerResp
@@ -45,7 +68,7 @@ func (p *polyapi) RegSwagger(ctx context.Context, host, swag, appID, tableID, ta
 	}
 	resp := &RegSwaggerResp{}
 
-	err := client.POST(ctx, &p.client, polyapiHost, params, resp)
+	err := client.POST(ctx, &p.client, fmt.Sprintf("%s%s", p.conf.Endpoint.PolyInner, register), params, resp)
 	if err != nil {
 		return nil, err
 	}
@@ -55,4 +78,5 @@ func (p *polyapi) RegSwagger(ctx context.Context, host, swag, appID, tableID, ta
 // PolyAPI PolyAPI
 type PolyAPI interface {
 	RegSwagger(ctx context.Context, host, swag, appID, tableID, tableName string) (*RegSwaggerResp, error)
+	DeleteNamespace(ctx context.Context, appID, tableID string) (*DeleteNamespaceResp, error)
 }

@@ -14,8 +14,9 @@ import (
 func ProxyForm(form permit.Permit) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		req := &permit.Request{
-			Request: c.Request(),
-			Writer:  c.Response().Writer,
+			Echo: c,
+			// Request: c.Request(),
+			// Writer:  c.Response().Writer,
 		}
 
 		ctx := echo2.MutateContext(c)
@@ -44,8 +45,9 @@ func ProxyForm(form permit.Permit) echo.HandlerFunc {
 func ProxyPoly(poly permit.Permit) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		req := &permit.Request{
-			Request: c.Request(),
-			Writer:  c.Response().Writer,
+			Echo: c,
+			// Request: c.Request(),
+			// Writer:  c.Response().Writer,
 		}
 
 		ctx := echo2.MutateContext(c)

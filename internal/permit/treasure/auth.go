@@ -2,7 +2,6 @@ package treasure
 
 import (
 	"context"
-
 	"time"
 
 	"github.com/quanxiang-cloud/cabin/logger"
@@ -49,7 +48,9 @@ func (a *Auth) Auth(ctx context.Context, req *permit.Request) (*consensus.Permit
 		return nil, err
 	}
 	if match.RoleID == models.RoleInit {
-		return nil, nil
+		return &consensus.Permit{
+			Types: models.InitType,
+		}, nil
 	}
 	permits, err := a.getCachePermit(ctx, match.RoleID, req)
 	if err != nil || permits == nil {
@@ -83,7 +84,7 @@ func (a *Auth) getCachePermit(ctx context.Context, roleID string, req *permit.Re
 	}
 	var getPermit *models.Limits
 	for _, value := range resp.List {
-		if value.Path == req.Request.URL.Path {
+		if value.Path == req.Echo.Request().URL.Path {
 			per := &models.Limits{
 				Path:      value.Path,
 				Condition: value.Condition,
@@ -149,7 +150,7 @@ func (a *Auth) getCachePermit1(ctx context.Context, roleID string, req *permit.R
 		exist := a.redis.ExistsKey(ctx, roleID)
 		if exist {
 			// judge path
-			getPermit, err := a.redis.GetPermit(ctx, roleID, req.Request.URL.Path)
+			getPermit, err := a.redis.GetPermit(ctx, roleID, req.Echo.Request().URL.Path)
 			if err != nil {
 				return nil, err
 			}
@@ -187,7 +188,7 @@ func (a *Auth) getCachePermit1(ctx context.Context, roleID string, req *permit.R
 			Params:    value.Params,
 			Response:  value.Response,
 		}
-		if value.Path == req.Request.URL.Path {
+		if value.Path == req.Echo.Request().URL.Path {
 			getPermit = per
 		}
 		limits[index] = per

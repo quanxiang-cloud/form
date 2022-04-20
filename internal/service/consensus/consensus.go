@@ -28,7 +28,8 @@ type Foundation struct {
 }
 
 type Get struct {
-	Query types.Query `json:"query,omitempty" form:"query"`
+	Query    types.Query `json:"query,omitempty" form:"query"`
+	OldQuery types.Query `json:"OldQuery"`
 }
 
 type List struct {
@@ -66,30 +67,10 @@ type Bus struct {
 	Delete
 }
 type Response struct {
-	GetResp
-	ListResp
-	DeleteResp
-	CreatedOrUpdateResp
-}
-
-type GetResp struct {
-	Entity types.M `json:"entity,omitempty"`
-}
-
-type DeleteResp struct {
-	Count int64 `json:"count,omitempty"`
-}
-
-type CreatedOrUpdateResp struct {
-	Data  interface{} `json:"data,omitempty"`
-	Count int64       `json:"count"`
-}
-
-type ListResp struct {
+	Entity   types.M        `json:"entity,omitempty"`
+	Total    int64          `json:"total"`
 	Entities types.Entities `json:"entities,omitempty"`
-	Total    int64          `json:"total,omitempty"`
 }
-
 type Guidance interface {
 	Do(ctx context.Context, bus *Bus) (*Response, error)
 }

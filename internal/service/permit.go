@@ -259,6 +259,7 @@ type FindGrantRoleReq struct {
 	RoleID string   `json:"roleID"`
 	Page   int      `json:"page"`
 	Size   int      `json:"size"`
+	Types  int      `json:"type"`
 }
 
 type FindGrantRoleResp struct {
@@ -278,6 +279,7 @@ func (p *permit) FindGrantRole(ctx context.Context, req *FindGrantRoleReq) (*Fin
 		Owners: req.Owners,
 		AppID:  req.AppID,
 		RoleID: req.RoleID,
+		Types:  req.Types,
 	}, req.Page, req.Size)
 	if err != nil {
 		return nil, err
@@ -537,10 +539,11 @@ type Owners struct {
 type AssignRoleGrantResp struct{}
 
 func (p *permit) AssignRoleGrant(ctx context.Context, req *AssignRoleGrantReq) (*AssignRoleGrantResp, error) {
+	tx := p.db.Begin()
 	roleGrants := make([]*models.RoleGrant, len(req.Add))
 	for index, value := range req.Add {
 		roleGrants[index] = &models.RoleGrant{
-			ID:        id2.HexUUID(true),
+			ID:        id2.StringUUID(),
 			RoleID:    req.RoleID,
 			Owner:     value.Owner,
 			OwnerName: value.OwnerName,
@@ -549,12 +552,13 @@ func (p *permit) AssignRoleGrant(ctx context.Context, req *AssignRoleGrantReq) (
 			CreatedAt: time2.NowUnix() + int64(index),
 		}
 	}
-	err := p.roleGrantRepo.BatchCreate(p.db, roleGrants...)
+	err := p.roleGrantRepo.BatchCreate(tx, roleGrants...)
 	if err != nil {
+		tx.Rollback()
 		return nil, err
 	}
-
 	if len(req.Removes) == 0 {
+		tx.Commit()
 		return &AssignRoleGrantResp{}, nil
 	}
 	err = p.roleGrantRepo.Delete(p.db, &models.RoleGrantQuery{
@@ -562,8 +566,20 @@ func (p *permit) AssignRoleGrant(ctx context.Context, req *AssignRoleGrantReq) (
 		Owners: req.Removes,
 	})
 	if err != nil {
+		tx.Rollback()
 		return nil, err
 	}
+	// 删除关联关系
+	err = p.userRoleRepo.Delete(p.db, &models.UserRoleQuery{
+		UserIDS: req.Removes,
+		AppID:   req.AppID,
+		RoleID:  req.RoleID,
+	})
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	tx.Commit()
 	return &AssignRoleGrantResp{}, nil
 }
 
@@ -584,7 +600,7 @@ func (p *permit) CreatePermit(ctx context.Context, req *CreatePerReq) (*CreatePe
 	permitArr := make([]*models.Permit, 0)
 	if IsFormAPI(req.AccessPath) {
 		permitArr = append(permitArr, &models.Permit{
-			ID:          id2.HexUUID(true),
+			ID:          id2.StringUUID(),
 			Path:        req.AccessPath,
 			Params:      req.Params,
 			Response:    req.Response,
@@ -641,8 +657,9 @@ type UpdatePerResp struct{}
 
 func (p *permit) UpdatePermit(ctx context.Context, req *UpdatePerReq) (*UpdatePerResp, error) {
 	err := p.permitRepo.Update(p.db, req.ID, &models.Permit{
-		Params:   req.Params,
-		Response: req.Response,
+		Params:    req.Params,
+		Response:  req.Response,
+		Condition: req.Condition,
 	})
 	if err != nil {
 		return nil, err

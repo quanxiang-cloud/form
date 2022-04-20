@@ -26,6 +26,9 @@ func (t *roleGrantRepo) List(db *gorm.DB, query *models.RoleGrantQuery, page, si
 	if len(query.RoleIDs) != 0 {
 		ql = ql.Where("role_id in ?", query.RoleIDs)
 	}
+	if query.Types != 0 {
+		ql = ql.Where("types = ?", query.Types)
+	}
 	err := ql.Count(&count).Error
 	if err != nil {
 		return nil, 0, err

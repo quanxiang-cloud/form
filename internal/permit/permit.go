@@ -3,8 +3,8 @@ package permit
 import (
 	"context"
 	"encoding/json"
-	"net/http"
 
+	"github.com/labstack/echo/v4"
 	"github.com/quanxiang-cloud/form/internal/service/consensus"
 )
 
@@ -13,8 +13,9 @@ type Permit interface {
 }
 
 type Request struct {
-	Request *http.Request
-	Writer  http.ResponseWriter
+	Echo echo.Context
+	// Request *http.Request
+	// Writer  http.ResponseWriter
 
 	Universal
 	FormReq

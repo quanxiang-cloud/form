@@ -12,7 +12,6 @@ import (
 const (
 	appCenterHost = "http://app-center/api/v1/app-center"
 	checkIsAdmin  = "/checkIsAdmin"
-	addAppScope   = "/addAppScope"
 )
 
 // CheckAppAdmin CheckAppAdmin
@@ -24,22 +23,6 @@ type appCenter struct {
 	client http.Client
 }
 
-func (a *appCenter) AddAppScope(ctx context.Context, appID string, scopes []string) (*AddResp, error) {
-	params := struct {
-		AppID  string   `json:"appID"`
-		Scopes []string `json:"scopes"`
-	}{
-		AppID:  appID,
-		Scopes: scopes,
-	}
-	resp := &AddResp{}
-	err := client.POST(ctx, &a.client, appCenterHost+addAppScope, params, resp)
-	if err != nil {
-		return nil, err
-	}
-	return resp, nil
-}
-
 // NewAppCenter 生成对象
 func NewAppCenter(conf client.Config) AppCenter {
 	return &appCenter{
@@ -47,14 +30,9 @@ func NewAppCenter(conf client.Config) AppCenter {
 	}
 }
 
-// AddResp AddResp
-type AddResp struct {
-}
-
 // AppCenter 应用壳管理对外接口
 type AppCenter interface {
 	CheckIsAdmin(ctx context.Context, appID, userID string, isSuper bool) (CheckAppAdmin, error)
-	AddAppScope(ctx context.Context, appID string, scopes []string) (*AddResp, error)
 }
 
 func (a *appCenter) CheckIsAdmin(ctx context.Context, appID, userID string, isSuper bool) (CheckAppAdmin, error) {

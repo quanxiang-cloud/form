@@ -3,6 +3,8 @@ package treasure
 import (
 	"context"
 	"fmt"
+	"github.com/quanxiang-cloud/form/pkg/misc/client"
+	"github.com/quanxiang-cloud/form/pkg/misc/config"
 	"reflect"
 
 	"github.com/quanxiang-cloud/form/internal/permit"
@@ -16,12 +18,14 @@ const (
 )
 
 type Condition struct {
-	parsers map[string]Parser
+	parsers   map[string]Parser
+	searchAPI client.SearchAPI
 }
 
-func NewCondition() *Condition {
+func NewCondition(config *config.Config) *Condition {
 	return &Condition{
-		parsers: make(map[string]Parser),
+		parsers:   make(map[string]Parser),
+		searchAPI: client.NewSearchAPI(config),
 	}
 }
 
@@ -81,6 +85,15 @@ func (s *subordinate) GetTag() string {
 
 func (s *subordinate) SetValue(ctx context.Context, c *Condition, req *permit.Request) error {
 	// TODO set subordinate value
+	resp, err := c.searchAPI.Subordinate(ctx, req.UserID)
+	if err != nil {
+		return err
+	}
+	ids := make([]string, resp.Total)
+	for index, value := range resp.Users {
+		ids[index] = value.ID
+	}
+	s.value = ids
 	return nil
 }
 

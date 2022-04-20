@@ -2,10 +2,10 @@ package tables
 
 import (
 	"context"
-
 	"github.com/quanxiang-cloud/cabin/logger"
 	"github.com/quanxiang-cloud/form/internal/service/tables/swagger"
 	"github.com/quanxiang-cloud/form/internal/service/tables/util"
+
 	"github.com/quanxiang-cloud/form/pkg/misc/client"
 	"github.com/quanxiang-cloud/form/pkg/misc/config"
 )
@@ -13,6 +13,7 @@ import (
 type registerSwagger struct {
 	conf    *config.Config
 	polyAPI client.PolyAPI
+	next    Guidance
 }
 
 func (reg *registerSwagger) Do(ctx context.Context, bus *Bus) (*DoResponse, error) {
@@ -26,12 +27,18 @@ func (reg *registerSwagger) Do(ctx context.Context, bus *Bus) (*DoResponse, erro
 		return nil, err
 	}
 	logger.Logger.Errorw("msg", "request-id", regSwagger)
-	return nil, nil
+
+	return reg.next.Do(ctx, bus)
 }
 
 func newRegisterSwagger(conf *config.Config) (Guidance, error) {
+	index, err := newTableIndex(conf)
+	if err != nil {
+		return nil, err
+	}
 	return &registerSwagger{
 		conf:    conf,
-		polyAPI: client.NewPolyAPI(conf.InternalNet),
+		next:    index,
+		polyAPI: client.NewPolyAPI(conf),
 	}, nil
 }

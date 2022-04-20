@@ -5,6 +5,7 @@ import (
 	"github.com/quanxiang-cloud/form/internal/models"
 	"github.com/quanxiang-cloud/form/internal/models/mysql"
 	"github.com/quanxiang-cloud/form/internal/service"
+	"github.com/quanxiang-cloud/form/pkg/misc/client"
 	config2 "github.com/quanxiang-cloud/form/pkg/misc/config"
 	"gorm.io/gorm"
 )
@@ -50,6 +51,7 @@ type table struct {
 	db              *gorm.DB
 	tableRepo       models.TableRepo
 	tableSchemaRepo models.TableSchemeRepo
+	polyAPI         client.PolyAPI
 }
 
 func NewTable(conf *config2.Config) (Table, error) {
@@ -61,6 +63,7 @@ func NewTable(conf *config2.Config) (Table, error) {
 		db:              db,
 		tableRepo:       mysql.NewTableRepo(),
 		tableSchemaRepo: mysql.NewTableSchema(),
+		polyAPI:         client.NewPolyAPI(conf),
 	}, nil
 }
 
@@ -124,6 +127,10 @@ func (t *table) DeleteTable(ctx context.Context, req *DeleteTableReq) (*DeleteTa
 	err = t.tableSchemaRepo.Delete(t.db, &models.TableSchemaQuery{
 		TableID: req.TableID,
 	})
+	if err != nil {
+		return nil, err
+	}
+	_, err = t.polyAPI.DeleteNamespace(ctx, req.AppID, req.TableID)
 	if err != nil {
 		return nil, err
 	}
