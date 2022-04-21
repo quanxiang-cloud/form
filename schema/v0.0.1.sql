@@ -45,6 +45,8 @@ CREATE TABLE `permit` (
     PRIMARY KEY  (`id`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+ALTER TABLE `permit` ADD `params_all`   bool;
+ALTER TABLE `permit` ADD `response_all` bool;
 
 DROP TABLE IF EXISTS `table`;
 

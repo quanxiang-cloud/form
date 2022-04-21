@@ -13,7 +13,7 @@ import (
 var (
 	formHost        string
 	getUserRoleURL  = "%s/api/v1/form/%s/internal/apiRole/userRole/get"
-	getPermitURl    = "%s/api/v1/form/%s/internal/apiPermit/find"
+	getPermitURl    = "%s/api/v1/form/%s/internal/apiPermit/get"
 	saveUserRoleURL = "%s/api/v1/form/%s/internal/apiRole/userRole/create"
 )
 
@@ -63,30 +63,31 @@ func (f *Form) GetCacheMatchRole(ctx context.Context, userID, depID, appID strin
 }
 
 type FindPermitResp struct {
-	List []*permit `json:"list"`
-}
-type permit struct {
 	ID        string             `json:"id"`
 	RoleID    string             `json:"roleID"`
 	Path      string             `json:"path"`
 	Params    models.FiledPermit `json:"params"`
 	Response  models.FiledPermit `json:"response"`
 	Condition models.Condition   `json:"condition"`
+	Methods   string             `json:"methods"`
 }
 
-func (f *Form) GetPermit(ctx context.Context, appID, roleID string) (*FindPermitResp, error) {
+func (f *Form) GetPermit(ctx context.Context, appID, roleID, path, methods string) (*FindPermitResp, error) {
 	resp := &FindPermitResp{}
 	getPermitURls := fmt.Sprintf(getPermitURl, formHost, appID)
 	err := client.POST(ctx, &f.client, getPermitURls, struct {
-		RoleID string `json:"roleID"`
+		RoleID  string `json:"roleID"`
+		Path    string `json:"path"`
+		Methods string `json:"methods"`
 	}{
-		RoleID: roleID,
+		RoleID:  roleID,
+		Path:    path,
+		Methods: methods,
 	}, resp)
 	if err != nil {
 		return nil, err
 	}
-
-	if len(resp.List) == 0 {
+	if resp.ID == "" {
 		return nil, nil
 	}
 

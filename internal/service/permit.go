@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	daprd "github.com/dapr/go-sdk/client"
 	error2 "github.com/quanxiang-cloud/cabin/error"
 	id2 "github.com/quanxiang-cloud/cabin/id"
@@ -133,77 +134,32 @@ func (p *permit) ListAndSelect(ctx context.Context, req *ListAndSelectReq) (*Lis
 }
 
 type ListPermitReq struct {
-	RoleID string   `json:"roleID,omitempty"`
-	Paths  []string `json:"paths"`
-	URIs   []string `json:"uris"`
+	RoleID string     `json:"roleID"`
+	List   []*ListRes `json:"paths" binding:"required"`
 }
-type ListPermitResp map[string]*ListVo
 
-type ListVo struct {
-	Params    models.FiledPermit `json:"params"`
-	Response  models.FiledPermit `json:"response"`
-	Condition models.Condition   `json:"condition"`
+type ListRes struct {
+	URI        string `json:"uri"`
+	AccessPath string `json:"accessPath"`
+	Method     string `json:"method"`
 }
+
+type ListPermitResp map[string]bool
 
 func (p *permit) ListPermit(ctx context.Context, req *ListPermitReq) (*ListPermitResp, error) {
-	if len(req.URIs) == 0 {
-		return p.list(req.Paths, req.RoleID)
-	}
-	if len(req.URIs) != len(req.Paths) {
-		return &ListPermitResp{}, nil
-	}
-	if len(req.Paths) == 0 && len(req.URIs) == 0 {
-		return &ListPermitResp{}, nil
-	}
-	if len(req.Paths) > 100 && len(req.URIs) > 100 {
-		req.Paths = req.Paths[0:100]
-		req.URIs = req.URIs[0:100]
-	}
-
-	temp := make(map[string]string)
-	for index, value := range req.URIs {
-		temp[value] = req.Paths[index]
-	}
-	form := IsFormAPI(req.Paths[0])
-	if form {
-		req.Paths = req.URIs
-	}
-	permits, _, err := p.permitRepo.List(p.db, &models.PermitQuery{
-		RoleID: req.RoleID,
-		Paths:  req.Paths,
-	}, 1, 100)
-	if err != nil {
-		return nil, err
-	}
 	resp := make(ListPermitResp)
-	for _, value := range permits {
-		key := value.Path
-		if form {
-			key = temp[value.Path]
+	for _, values := range req.List {
+		url := values.AccessPath
+		if IsFormAPI(values.AccessPath) {
+			url = values.URI
 		}
-		resp[key] = &ListVo{
-			Params:    value.Params,
-			Response:  value.Response,
-			Condition: value.Condition,
+		per, err := p.permitRepo.Get(p.db, req.RoleID, url, values.Method)
+		if err != nil {
+			continue
 		}
-	}
-	return &resp, nil
-}
-
-func (p *permit) list(path []string, roleID string) (*ListPermitResp, error) {
-	permits, _, err := p.permitRepo.List(p.db, &models.PermitQuery{
-		RoleID: roleID,
-		Paths:  path,
-	}, 1, 100)
-	resp := make(ListPermitResp)
-	if err != nil {
-		return nil, err
-	}
-	for _, value := range permits {
-		resp[value.Path] = &ListVo{
-			Params:    value.Params,
-			Response:  value.Response,
-			Condition: value.Condition,
+		if per.ID != "" {
+			key := fmt.Sprintf("%s-%s", values.AccessPath, values.Method)
+			resp[key] = true
 		}
 	}
 	return &resp, nil
@@ -227,6 +183,7 @@ type Permits struct {
 	Params    models.FiledPermit `json:"params"`
 	Response  models.FiledPermit `json:"response"`
 	Condition models.Condition   `json:"condition"`
+	Methods   string             `json:"methods"`
 }
 
 func (p *permit) FindPermit(ctx context.Context, req *FindPermitReq) (*FindPermitResp, error) {
@@ -417,7 +374,7 @@ func (p *permit) CreateRole(ctx context.Context, req *CreateRoleReq) (*CreateRol
 		return nil, err
 	}
 	if total > 0 {
-		return nil, error2.New(code.ErrExistGroupNameState)
+		return nil, error2.New(code.ErrExistRoleNameState)
 	}
 	roles := &models.Role{
 		ID:          id2.StringUUID(),
@@ -598,11 +555,18 @@ type CreatePerResp struct{}
 
 // CreatePermit CreatePermit 如果是表单， (uri , post)    (accessPath , post ,get)
 func (p *permit) CreatePermit(ctx context.Context, req *CreatePerReq) (*CreatePerResp, error) {
+	exist, err := p.checkExist(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	if exist {
+		return nil, error2.New(code.ErrExistPermitState)
+	}
 	permitArr := make([]*models.Permit, 0)
-	if IsFormAPI(req.AccessPath) {
+	if IsFormAPI(req.AccessPath) { // is form api
 		permitArr = append(permitArr, &models.Permit{
 			ID:          id2.StringUUID(),
-			Path:        req.AccessPath,
+			Path:        req.URI,
 			Params:      req.Params,
 			Response:    req.Response,
 			RoleID:      req.RoleID,
@@ -610,10 +574,10 @@ func (p *permit) CreatePermit(ctx context.Context, req *CreatePerReq) (*CreatePe
 			CreatorName: req.UserName,
 			CreatedAt:   time2.NowUnix(),
 			Condition:   req.Condition,
+			Methods:     req.Method,
 			ParamsAll:   true,
 			ResponseAll: true,
 		})
-		req.AccessPath = req.URI
 	}
 	permits := &models.Permit{
 		ID:          id2.StringUUID(),
@@ -627,13 +591,53 @@ func (p *permit) CreatePermit(ctx context.Context, req *CreatePerReq) (*CreatePe
 		Condition:   req.Condition,
 		ParamsAll:   true,
 		ResponseAll: true,
+		Methods:     req.Method,
+	}
+	if req.Method != "POST" {
+		permits.Methods = fmt.Sprintf("%s,%s", "POST", req.Method)
 	}
 	permitArr = append(permitArr, permits)
-	err := p.permitRepo.BatchCreate(p.db, permitArr...)
+	err = p.permitRepo.BatchCreate(p.db, permitArr...)
 	if err != nil {
 		return nil, err
 	}
 	return &CreatePerResp{}, nil
+}
+
+type check struct {
+	method string
+	path   string
+}
+
+func (p *permit) checkExist(ctx context.Context, req *CreatePerReq) (bool, error) {
+	checks := make([]*check, 0)
+	if IsFormAPI(req.AccessPath) {
+		checks = append(checks, &check{
+			method: req.Method,
+			path:   req.URI,
+		})
+	}
+	checks = append(checks, &check{
+		method: req.Method,
+		path:   req.AccessPath,
+	})
+	if req.Method != "POST" {
+		checks = append(checks, &check{
+			method: "POST",
+			path:   req.AccessPath,
+		})
+	}
+	for _, value := range checks {
+		exit, err := p.permitRepo.Get(p.db, req.RoleID, value.path, value.method)
+		if err != nil {
+			return false, err
+		}
+		if exit.ID != "" {
+			return true, nil
+		}
+		continue
+	}
+	return false, nil
 }
 
 type UpdatePerReq struct {
@@ -708,6 +712,7 @@ type GetPermitReq struct {
 	RoleID string `json:"roleID"`
 	Path   string `json:"path"`
 	URI    string `json:"uri"`
+	Method string `json:"method"`
 }
 
 type GetPermitResp struct {
@@ -725,7 +730,7 @@ func (p *permit) GetPermit(ctx context.Context, req *GetPermitReq) (*GetPermitRe
 	if IsFormAPI(req.Path) {
 		req.Path = req.URI
 	}
-	permits, err := p.permitRepo.Get(p.db, req.RoleID, req.Path)
+	permits, err := p.permitRepo.Get(p.db, req.RoleID, req.Path, req.Method)
 	if err != nil {
 		return nil, err
 	}

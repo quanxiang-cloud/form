@@ -11,9 +11,9 @@ func (t *permitRepo) BatchCreate(db *gorm.DB, permits ...*models.Permit) error {
 	return db.Table(t.TableName()).CreateInBatches(permits, len(permits)).Error
 }
 
-func (t *permitRepo) Get(db *gorm.DB, roleID, path string) (*models.Permit, error) {
+func (t *permitRepo) Get(db *gorm.DB, roleID, path, method string) (*models.Permit, error) {
 	permits := new(models.Permit)
-	err := db.Table(t.TableName()).Where("role_id = ? and  path = ? ", roleID, path).Find(permits).Error
+	err := db.Table(t.TableName()).Where("role_id = ? and  path = ?  and method like ?", roleID, path, "%"+method+"%").Find(permits).Error
 	if err != nil {
 		return nil, err
 	}
