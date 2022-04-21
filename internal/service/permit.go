@@ -574,7 +574,7 @@ func (p *permit) CreatePermit(ctx context.Context, req *CreatePerReq) (*CreatePe
 			CreatorName: req.UserName,
 			CreatedAt:   time2.NowUnix(),
 			Condition:   req.Condition,
-			Methods:     req.Method,
+			Method:      req.Method,
 			ParamsAll:   true,
 			ResponseAll: true,
 		})
@@ -591,10 +591,10 @@ func (p *permit) CreatePermit(ctx context.Context, req *CreatePerReq) (*CreatePe
 		Condition:   req.Condition,
 		ParamsAll:   true,
 		ResponseAll: true,
-		Methods:     req.Method,
+		Method:      req.Method,
 	}
 	if req.Method != "POST" {
-		permits.Methods = fmt.Sprintf("%s,%s", "POST", req.Method)
+		permits.Method = fmt.Sprintf("%s,%s", "POST", req.Method)
 	}
 	permitArr = append(permitArr, permits)
 	err = p.permitRepo.BatchCreate(p.db, permitArr...)

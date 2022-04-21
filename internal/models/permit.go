@@ -15,7 +15,7 @@ type Permit struct {
 	Params      FiledPermit
 	Response    FiledPermit
 	Condition   Condition
-	Methods     string
+	Method      string
 	ParamsAll   bool
 	ResponseAll bool
 	CreatedAt   int64

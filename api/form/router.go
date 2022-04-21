@@ -137,6 +137,9 @@ func cometRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 		inner.POST("/:action", action(guide))     // inner use。
 		innerHome.POST("/:action", action(guide)) // poly use
 	}
+
+	cometHome.GET("/form/relation/get", relation(guide))
+
 	table, err := NewTable(c)
 	if err != nil {
 		return err
