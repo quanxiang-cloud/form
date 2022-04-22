@@ -2,6 +2,7 @@ package inform
 
 import (
 	"context"
+	"github.com/quanxiang-cloud/cabin/logger"
 
 	daprd "github.com/dapr/go-sdk/client"
 	"github.com/go-logr/logr"
@@ -46,8 +47,9 @@ func (manager *HookManger) Start(ctx context.Context) {
 	for {
 		select {
 		case sendData := <-manager.Send:
+			logger.Logger.Infow("listen channel", "data is ", sendData)
 			if err := manager.publish(ctx, manager.conf.Dapr.TopicFlow, sendData); err != nil {
-				manager.log.Error(err, "push flow", "sendData ", sendData)
+				logger.Logger.Error(err, "push flow", "sendData ", sendData)
 			}
 		case <-ctx.Done():
 		}
@@ -56,7 +58,7 @@ func (manager *HookManger) Start(ctx context.Context) {
 
 func (manager *HookManger) publish(ctx context.Context, topic string, data interface{}) error {
 	if err := manager.daprClient.PublishEvent(ctx, manager.conf.Dapr.PubSubName, topic, data); err != nil {
-		manager.log.Error(err, "publishEvent", "topic", topic, "pubsubName", manager.conf.Dapr.PubSubName)
+		logger.Logger.Error(err, "publishEvent", "topic", topic, "pubsubName", manager.conf.Dapr.PubSubName)
 		return err
 	}
 	return nil

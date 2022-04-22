@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -188,31 +189,69 @@ func initBus(c *gin.Context, bus *consensus.Bus, method string) error {
 }
 
 type relationReq struct {
+	ID         string      `json:"id" form:"id"`
 	TableID    string      `json:"tableID"`
-	SubTableID string      `json:"subTableID"`
-	FieldKey   string      `json:"fieldKey"`
-	Page       int         `json:"page"`
-	Size       int         `json:"size"`
-	Query      types.Query `json:"query"`
+	SubTableID string      `json:"subTableID" form:"subTableID"`
+	FieldKey   string      `json:"fieldKey" form:"fieldKey"`
+	Page       int64       `json:"page" form:"page"`
+	Size       int64       `json:"size" form:"size"`
+	Query      types.Query `json:"query" form:"query"`
+	AppID      string      `json:"appID"`
 }
 
 func relation(ctr consensus.Guidance) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := header.MutateContext(c)
-		bus := &consensus.Bus{}
-		err := initBus(c, bus, "create")
+		req := &relationReq{}
+		req.AppID = c.Param("appID")
+		req.TableID = c.Param("tableName")
+		if err := c.ShouldBind(req); err != nil {
+			logger.Logger.WithName("relation").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
+			return
+		}
+		ids := consensus.GetSimple(consensus.TermKey, "primitiveID", req.ID)
+		keys := consensus.GetSimple(consensus.TermKey, "fieldName", req.FieldKey)
+		boolQuery := consensus.GetBool(consensus.Must, ids, keys)
+		bus := getBus(req.AppID, getRelationName(req.TableID, req.SubTableID), boolQuery, 1, 300)
+		searchResp1, err := ctr.Do(ctx, bus)
 		if err != nil {
-			logger.Logger.WithName("create").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
-			c.AbortWithError(http.StatusBadRequest, err)
+			logger.Logger.WithName("search err").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
+			c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
-		if err = c.ShouldBind(bus); err != nil {
-			logger.Logger.WithName("create").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
-			c.AbortWithError(http.StatusBadRequest, err)
-			return
+		data := make([]interface{}, 0)
+		for _, value := range searchResp1.Entities {
+			_, ok := value["subID"]
+			if !ok {
+				continue
+			}
+			data = append(data, value["subID"])
 		}
-		do, err := ctr.Do(header.MutateContext(c), bus)
-
-		resp.Format(do, err).Context(c)
+		subQuery := consensus.GetSimple(consensus.TermsKey, "_id", data)
+		if len(req.Query) != 0 {
+			subQuery = consensus.GetBool(consensus.Must, subQuery, req.Query)
+		}
+		bus1 := getBus(req.AppID, req.SubTableID, subQuery, req.Page, req.Size)
+		resp.Format(ctr.Do(ctx, bus1)).Context(c)
 	}
+}
+
+func getBus(appID, tableID string, query types.Query, page, size int64) *consensus.Bus {
+	bus := new(consensus.Bus)
+	bus.Foundation = consensus.Foundation{
+		AppID:   appID,
+		TableID: tableID,
+		Method:  "search",
+	}
+	bus.Get.Query = query
+	bus.List = consensus.List{
+		Size: size,
+		Page: page,
+		Sort: []string{"created_at"},
+	}
+	return bus
+}
+
+func getRelationName(primary, sub string) string {
+	return fmt.Sprintf("%s_%s", primary, sub)
 }

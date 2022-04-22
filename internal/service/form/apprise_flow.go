@@ -59,7 +59,7 @@ func (a *appriseFlow) createApprise(ctx context.Context, bus *consensus.Bus) {
 	data.TableID = bus.TableID
 	data.Entity = bus.CreatedOrUpdate.Entity
 	inform.DefaultFormFiled(ctx, data, "post")
-	logger.Logger.Infof(" %s send kafk data:   %+v : ", data)
+	logger.Logger.Infow("create", "data is ", data)
 	a.inform.Send <- data
 }
 
@@ -77,7 +77,7 @@ func (a *appriseFlow) deleteApprise(ctx context.Context, bus *consensus.Bus) {
 		},
 	}
 	inform.DefaultFormFiled(ctx, data, "delete")
-	logger.Logger.Infof(" %s send kafk data:   %+v : ", data)
+	logger.Logger.Infow("delete", "data is ", data)
 	a.inform.Send <- data
 }
 
@@ -96,7 +96,7 @@ func (a *appriseFlow) updateApprise(ctx context.Context, bus *consensus.Bus) {
 			Entity:  entity,
 		}
 		inform.DefaultFormFiled(ctx, data, "put")
-		logger.Logger.Infof(" %s send kafk data:   %+v : ", data)
+		logger.Logger.Infow("update", "data is ", data)
 		a.inform.Send <- data
 	}
 }
