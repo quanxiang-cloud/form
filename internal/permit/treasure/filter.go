@@ -24,7 +24,7 @@ const (
 )
 
 func Filter(entity interface{}, fieldPermit models.FiledPermit) {
-	if intercept == "true" {
+	if intercept != "true" {
 		return
 	}
 	if entity == nil || fieldPermit == nil {
