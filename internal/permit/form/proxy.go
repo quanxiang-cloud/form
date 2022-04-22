@@ -116,6 +116,6 @@ func (p *Proxy) filter(resp *http.Response, req *permit.Request) error {
 		return err
 	}
 	resp.Body = io.NopCloser(bytes.NewReader(data))
-	resp.ContentLength = int64(len(data))
+	//resp.ContentLength = int64(len(data))
 	return nil
 }
