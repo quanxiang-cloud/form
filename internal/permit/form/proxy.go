@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	error2 "github.com/quanxiang-cloud/cabin/error"
 	"github.com/quanxiang-cloud/form/internal/permit/treasure"
 	"io"
 	"net"
@@ -102,9 +101,9 @@ func (p *Proxy) filter(resp *http.Response, req *permit.Request) error {
 	if err := json.Unmarshal(respDate, &result); err != nil {
 		return err
 	}
-	if result["code"] != error2.Success {
-		return nil
-	}
+	//if result["code"] != error2.Success {
+	//	return nil
+	//}
 	switch req.Action {
 	case "get", "search":
 		if !req.Permit.ResponseAll {
