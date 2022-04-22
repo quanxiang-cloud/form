@@ -49,11 +49,13 @@ type Incidental struct {
 }
 
 type Permit struct {
-	Name      string
-	Params    models.FiledPermit
-	Response  models.FiledPermit
-	Condition models.Condition
-	Types     models.RoleType
+	Name        string
+	Params      models.FiledPermit
+	Response    models.FiledPermit
+	Condition   models.Condition
+	Types       models.RoleType
+	ResponseAll bool
+	ParamsAll   bool
 }
 
 type Bus struct {

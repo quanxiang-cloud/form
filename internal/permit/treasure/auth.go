@@ -54,9 +54,11 @@ func (a *Auth) Auth(ctx context.Context, req *permit.Request) (*consensus.Permit
 	}
 
 	return &consensus.Permit{
-		Params:    permits.Params,
-		Response:  permits.Response,
-		Condition: permits.Condition,
+		Params:      permits.Params,
+		Response:    permits.Response,
+		Condition:   permits.Condition,
+		ParamsAll:   permits.ParamsAll,
+		ResponseAll: permits.ResponseAll,
 	}, nil
 }
 
@@ -79,10 +81,12 @@ func (a *Auth) getCachePermit(ctx context.Context, roleID string, req *permit.Re
 		return nil, err
 	}
 	getPermit := &models.Limits{
-		Path:      resp.Path,
-		Condition: resp.Condition,
-		Params:    resp.Params,
-		Response:  resp.Response,
+		Path:        resp.Path,
+		Condition:   resp.Condition,
+		Params:      resp.Params,
+		Response:    resp.Response,
+		ParamsAll:   resp.ParamsAll,
+		ResponseAll: resp.ResponseAll,
 	}
 	return getPermit, nil
 }

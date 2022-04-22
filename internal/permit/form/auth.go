@@ -2,8 +2,6 @@ package guard
 
 import (
 	"context"
-	"net/http"
-
 	"github.com/quanxiang-cloud/form/internal/models"
 
 	"github.com/quanxiang-cloud/cabin/logger"
@@ -36,11 +34,6 @@ func NewAuth(conf *config.Config) (*Auth, error) {
 		next: next,
 	}, nil
 }
-
-const (
-	_entity = "entity"
-)
-
 func (a *Auth) Do(ctx context.Context, req *permit.Request) (*permit.Response, error) {
 	p, err := a.auth.Auth(ctx, req)
 	if err != nil {
@@ -55,19 +48,11 @@ func (a *Auth) Do(ctx context.Context, req *permit.Request) (*permit.Response, e
 	if p.Types == models.InitType {
 		return a.next.Do(ctx, req)
 	}
-	var entity interface{}
-	switch req.Echo.Request().Method {
-	case http.MethodGet:
-		entity = req.Entity
-	case http.MethodPost:
-		entity = req.Body[_entity]
-	}
-	if entity != nil {
-		// input parameter judgment
-		if !treasure.Pre(entity, p.Params) {
-			return nil, nil
+	switch req.Action {
+	case "create", "update":
+		if !p.ParamsAll {
+			treasure.Filter(req.Body, p.Params)
 		}
 	}
-
 	return a.next.Do(ctx, req)
 }

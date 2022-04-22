@@ -10,11 +10,13 @@ const (
 )
 
 type Limits struct {
-	Path      string
-	Name      string
-	Params    FiledPermit
-	Response  FiledPermit
-	Condition Condition
+	Path        string
+	Name        string
+	Params      FiledPermit
+	Response    FiledPermit
+	Condition   Condition
+	ResponseAll bool
+	ParamsAll   bool
 }
 
 // UserRoles UserRoles

@@ -56,6 +56,7 @@ type PermitQuery struct {
 	ID      string
 	RoleID  string
 	Path    string
+	Method  string
 	Paths   []string
 	RoleIDs []string
 }

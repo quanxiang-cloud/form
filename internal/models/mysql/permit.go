@@ -32,6 +32,9 @@ func (t *permitRepo) Delete(db *gorm.DB, query *models.PermitQuery) error {
 	if query.Path != "" {
 		ql = ql.Where("path = ?", query.Path)
 	}
+	if query.Method != "" {
+		ql = ql.Where("method like ? ", "%"+query.Method+"%")
+	}
 	return ql.Delete(resp).Error
 }
 

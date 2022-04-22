@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	error2 "github.com/quanxiang-cloud/cabin/error"
+	"github.com/quanxiang-cloud/form/internal/permit/treasure"
 	"io"
 	"net"
 	"net/http"
@@ -12,13 +14,9 @@ import (
 	"net/url"
 	"strings"
 
-	error2 "github.com/quanxiang-cloud/cabin/error"
 	"github.com/quanxiang-cloud/cabin/logger"
 	"github.com/quanxiang-cloud/cabin/tailormade/header"
-	cabinr "github.com/quanxiang-cloud/cabin/tailormade/resp"
 	"github.com/quanxiang-cloud/form/internal/permit"
-	"github.com/quanxiang-cloud/form/internal/permit/treasure"
-	"github.com/quanxiang-cloud/form/internal/service/consensus"
 	"github.com/quanxiang-cloud/form/pkg/misc/config"
 )
 
@@ -94,38 +92,30 @@ func (p *Proxy) filter(resp *http.Response, req *permit.Request) error {
 	if !strings.HasPrefix(ctype, mimeApplicationJSON) {
 		return fmt.Errorf("response data content-type is not %s", mimeApplicationJSON)
 	}
-
 	respDate, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
-	cabinResp := new(cabinr.Resp)
-	conResp := &consensus.Response{}
-	cabinResp.Data = conResp
+	var result map[string]interface{}
 
-	err = json.Unmarshal(respDate, cabinResp)
-	if err != nil {
+	if err := json.Unmarshal(respDate, &result); err != nil {
 		return err
 	}
-
-	if cabinResp.Code != error2.Success {
+	if result["code"] != error2.Success {
 		return nil
 	}
-
 	switch req.Action {
-	case "get":
-		treasure.Post(conResp.Entity, req.Permit.Response)
-	case "search":
-		treasure.Post(conResp.Entities, req.Permit.Response)
+	case "get", "search":
+		if !req.Permit.ResponseAll {
+			treasure.Filter(result, req.Permit.Response)
+		}
 	}
-
-	data, err := json.Marshal(cabinResp)
+	data, err := json.Marshal(result)
 	if err != nil {
 		logger.Logger.Errorf("entity json marshal failed: %s", err.Error())
 		return err
 	}
-
 	resp.Body = io.NopCloser(bytes.NewReader(data))
 	resp.ContentLength = int64(len(data))
 	return nil

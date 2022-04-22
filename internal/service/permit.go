@@ -670,6 +670,7 @@ type DeletePerReq struct {
 	RoleID string `json:"roleID"`
 	Path   string `json:"path"`
 	URI    string `json:"uri"`
+	Method string `json:"method"`
 }
 
 type DeletePerResp struct{}
@@ -678,32 +679,20 @@ func (p *permit) DeletePermit(ctx context.Context, req *DeletePerReq) (*DeletePe
 	if IsFormAPI(req.Path) {
 		err := p.permitRepo.Delete(p.db, &models.PermitQuery{
 			RoleID: req.RoleID,
-			Path:   req.Path,
+			Path:   req.URI,
+			Method: req.Method,
 		})
 		if err != nil {
 			return nil, err
 		}
-		req.Path = req.URI
 	}
 	err := p.permitRepo.Delete(p.db, &models.PermitQuery{
 		RoleID: req.RoleID,
 		Path:   req.Path,
+		Method: req.Method,
 	})
 	if err != nil {
 		return nil, err
-	}
-	spec := &event.PermitSpec{
-		RoleID: req.RoleID,
-		Path:   req.Path,
-		Action: "delete",
-	}
-
-	// TODO dapr
-	err = p.publish(ctx, form_permit, &event.Data{
-		PermitSpec: spec,
-	})
-	if err != nil {
-		logger.Logger.WithName("publish permit create ").Errorw("publish", "topic", form_permit, "err is", err.Error())
 	}
 	return &DeletePerResp{}, nil
 }
@@ -712,7 +701,7 @@ type GetPermitReq struct {
 	RoleID string `json:"roleID"`
 	Path   string `json:"path"`
 	URI    string `json:"uri"`
-	Method string `json:"method"`
+	Method string `json:"method" binding:"required"`
 }
 
 type GetPermitResp struct {

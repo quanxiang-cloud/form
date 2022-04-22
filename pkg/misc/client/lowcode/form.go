@@ -63,26 +63,28 @@ func (f *Form) GetCacheMatchRole(ctx context.Context, userID, depID, appID strin
 }
 
 type FindPermitResp struct {
-	ID        string             `json:"id"`
-	RoleID    string             `json:"roleID"`
-	Path      string             `json:"path"`
-	Params    models.FiledPermit `json:"params"`
-	Response  models.FiledPermit `json:"response"`
-	Condition models.Condition   `json:"condition"`
-	Methods   string             `json:"methods"`
+	ID          string             `json:"id"`
+	RoleID      string             `json:"roleID"`
+	Path        string             `json:"path"`
+	Params      models.FiledPermit `json:"params"`
+	Response    models.FiledPermit `json:"response"`
+	Condition   models.Condition   `json:"condition"`
+	Methods     string             `json:"methods"`
+	ResponseAll bool               `json:"responseAll"`
+	ParamsAll   bool               `json:"paramsAll"`
 }
 
 func (f *Form) GetPermit(ctx context.Context, appID, roleID, path, methods string) (*FindPermitResp, error) {
 	resp := &FindPermitResp{}
 	getPermitURls := fmt.Sprintf(getPermitURl, formHost, appID)
 	err := client.POST(ctx, &f.client, getPermitURls, struct {
-		RoleID  string `json:"roleID"`
-		Path    string `json:"path"`
-		Methods string `json:"methods"`
+		RoleID string `json:"roleID"`
+		Path   string `json:"path"`
+		Method string `json:"method"`
 	}{
-		RoleID:  roleID,
-		Path:    path,
-		Methods: methods,
+		RoleID: roleID,
+		Path:   path,
+		Method: methods,
 	}, resp)
 	if err != nil {
 		return nil, err
