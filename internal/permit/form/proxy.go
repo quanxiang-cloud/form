@@ -5,13 +5,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/quanxiang-cloud/form/internal/permit/treasure"
 	"io"
 	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"strings"
+
+	"github.com/quanxiang-cloud/form/internal/permit/treasure"
 
 	"github.com/quanxiang-cloud/cabin/logger"
 	"github.com/quanxiang-cloud/cabin/tailormade/header"
@@ -71,7 +72,7 @@ func (p *Proxy) Do(ctx context.Context, req *permit.Request) (*permit.Response, 
 	}
 
 	r.Body = io.NopCloser(bytes.NewReader(data))
-	r.ContentLength = int64(len(data))
+	// r.ContentLength = int64(len(data))
 	proxy.ServeHTTP(req.Echo.Response(), r)
 
 	return &permit.Response{}, nil
