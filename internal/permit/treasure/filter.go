@@ -1,6 +1,7 @@
 package treasure
 
 import (
+	"github.com/aerospike/aerospike-client-go/logger"
 	"os"
 	"reflect"
 
@@ -24,6 +25,7 @@ const (
 )
 
 func Filter(entity interface{}, fieldPermit models.FiledPermit) {
+	logger.Logger.Info("intercept is", intercept)
 	if intercept != "true" {
 		return
 	}
