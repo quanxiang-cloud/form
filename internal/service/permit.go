@@ -716,9 +716,10 @@ type GetPermitResp struct {
 }
 
 func (p *permit) GetPermit(ctx context.Context, req *GetPermitReq) (*GetPermitResp, error) {
-	if IsFormAPI(req.Path) {
+	if IsFormAPI(req.Path) && req.URI != "" {
 		req.Path = req.URI
 	}
+
 	permits, err := p.permitRepo.Get(p.db, req.RoleID, req.Path, req.Method)
 	if err != nil {
 		return nil, err

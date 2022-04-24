@@ -82,7 +82,6 @@ func get(ctr consensus.Guidance) gin.HandlerFunc {
 func search(ctr consensus.Guidance) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := header.MutateContext(c)
-
 		bus := &consensus.Bus{}
 		err := initBus(c, bus, "search")
 		if err != nil {
@@ -95,8 +94,35 @@ func search(ctr consensus.Guidance) gin.HandlerFunc {
 			c.AbortWithError(http.StatusBadRequest, err)
 			return
 		}
-		do, err := ctr.Do(header.MutateContext(c), bus)
-		resp.Format(do, err).Context(c)
+		if bus.Sub.PID == "" { // is  normal
+			do, err := ctr.Do(header.MutateContext(c), bus)
+			resp.Format(do, err).Context(c)
+			return
+		}
+		ids := consensus.GetSimple(consensus.TermKey, "primitiveID", bus.Sub.PID)
+		keys := consensus.GetSimple(consensus.TermKey, "fieldName", bus.Sub.FieldKey)
+		boolQuery := consensus.GetBool(consensus.Must, ids, keys)
+		bus1 := getBus(bus.AppID, getRelationName(bus.PTableID, bus.TableID), boolQuery, 1, 300)
+		searchResp1, err := ctr.Do(ctx, bus1)
+		if err != nil {
+			logger.Logger.WithName("search err").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+		data := make([]interface{}, 0)
+		for _, value := range searchResp1.Entities {
+			_, ok := value["subID"]
+			if !ok {
+				continue
+			}
+			data = append(data, value["subID"])
+		}
+		subQuery := consensus.GetSimple(consensus.TermsKey, "_id", data)
+		if len(bus.Get.Query) != 0 {
+			subQuery = consensus.GetBool(consensus.Must, subQuery, bus.Get.Query)
+		}
+		bus2 := getBus(bus.AppID, bus.TableID, subQuery, bus.Page, bus.Size)
+		resp.Format(ctr.Do(ctx, bus2)).Context(c)
 	}
 }
 
