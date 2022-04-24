@@ -33,9 +33,9 @@ type Get struct {
 }
 
 type List struct {
-	Page int64    `json:"page,omitempty"`
-	Size int64    `json:"size,omitempty"`
-	Sort []string `json:"sort,omitempty"`
+	Page int64    `json:"page,omitempty" form:"page"`
+	Size int64    `json:"size,omitempty" form:"size"`
+	Sort []string `json:"sort,omitempty" form:"sort"`
 }
 
 type CreatedOrUpdate struct {
@@ -67,7 +67,14 @@ type Bus struct {
 	List
 	CreatedOrUpdate
 	Delete
+	Sub
 }
+type Sub struct {
+	PID      string `json:"pid" form:"pid"`
+	PTableID string `json:"pTableID" form:"pTableID"`
+	FieldKey string `json:"fieldKey" form:"fieldKey"`
+}
+
 type Response struct {
 	Entity   types.M        `json:"entity,omitempty"`
 	Total    int64          `json:"total"`
