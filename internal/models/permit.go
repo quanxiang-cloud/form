@@ -69,7 +69,7 @@ type PermitRepo interface {
 
 	Delete(db *gorm.DB, query *PermitQuery) error
 
-	Update(db *gorm.DB, id string, permit *Permit) error
+	Update(db *gorm.DB, query *PermitQuery, permit *Permit) error
 
 	List(db *gorm.DB, query *PermitQuery, page, size int) ([]*Permit, int64, error)
 }
