@@ -277,6 +277,18 @@ func (p *Permit) GetUserRole(c *gin.Context) {
 	resp.Format(p.permit.GetUserRole(ctx, req)).Context(c)
 }
 
-func (p *Permit) CopyRole(context *gin.Context) {
-	// copy role
+func (p *Permit) CopyRole(c *gin.Context) {
+	pf := getProfile(c)
+	req := &service.CopyRoleReq{
+		UserID:   pf.userID,
+		UserName: pf.userName,
+		AppID:    c.Param("appID"),
+	}
+	ctx := header.MutateContext(c)
+	if err := c.ShouldBind(req); err != nil {
+		logger.Logger.WithName("SaveUserPerMatch").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+	resp.Format(p.permit.CopyRole(ctx, req)).Context(c)
 }

@@ -87,7 +87,7 @@ func permitRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 		role.POST("/find", permits.FindRole)
 		role.POST("/grant/list/:roleID", permits.FindGrantRole)
 		role.POST("/grant/assign/:roleID", permits.AssignRoleGrant)
-		role.POST("/duplicatePer", permits.CopyRole)
+		role.POST("/copy", permits.CopyRole)
 	}
 	apiPermit := r[managerPath].Group("/apiPermit")
 	{
