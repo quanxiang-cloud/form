@@ -1,4 +1,4 @@
-package guard
+package side
 
 import (
 	"context"
@@ -16,10 +16,9 @@ import (
 )
 
 const (
-	_query     = "query"
-	_condition = "condition"
-	_bool      = "bool"
-	_must      = "must"
+	_query = "query"
+	_bool  = "bool"
+	_must  = "must"
 )
 
 // Condition is a guard for permit.
@@ -29,8 +28,8 @@ type Condition struct {
 }
 
 // NewCondition returns a new guard for permit.
-func NewCondition(conf *config.Config) (*Condition, error) {
-	next, err := NewProxy(conf)
+func NewCondition(conf *config.Config, rawurl string) (*Condition, error) {
+	next, err := NewProxy(conf, rawurl)
 	if err != nil {
 		return nil, err
 	}
@@ -43,14 +42,18 @@ func NewCondition(conf *config.Config) (*Condition, error) {
 
 // Do is a guard for permit.
 func (c *Condition) Do(ctx context.Context, req *permit.Request) (*permit.Response, error) {
+
 	if req.Permit.Types == models.InitType {
 		return c.next.Do(ctx, req)
 	}
-	oldQuery := req.Body[_query]
+
+	// 判单来源。
+	// TODO
+	oldQuery := req.Data[_query]
 	var query permit.Object
 	switch req.Echo.Request().Method {
 	case http.MethodGet:
-		query = req.Query
+		//query = req.Query
 	case http.MethodPost:
 		bytes, err := json.Marshal(oldQuery)
 		if err != nil {
@@ -58,21 +61,14 @@ func (c *Condition) Do(ctx context.Context, req *permit.Request) (*permit.Respon
 		}
 		json.Unmarshal(bytes, &query)
 	}
-
-	err := c.cond.SetParseValue(ctx, req)
-	if err != nil {
-		logger.Logger.WithName("form condition").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
-		return nil, err
-	}
-
+	c.cond.SetParse(ctx, req)
 	dataes := make([]interface{}, 0, 2)
 	if query != nil && len(query) != 0 {
 		dataes = append(dataes, query)
 	}
 	condition := req.Permit.Condition
-	println(len(condition))
 	if condition != nil && len(condition) != 0 {
-		err = c.cond.ParseCondition(condition[_query])
+		err := c.cond.ParseCondition(condition[_query])
 		if err != nil {
 			logger.Logger.WithName("form condition").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
 			return nil, err
@@ -109,8 +105,8 @@ func (c *Condition) Do(ctx context.Context, req *permit.Request) (*permit.Respon
 
 		req.Echo.Request().URL.RawQuery = v.Encode()
 	case http.MethodPost:
-		req.Body[_query] = newQuery
+		req.Data[_query] = newQuery
 	}
-	req.Body["oldQuery"] = oldQuery
+	req.Data["oldQuery"] = oldQuery
 	return c.next.Do(ctx, req)
 }
