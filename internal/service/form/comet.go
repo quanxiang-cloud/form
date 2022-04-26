@@ -117,8 +117,6 @@ func (c *comet) callCreate(ctx context.Context, req *CreateReq) (*consensus.Resp
 }
 
 func (c *comet) callUpdate(ctx context.Context, req *UpdateReq) (*consensus.Response, error) {
-	req.Entity = consensus.DefaultField(req.Entity,
-		consensus.WithUpdated(req.UserID, req.UserName))
 	dsl := make(map[string]interface{})
 	if req.Query != nil {
 		dsl["query"] = req.Query
@@ -132,12 +130,12 @@ func (c *comet) callUpdate(ctx context.Context, req *UpdateReq) (*consensus.Resp
 		TableID:  getTableID(req.AppID, req.TableID),
 		DslQuery: dsl,
 	}
-	update, err := c.formClient.Update(ctx, formReq)
+	updates, err := c.formClient.Update(ctx, formReq)
 	if err != nil {
 		return nil, err
 	}
 	resp := &consensus.Response{}
-	resp.Total = update.SuccessCount
+	resp.Total = updates.SuccessCount
 	return resp, nil
 }
 

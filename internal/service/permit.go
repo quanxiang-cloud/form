@@ -18,10 +18,6 @@ import (
 	"gorm.io/gorm"
 )
 
-const (
-	form_permit = "formpermit"
-)
-
 type Permit interface {
 	CreateRole(ctx context.Context, req *CreateRoleReq) (*CreateRoleResp, error)
 
@@ -54,6 +50,8 @@ type Permit interface {
 	ListAndSelect(ctx context.Context, req *ListAndSelectReq) (*ListAndSelectResp, error)
 
 	GetUserRole(ctx context.Context, req *GetUserRoleReq) (*GetUserRoleResp, error)
+
+	CopyRole(ctx context.Context, req *CopyRoleReq) (*CopyRoleResp, error)
 }
 
 type permit struct {
@@ -65,6 +63,67 @@ type permit struct {
 	daprClient    daprd.Client
 	conf          *config2.Config
 	userRoleRepo  models.UserRoleRepo
+}
+
+type CopyRoleReq struct {
+	RoleID      string `json:"roleID"`
+	UserID      string `json:"userID"`
+	AppID       string `json:"appID"`
+	UserName    string `json:"userName"`
+	Description string `json:"description"`
+	Name        string `json:"name"`
+}
+
+type CopyRoleResp struct {
+	RoleID string `json:"roleID"`
+}
+
+func (p *permit) CopyRole(ctx context.Context, req *CopyRoleReq) (*CopyRoleResp, error) {
+	tx := p.db.Begin()
+	roleID := id2.StringUUID()
+	err := p.roleRepo.BatchCreate(tx, &models.Role{
+		ID:          roleID,
+		Description: req.Description,
+		Name:        req.Name,
+		AppID:       req.AppID,
+		CreatorName: req.UserName,
+		CreatorID:   req.UserID,
+		CreatedAt:   time2.NowUnix(),
+	})
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	list, _, err := p.permitRepo.List(tx, &models.PermitQuery{
+		RoleID: req.RoleID,
+	}, 1, 999)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	lists := make([]*models.Permit, len(list))
+	for index, value := range list {
+		lists[index] = &models.Permit{
+			ID:          id2.StringUUID(),
+			RoleID:      roleID,
+			Path:        value.Path,
+			Params:      value.Params,
+			Condition:   value.Condition,
+			Method:      value.Method,
+			ParamsAll:   value.ParamsAll,
+			ResponseAll: value.ResponseAll,
+			CreatedAt:   time2.NowUnix(),
+			CreatorID:   req.UserID,
+			CreatorName: req.UserName,
+		}
+	}
+	err = p.permitRepo.BatchCreate(tx, lists...)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	tx.Commit()
+	return &CopyRoleResp{}, nil
 }
 
 type ListAndSelectReq struct {
