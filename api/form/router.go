@@ -80,7 +80,7 @@ func permitRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 	}
 	role := r[managerPath].Group("/apiRole")
 	{
-		role.GET("/create", permits.CreateRole)
+		role.POST("/create", permits.CreateRole)
 		role.POST("/update", permits.UpdateRole)
 		role.POST("/get/:id", permits.GetRole)
 		role.POST("/delete/:id", permits.DeleteRole)
