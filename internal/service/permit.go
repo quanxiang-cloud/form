@@ -75,7 +75,7 @@ type CopyRoleReq struct {
 }
 
 type CopyRoleResp struct {
-	RoleID string `json:"roleID"`
+	RoleID string `json:"id"`
 }
 
 func (p *permit) CopyRole(ctx context.Context, req *CopyRoleReq) (*CopyRoleResp, error) {
@@ -123,7 +123,9 @@ func (p *permit) CopyRole(ctx context.Context, req *CopyRoleReq) (*CopyRoleResp,
 		return nil, err
 	}
 	tx.Commit()
-	return &CopyRoleResp{}, nil
+	return &CopyRoleResp{
+		RoleID: roleID,
+	}, nil
 }
 
 type ListAndSelectReq struct {
