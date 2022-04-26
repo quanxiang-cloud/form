@@ -15,6 +15,9 @@ type Permit struct {
 	Params      FiledPermit
 	Response    FiledPermit
 	Condition   Condition
+	Method      string
+	ParamsAll   bool
+	ResponseAll bool
 	CreatedAt   int64
 	CreatorID   string
 	CreatorName string
@@ -53,6 +56,7 @@ type PermitQuery struct {
 	ID      string
 	RoleID  string
 	Path    string
+	Method  string
 	Paths   []string
 	RoleIDs []string
 }
@@ -61,11 +65,11 @@ type PermitQuery struct {
 type PermitRepo interface {
 	BatchCreate(db *gorm.DB, form ...*Permit) error
 
-	Get(db *gorm.DB, roleID, path string) (*Permit, error)
+	Get(db *gorm.DB, roleID, path, method string) (*Permit, error)
 
 	Delete(db *gorm.DB, query *PermitQuery) error
 
-	Update(db *gorm.DB, id string, permit *Permit) error
+	Update(db *gorm.DB, query *PermitQuery, permit *Permit) error
 
 	List(db *gorm.DB, query *PermitQuery, page, size int) ([]*Permit, int64, error)
 }

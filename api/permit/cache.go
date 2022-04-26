@@ -3,7 +3,6 @@ package router
 import (
 	"context"
 	"encoding/json"
-
 	"io/ioutil"
 
 	"github.com/quanxiang-cloud/form/pkg/misc/config"

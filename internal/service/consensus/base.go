@@ -79,18 +79,6 @@ func Term(data interface{}) interface{} {
 	return nil
 }
 
-/*
- {"bool":{
-	"must":[
-
-	]
-	}}
-
-
-
-
-*/
-
 func GetTableID(appID, tableID string) string {
 	if len(appID) == 36 {
 		return fmt.Sprintf("%s%s%s", "A", appID, tableID)

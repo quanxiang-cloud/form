@@ -80,14 +80,14 @@ func permitRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 	}
 	role := r[managerPath].Group("/apiRole")
 	{
-		role.POST("/create", permits.CreateRole)
+		role.GET("/create", permits.CreateRole)
 		role.POST("/update", permits.UpdateRole)
 		role.POST("/get/:id", permits.GetRole)
 		role.POST("/delete/:id", permits.DeleteRole)
 		role.POST("/find", permits.FindRole)
 		role.POST("/grant/list/:roleID", permits.FindGrantRole)
 		role.POST("/grant/assign/:roleID", permits.AssignRoleGrant)
-		role.POST("/duplicatePer", permits.CopyRole)
+		role.POST("/copy", permits.CopyRole)
 	}
 	apiPermit := r[managerPath].Group("/apiPermit")
 	{
@@ -108,6 +108,7 @@ func permitRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 	{
 		r[internalPath].POST("/apiRole/userRole/get", permits.GetUserRole)
 		r[internalPath].POST("/apiPermit/find", permits.FindPermit)
+		r[internalPath].POST("/apiPermit/get", permits.GetPermit)
 		r[internalPath].POST("/apiRole/userRole/create", permits.CreateUserRole)
 		r[internalPath].POST("/apiRole/create", permits.CreateRole)
 		r[internalPath].POST("/apiRole/grant/assign/:roleID", permits.AssignRoleGrant)
@@ -128,14 +129,18 @@ func cometRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 	}
 	{
 		cometHome.POST("/:action", action(guide))
+		inner.POST("/:action", action(guide))     // inner use。
+		innerHome.POST("/:action", action(guide)) // poly use
+
 		v2Path.GET("/:id", get(guide))
 		v2Path.DELETE("/:id", delete(guide))
 		v2Path.PUT("/:id", update(guide))
 		v2Path.POST("", create(guide))
-		v2Path.GET("", search(guide))
-		inner.POST("/:action", action(guide))     // inner use。
-		innerHome.POST("/:action", action(guide)) // poly use
+		cometHome.GET("", search(guide))
+		cometHome.GET("/relation", relation(guide))
+
 	}
+
 	table, err := NewTable(c)
 	if err != nil {
 		return err
