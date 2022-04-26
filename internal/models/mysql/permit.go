@@ -38,7 +38,7 @@ func (t *permitRepo) Delete(db *gorm.DB, query *models.PermitQuery) error {
 	return ql.Delete(resp).Error
 }
 
-func (t *permitRepo) Update(db *gorm.DB, id string, permit *models.Permit) error {
+func (t *permitRepo) Update(db *gorm.DB, query *models.PermitQuery, permit *models.Permit) error {
 	setMap := make(map[string]interface{})
 	if permit.Params != nil {
 		setMap["params"] = permit.Params
@@ -51,7 +51,14 @@ func (t *permitRepo) Update(db *gorm.DB, id string, permit *models.Permit) error
 	}
 	setMap["params_all"] = permit.ParamsAll
 	setMap["response_all"] = permit.ResponseAll
-	return db.Table(t.TableName()).Where("id = ? ", id).Updates(
+	ql := db.Table(t.TableName())
+	if query.Path != "" {
+		ql = ql.Where("path = ?", query.Path)
+	}
+	if query.Method != "" {
+		ql = ql.Where("method like ? ", "%"+query.Method+"%")
+	}
+	return ql.Updates(
 		setMap).Error
 }
 

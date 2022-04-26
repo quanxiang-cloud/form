@@ -617,6 +617,7 @@ type CreatePerResp struct{}
 
 // CreatePermit CreatePermit 如果是表单， (uri , post)    (accessPath , post ,get)
 func (p *permit) CreatePermit(ctx context.Context, req *CreatePerReq) (*CreatePerResp, error) {
+
 	exist, err := p.checkExist(ctx, req)
 	if err != nil {
 		return nil, err
@@ -709,12 +710,36 @@ type UpdatePerReq struct {
 	Condition   models.Condition   `json:"condition"`
 	ParamsAll   bool               `json:"paramsAll"`
 	ResponseAll bool               `json:"responseAll"`
+	Path        string             `json:"accessPath"`
+	URI         string             `json:"uri"`
+	Method      string             `json:"method"`
 }
 
 type UpdatePerResp struct{}
 
 func (p *permit) UpdatePermit(ctx context.Context, req *UpdatePerReq) (*UpdatePerResp, error) {
-	err := p.permitRepo.Update(p.db, req.ID, &models.Permit{
+	tx := p.db.Begin()
+	if IsFormAPI(req.Path) {
+		err := p.permitRepo.Update(p.db, &models.PermitQuery{
+			Path:   req.URI,
+			Method: req.Method,
+		}, &models.Permit{
+			Params:      req.Params,
+			Response:    req.Response,
+			Condition:   req.Condition,
+			ParamsAll:   req.ParamsAll,
+			ResponseAll: req.ResponseAll,
+		})
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+	}
+
+	err := p.permitRepo.Update(p.db, &models.PermitQuery{
+		Path:   req.Path,
+		Method: req.Method,
+	}, &models.Permit{
 		Params:      req.Params,
 		Response:    req.Response,
 		Condition:   req.Condition,
@@ -722,8 +747,10 @@ func (p *permit) UpdatePermit(ctx context.Context, req *UpdatePerReq) (*UpdatePe
 		ResponseAll: req.ResponseAll,
 	})
 	if err != nil {
+		tx.Rollback()
 		return nil, err
 	}
+	tx.Commit()
 	// add redis cache
 	return &UpdatePerResp{}, nil
 }
