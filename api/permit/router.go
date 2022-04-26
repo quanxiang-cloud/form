@@ -3,8 +3,7 @@ package router
 import (
 	"github.com/labstack/echo/v4"
 	"github.com/quanxiang-cloud/cabin/logger"
-	guard "github.com/quanxiang-cloud/form/internal/permit/form"
-	defender "github.com/quanxiang-cloud/form/internal/permit/poly"
+	"github.com/quanxiang-cloud/form/internal/permit/side"
 	config2 "github.com/quanxiang-cloud/form/pkg/misc/config"
 	echo2 "github.com/quanxiang-cloud/form/pkg/misc/echo"
 )
@@ -64,34 +63,33 @@ func (r *Router) Run() error {
 }
 
 func polyRouter(c *config2.Config, r map[string]*echo.Group) error {
-	cor, err := defender.NewParam(c)
+	cor, err := side.NewAuth(c, c.Endpoint.Poly)
 	if err != nil {
 		logger.Logger.WithName("instantiation poly cor").Error(err)
 		return err
 	}
-
 	group := r[ployPath]
 	{
-		group.Any("/*", ProxyPoly(cor))
+		group.Any("/request/system/app/:appID/*", Permit(cor))
 	}
 	return nil
 }
 
 func formRouter(c *config2.Config, r map[string]*echo.Group) error {
-	cor, err := guard.NewAuth(c)
+	cor, err := side.NewAuth(c, c.Endpoint.Form)
 	if err != nil {
 		logger.Logger.WithName("instantiation form cor").Error(err)
 		return err
 	}
-	p, err := defender.NewProxy(c, c.Endpoint.Form)
+	p, err := side.NewNilModifyProxy(c, c.Endpoint.Form)
 	if err != nil {
 		return err
 	}
 
 	group := r[formPath]
 	{
-		group.Any("/*", ProxyForm(p))
-		group.Any("/:appID/home/form/:tableID/:action", ProxyForm(cor))
+		group.Any("/*", Permit(p))
+		group.Any("/:appID/home/form/:tableID/:action", Permit(cor))
 	}
 	return nil
 }
@@ -105,6 +103,5 @@ func perCacheRouter(c *config2.Config, r map[string]*echo.Group) error {
 	}
 	r[cache].Any("/role", caches.UserRole)
 	r[cache].Any("/permit", caches.Permit)
-
 	return nil
 }

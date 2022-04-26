@@ -1,7 +1,7 @@
 
 
-  # port 端口
-  # e.g :80
+# port 端口
+# e.g :80
 port: :80
 portInner: :8080
 
@@ -37,9 +37,9 @@ internalNet:
 # -------------------- redis --------------------
 redis:
   addrs:
-    - 192.168.200.18:6379
-    - 192.168.200.19:6379
-    - 192.168.200.20:6379
+    - 192.168.201.14:6379,192.168.201.15:6379,192.168.201.16:6379
+    - 192.168.201.15:6379
+    - 192.168.201.16:6379
   username:
   password:
 # -------------------- dapr --------------------
@@ -50,8 +50,8 @@ dapr:
 endpoint:
   appCenter: "http://app-center"
   org: "http://org"
-  search: "http://127.0.0.1:81"
-  polyInner: "http://polyapi:9090"
+  search: "http://search.inner"
+  polyInner: "http://poly.inner"
 
 # -------------------- mongo --------------------
 mongo:

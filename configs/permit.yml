@@ -20,9 +20,10 @@ internalNet:
 
 # --------------------- endpoint -------------
 endpoint:
-  poly: "http://polyapi"
+  poly: "http://poly.alpha"
   form: "http://localhost:80"
   formInner: "http://localhost:8080"
+  search: "http://search.inner"
 
 # --------------------- transport -----------------
 transport:
@@ -35,12 +36,11 @@ transport:
 
 
 
-# -------------------- service --------------------
+# -------------------- redis --------------------
 redis:
   addrs:
-    - 192.168.200.18:6379
-    - 192.168.200.19:6379
-    - 192.168.200.20:6379
+    - 192.168.201.14:6379
+    - 192.168.201.15:6379
+    - 192.168.201.16:6379
   username:
   password:
-

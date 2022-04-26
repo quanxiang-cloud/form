@@ -2,6 +2,7 @@ package tables
 
 import (
 	"context"
+	"encoding/base64"
 	"github.com/quanxiang-cloud/cabin/logger"
 	"github.com/quanxiang-cloud/form/internal/service/tables/swagger"
 	"github.com/quanxiang-cloud/form/internal/service/tables/util"
@@ -22,7 +23,7 @@ func (reg *registerSwagger) Do(ctx context.Context, bus *Bus) (*DoResponse, erro
 	if err != nil {
 		return nil, err
 	}
-	regSwagger, err := reg.polyAPI.RegSwagger(ctx, "form", swagger, bus.AppID, bus.TableID, bus.Title)
+	regSwagger, err := reg.polyAPI.RegSwagger(ctx, "form", base64.StdEncoding.EncodeToString([]byte(swagger)), bus.AppID, bus.TableID, bus.Title)
 	if err != nil {
 		return nil, err
 	}

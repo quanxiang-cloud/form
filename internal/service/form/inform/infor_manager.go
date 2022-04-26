@@ -29,14 +29,14 @@ type HookManger struct {
 
 // NewHookManger NewHookManger.
 func NewHookManger(ctx context.Context, conf *config.Config) (*HookManger, error) {
-	client, err := daprd.NewClient()
-	if err != nil {
-		return nil, err
-	}
+	//client, err := daprd.NewClient()
+	//if err != nil {
+	//	return nil, err
+	//}
 	m := &HookManger{
-		daprClient: client,
-		Send:       make(chan *FormData),
-		conf:       conf,
+		//	daprClient: client,
+		Send: make(chan *FormData),
+		conf: conf,
 	}
 	go m.Start(ctx)
 	return m, nil
@@ -47,19 +47,20 @@ func (manager *HookManger) Start(ctx context.Context) {
 	for {
 		select {
 		case sendData := <-manager.Send:
-			logger.Logger.Infow("listen channel", "data is ", sendData)
+			logger.Logger.Infow("listen channel start", "data is ", sendData)
 			if err := manager.publish(ctx, manager.conf.Dapr.TopicFlow, sendData); err != nil {
-				logger.Logger.Error(err, "push flow", "sendData ", sendData)
+				continue
 			}
+			logger.Logger.Infow("success", "data is ", sendData, "topic", manager.conf.Dapr.TopicFlow, "pubsubName", manager.conf.Dapr.PubSubName)
 		case <-ctx.Done():
 		}
 	}
 }
 
 func (manager *HookManger) publish(ctx context.Context, topic string, data interface{}) error {
-	if err := manager.daprClient.PublishEvent(ctx, manager.conf.Dapr.PubSubName, topic, data); err != nil {
-		logger.Logger.Error(err, "publishEvent", "topic", topic, "pubsubName", manager.conf.Dapr.PubSubName)
-		return err
-	}
+	//if err := manager.daprClient.PublishEvent(ctx, manager.conf.Dapr.PubSubName, topic, data); err != nil {
+	//	logger.Logger.Error(err, "publishEvent", "topic", topic, "pubsubName", manager.conf.Dapr.PubSubName)
+	//	return err
+	//}
 	return nil
 }
