@@ -88,6 +88,7 @@ func (p *permit) CopyRole(ctx context.Context, req *CopyRoleReq) (*CopyRoleResp,
 		AppID:       req.AppID,
 		CreatorName: req.UserName,
 		CreatorID:   req.UserID,
+		Types:       models.CreateType,
 		CreatedAt:   time2.NowUnix(),
 	})
 	if err != nil {
