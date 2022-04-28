@@ -21,7 +21,7 @@ func (t *tableIndex) Do(ctx context.Context, bus *Bus) (*DoResponse, error) {
 }
 
 func newTableIndex(conf *config.Config) (Guidance, error) {
-	formDDLAPI, err := client.NewFormDDLAPI()
+	formDDLAPI, err := client.NewFormDDLAPI(conf)
 	if err != nil {
 		return nil, err
 	}
