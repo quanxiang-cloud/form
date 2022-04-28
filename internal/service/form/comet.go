@@ -3,6 +3,7 @@ package form
 import (
 	"context"
 	"fmt"
+	"github.com/quanxiang-cloud/form/pkg/misc/config"
 
 	"github.com/quanxiang-cloud/form/internal/service/consensus"
 	client2 "github.com/quanxiang-cloud/form/pkg/misc/client"
@@ -12,8 +13,8 @@ type comet struct {
 	formClient *client2.FormAPI
 }
 
-func newForm() (consensus.Guidance, error) {
-	formApi, err := client2.NewFormAPI()
+func newForm(config *config.Config) (consensus.Guidance, error) {
+	formApi, err := client2.NewFormAPI(config)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +80,6 @@ func (c *comet) callSearch(ctx context.Context, req *SearchReq) (*consensus.Resp
 	if req.Query != nil {
 		dsl["query"] = req.Query
 	}
-
 	if len(dsl) == 0 {
 		dsl = nil
 	}

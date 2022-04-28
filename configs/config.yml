@@ -1,7 +1,12 @@
+<<<<<<< HEAD
 
 
 # port 端口
 # e.g :80
+=======
+  # port 端口
+  # e.g :80
+>>>>>>> fix/relation
 port: :80
 portInner: :8080
 
@@ -48,11 +53,10 @@ dapr:
   topicFlow: form.Flow
 # -------------------- other service --------------------
 endpoint:
-  appCenter: "http://app-center"
-  org: "http://org"
-  search: "http://search.inner"
-  polyInner: "http://poly.inner"
-
+  appCenter: "http://appcenter.inner"
+  org: "http://org.inner"
+  polyInner: "http://polyapi:9090"
+  structor: "localhost:8081"
 # -------------------- mongo --------------------
 mongo:
   hosts:

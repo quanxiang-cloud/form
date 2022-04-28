@@ -5,7 +5,6 @@ import (
 	"github.com/quanxiang-cloud/cabin/logger"
 
 	daprd "github.com/dapr/go-sdk/client"
-	"github.com/go-logr/logr"
 	"github.com/quanxiang-cloud/form/pkg/misc/config"
 )
 
@@ -24,7 +23,6 @@ type HookManger struct {
 	Send       chan *FormData // 增删改数据后，放到这个信道
 	conf       *config.Config
 	daprClient daprd.Client
-	log        logr.Logger
 }
 
 // NewHookManger NewHookManger.
@@ -38,7 +36,6 @@ func NewHookManger(ctx context.Context, conf *config.Config) (*HookManger, error
 		Send:       make(chan *FormData),
 		conf:       conf,
 	}
-	go m.Start(ctx)
 	return m, nil
 }
 
@@ -49,6 +46,7 @@ func (manager *HookManger) Start(ctx context.Context) {
 		case sendData := <-manager.Send:
 			logger.Logger.Infow("listen channel start", "data is ", sendData)
 			if err := manager.publish(ctx, manager.conf.Dapr.TopicFlow, sendData); err != nil {
+
 				continue
 			}
 			logger.Logger.Infow("success", "data is ", sendData, "topic", manager.conf.Dapr.TopicFlow, "pubsubName", manager.conf.Dapr.PubSubName)
@@ -59,7 +57,7 @@ func (manager *HookManger) Start(ctx context.Context) {
 
 func (manager *HookManger) publish(ctx context.Context, topic string, data interface{}) error {
 	if err := manager.daprClient.PublishEvent(ctx, manager.conf.Dapr.PubSubName, topic, data); err != nil {
-		logger.Logger.Error(err, "publishEvent", "topic", topic, "pubsubName", manager.conf.Dapr.PubSubName)
+		logger.Logger.Error(err, "topic", topic, "pubsubName", manager.conf.Dapr.PubSubName)
 		return err
 	}
 	return nil

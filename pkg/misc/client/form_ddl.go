@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"github.com/quanxiang-cloud/form/pkg/misc/config"
 	pb "github.com/quanxiang-cloud/structor/api/proto"
 	"google.golang.org/grpc"
 )
@@ -10,8 +11,8 @@ type FormDDLAPI struct {
 	client pb.DDLServiceClient
 }
 
-func NewFormDDLAPI() (*FormDDLAPI, error) {
-	client, err := connectDDL(target)
+func NewFormDDLAPI(config *config.Config) (*FormDDLAPI, error) {
+	client, err := connectDDL(config.Endpoint.Structor)
 	if err != nil {
 		return nil, err
 	}

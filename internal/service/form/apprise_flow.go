@@ -16,7 +16,7 @@ type appriseFlow struct {
 }
 
 func NewAppriseFlow(conf *config.Config) (consensus.Guidance, error) {
-	form, err := newForm()
+	form, err := newForm(conf)
 	if err != nil {
 		return nil, err
 	}

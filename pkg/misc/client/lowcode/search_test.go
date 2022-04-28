@@ -1,4 +1,4 @@
-package client
+package lowcode
 
 import (
 	"context"

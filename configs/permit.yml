@@ -24,7 +24,6 @@ endpoint:
   form: "http://localhost:80"
   formInner: "http://localhost:8080"
   search: "http://search.inner"
-
 # --------------------- transport -----------------
 transport:
   timeout: 20s

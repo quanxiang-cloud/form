@@ -2,40 +2,45 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"github.com/quanxiang-cloud/cabin/tailormade/client"
+	"github.com/quanxiang-cloud/cabin/tailormade/header"
 	"github.com/quanxiang-cloud/form/pkg/misc/config"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
 const (
-	appCenterHost = "http://app-center/api/v1/app-center"
-	checkIsAdmin  = "/checkIsAdmin"
+	appCenter    = "/api/v1/app-center"
+	checkIsAdmin = "/checkIsAdmin"
 )
 
-// CheckAppAdmin CheckAppAdmin
-type CheckAppAdmin struct {
-	IsAdmin bool
-}
-
-type appCenter struct {
+type appCenterAPI struct {
+	conf   *config.Config
 	client http.Client
 }
 
-// NewAppCenter 生成对象
-func NewAppCenter(conf client.Config) AppCenter {
-	return &appCenter{
-		client: client.New(conf),
+// NewAppCenterAPI 生成对象
+func NewAppCenterAPI(conf *config.Config) AppCenterAPI {
+	return &appCenterAPI{
+		conf:   conf,
+		client: client.New(conf.InternalNet),
 	}
 }
 
-// AppCenter 应用壳管理对外接口
-type AppCenter interface {
-	CheckIsAdmin(ctx context.Context, appID, userID string, isSuper bool) (CheckAppAdmin, error)
+// AppCenterAPI 应用壳管理对外接口
+type AppCenterAPI interface {
+	CheckIsAdmin(ctx context.Context, appID, userID string, isSuper bool) (*CheckAppAdminResp, error)
 }
 
-func (a *appCenter) CheckIsAdmin(ctx context.Context, appID, userID string, isSuper bool) (CheckAppAdmin, error) {
+// CheckAppAdminResp CheckAppAdmin
+type CheckAppAdminResp struct {
+	IsAdmin bool
+}
+
+func (a *appCenterAPI) CheckIsAdmin(ctx context.Context, appID, userID string, isSuper bool) (*CheckAppAdminResp, error) {
 	params := struct {
 		AppID   string `json:"appID"`
 		UserID  string `json:"userID"`
@@ -45,46 +50,61 @@ func (a *appCenter) CheckIsAdmin(ctx context.Context, appID, userID string, isSu
 		UserID:  userID,
 		IsSuper: isSuper,
 	}
-
-	IsAdmin := CheckAppAdmin{}
-	err := client.POST(ctx, &a.client, appCenterHost+checkIsAdmin, params, &IsAdmin)
-	return IsAdmin, err
+	resp := &CheckAppAdminResp{}
+	err := client.POST(ctx, &a.client, fmt.Sprintf("%s%s%s", a.conf.Endpoint.AppCenter, appCenter, checkIsAdmin), params, resp)
+	return resp, err
 }
 
 // AppCenterClient 应用壳服务请求客户端
-type AppCenterClient struct {
-	AppCenter AppCenter
+type appCenterClient struct {
+	appCenterAPI AppCenterAPI
 }
 
 // NewAppCenterClient NewAppCenterClient
-func NewAppCenterClient(c *config.Config) *AppCenterClient {
-	return &AppCenterClient{
-		//AppCenter: NewAppCenter(),
+func NewAppCenterClient(c *config.Config) *appCenterClient {
+	return &appCenterClient{
+		appCenterAPI: NewAppCenterAPI(c),
+	}
+}
+
+// NewAppCenterMockClient NewAppCenterMockClient
+func NewAppCenterMockClient(c *config.Config) *appCenterClient {
+	return &appCenterClient{
+		appCenterAPI: NewAppCenterMock(),
 	}
 }
 
 // CheckIsAppAdmin CheckIsAppAdmin
-func (a *AppCenterClient) CheckIsAppAdmin(c *gin.Context) {
-	//ctx := logger.CTXTransfer(c)
-	//profile := header2.GetProfile(c)
-	//appID := c.Param("appID")
-	//if appID == "" {
-	//	c.AbortWithStatus(http.StatusNotFound)
-	//	return
-	//} else if appID == "dataset" || appID == "formula" {
-	//	c.Next()
-	//	return
-	//}
-	//isSuper := header2.GetRole(c).IsSuper()
-	//isAdmin, err := a.AppCenter.CheckIsAdmin(ctx, appID, profile.UserID, isSuper)
-	//if err != nil {
-	//	c.AbortWithStatus(http.StatusInternalServerError)
-	//	return
-	//}
-	//if !isAdmin.IsAdmin {
-	//	c.AbortWithStatus(http.StatusForbidden)
-	//	return
-	//}
-	//c.Next()
+func (a *appCenterClient) CheckIsAppAdmin(c *gin.Context) {
+	ctx := header.MutateContext(c)
+	appID := c.Param("appID")
+	if appID == "" {
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+	resp, err := a.appCenterAPI.CheckIsAdmin(ctx, appID, c.GetHeader("User-Id"), isSuper(GetRole(c)))
+	if err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	if !resp.IsAdmin {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+	c.Next()
 	return
+}
+
+func GetRole(c *gin.Context) []string {
+	roleStr := c.Request.Header.Get("Role")
+	return strings.Split(roleStr, ",")
+}
+
+func isSuper(roles []string) bool {
+	for _, role := range roles {
+		if role == "super" {
+			return true
+		}
+	}
+	return false
 }

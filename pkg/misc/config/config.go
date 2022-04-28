@@ -46,6 +46,7 @@ type Endpoint struct {
 	Org       string `yaml:"org"`
 	AppCenter string `yaml:"appCenter"`
 	Search    string `yaml:"search"`
+	Structor  string `yaml:"structor"`
 }
 
 type Transport struct {

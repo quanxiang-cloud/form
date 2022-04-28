@@ -3,22 +3,19 @@ package client
 import (
 	"context"
 	"encoding/json"
+	"github.com/quanxiang-cloud/form/pkg/misc/config"
 	pb "github.com/quanxiang-cloud/structor/api/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
-const (
-	target = "localhost:8081"
-)
-
 type FormAPI struct {
 	client pb.DSLServiceClient
 }
 
-func NewFormAPI() (*FormAPI, error) {
-	client, err := connect(target)
+func NewFormAPI(config *config.Config) (*FormAPI, error) {
+	client, err := connect(config.Endpoint.Structor)
 	if err != nil {
 		return nil, err
 	}
