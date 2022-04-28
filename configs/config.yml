@@ -1,12 +1,3 @@
-<<<<<<< HEAD
-
-
-# port 端口
-# e.g :80
-=======
-  # port 端口
-  # e.g :80
->>>>>>> fix/relation
 port: :80
 portInner: :8080
 
