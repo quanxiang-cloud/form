@@ -210,6 +210,9 @@ type ListPermitResp map[string]bool
 
 func (p *permit) ListPermit(ctx context.Context, req *ListPermitReq) (*ListPermitResp, error) {
 	resp := make(ListPermitResp)
+	if req.RoleID == "" {
+		return &resp, nil
+	}
 	for _, values := range req.List {
 		url := values.AccessPath
 		if IsFormAPI(values.AccessPath) {
