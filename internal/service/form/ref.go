@@ -3,9 +3,11 @@ package form
 import (
 	"context"
 	"github.com/quanxiang-cloud/cabin/logger"
+	redis2 "github.com/quanxiang-cloud/cabin/tailormade/db/redis"
 	"github.com/quanxiang-cloud/cabin/tailormade/header"
 	"github.com/quanxiang-cloud/form/internal/models"
 	"github.com/quanxiang-cloud/form/internal/models/mysql"
+	"github.com/quanxiang-cloud/form/internal/models/redis"
 	"github.com/quanxiang-cloud/form/internal/service"
 	"github.com/quanxiang-cloud/form/internal/service/consensus"
 	"github.com/quanxiang-cloud/form/internal/service/types"
@@ -37,16 +39,16 @@ func NewRefs(conf *config.Config) (consensus.Guidance, error) {
 	if err != nil {
 		return nil, err
 	}
-	//redisClient, err := redis2.NewClient(conf.Redis)
-	//if err != nil {
-	//	return nil, err
-	//}
+	redisClient, err := redis2.NewClient(conf.Redis)
+	if err != nil {
+		return nil, err
+	}
 	return &refs{
 		db:           db,
 		relationRepo: mysql.NewTableRelationRepo(),
 		next:         appriseFlows,
 		component:    newFormComponent(),
-		//serialRepo:   redis.NewSerialRepo(redisClient),
+		serialRepo:   redis.NewSerialRepo(redisClient),
 	}, nil
 }
 
