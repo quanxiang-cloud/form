@@ -30,6 +30,7 @@ type Foundation struct {
 type Get struct {
 	Query    types.Query `json:"query,omitempty" form:"query"`
 	OldQuery types.Query `json:"OldQuery"`
+	Aggs     types.Any   `json:"aggs"`
 }
 
 type List struct {

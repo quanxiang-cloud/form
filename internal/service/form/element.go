@@ -556,6 +556,10 @@ type aggregation struct {
 	common
 }
 
+func (a *aggregation) getTag() string {
+	return "aggregation"
+}
+
 func (a *aggregation) GetTag() string {
 	return "aggregation"
 }
@@ -565,11 +569,148 @@ func (a *aggregation) handlerFunc(ctx context.Context, action string) error {
 		return nil
 	}
 	refData := &RefData{}
-	originalData := &ExtraData{}
-	err := a.perInitData(ctx, refData, originalData)
+	extra := &ExtraData{}
+	err := a.perInitData(ctx, refData, extra)
 	if err != nil {
 		return err
 	}
-	//
+	if extra.ID == "" {
+
+	}
+	data := make([]interface{}, 0)
+	idCondition := consensus.GetSimple(consensus.TermsKey, "primitiveID", extra.ID)
+	fieldNameCondition := consensus.GetSimple(consensus.TermKey, "fieldName", refData.SourceFieldID)
+	dslQuery := consensus.GetBool("must", idCondition, fieldNameCondition)
+	foundation := consensus.Foundation{
+		AppID:   refData.AppID,
+		TableID: getRelationName(extra.TableID, refData.TableID),
+		Method:  "search",
+	}
+	bus := new(consensus.Bus)
+	bus.Foundation = foundation
+	bus.Get.Query = dslQuery
+	list := consensus.List{
+		Size: 1000,
+		Page: 1,
+		Sort: []string{"created_at"},
+	}
+	bus.List = list
+
+	searchResp1, err := a.ref.Do(ctx, bus)
+	if err != nil {
+		return err
+	}
+	for _, value := range searchResp1.Entities {
+		_, ok := value[subIDs]
+		if !ok {
+			continue
+		}
+		data = append(data, value[subIDs])
+	}
+	if refData.AggType == "sum" {
+		agg, err := a.doAgg(ctx, "avg", refData, data)
+		if err != nil {
+			return err
+		}
+		if agg == nil {
+			setValue(a.primaryEntity, a.key, agg)
+			return nil
+		}
+	}
+	agg, err := a.doAgg(ctx, refData.AggType, refData, data)
+	if err != nil {
+		return err
+	}
+	setValue(a.primaryEntity, a.key, agg)
 	return nil
+}
+
+func (a *aggregation) doAgg(ctx context.Context, aggType string, refData *RefData, data interface{}) (interface{}, error) {
+	constructQuery(refData, data)
+	alias := refData.AggType + refData.FieldName
+	agg := map[string]interface{}{
+		alias: consensus.KeyValue{
+			aggType: consensus.KeyValue{
+				"field": refData.FieldName,
+			},
+		},
+	}
+	foundation := consensus.Foundation{
+		AppID:   refData.AppID,
+		TableID: refData.TableID,
+		Method:  "search",
+	}
+	bus := new(consensus.Bus)
+	bus.Foundation = foundation
+	bus.Get.Query = refData.Query
+	bus.Aggs = agg
+	searchResp, err := a.ref.Do(ctx, bus)
+	if err != nil {
+		return nil, err
+	}
+	return getResult(searchResp.Entities, alias), nil
+}
+
+func getResult(data interface{}, fieldName string) interface{} {
+	v := reflect.ValueOf(data)
+	switch reflect.TypeOf(data).Kind() {
+	case reflect.Slice, reflect.Array:
+		if v.Len() >= 1 {
+			return getResult(v.Index(0).Interface(), fieldName)
+		}
+		return nil
+	case reflect.Map:
+		if value := v.MapIndex(reflect.ValueOf(fieldName)); value.IsValid() {
+			return value.Interface()
+		}
+	}
+	return nil
+}
+
+// AggregationQuery AggregationQuery
+func aggregationQuery(data interface{}, ids interface{}) {
+	if data == nil {
+		return
+	}
+	switch reflect.TypeOf(data).Kind() {
+	case reflect.Map:
+		v := reflect.ValueOf(data)
+		if value := v.MapIndex(reflect.ValueOf("bool")); value.IsValid() {
+			aggregationQuery(value.Elem().Interface(), ids)
+			return
+		}
+		if value := v.MapIndex(reflect.ValueOf("must")); value.IsValid() {
+			must, ok := value.Interface().([]interface{})
+			if !ok {
+				return
+			}
+			termsIDs := consensus.GetSimple(consensus.TermsKey, consensus.IDKey, ids)
+			must = append(must, termsIDs)
+			v.SetMapIndex(reflect.ValueOf("must"), reflect.ValueOf(must))
+			return
+		}
+		if value := v.MapIndex(reflect.ValueOf("should")); value.IsValid() {
+			shouldArr, ok := value.Interface().([]interface{})
+			if !ok {
+				return
+			}
+			termsIDs := consensus.GetSimple(consensus.TermsKey, consensus.IDKey, ids)
+			arr := make([]interface{}, 0)
+			arr = append(arr, consensus.KeyValue{
+				"should": shouldArr,
+			}, termsIDs)
+
+			v.SetMapIndex(reflect.ValueOf("should"), reflect.Value{})
+			v.SetMapIndex(reflect.ValueOf("must"), reflect.ValueOf(arr))
+			return
+		}
+	}
+}
+
+func constructQuery(ref *RefData, ids interface{}) {
+	if ref.Query == nil {
+		ref.Query = consensus.GetSimple(consensus.TermsKey, consensus.IDKey, ids)
+	} else {
+		aggregationQuery(ref.Query, ids)
+	}
 }

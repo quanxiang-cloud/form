@@ -38,6 +38,7 @@ func (c *comet) Do(ctx context.Context, bus *consensus.Bus) (*consensus.Response
 		}
 		req.Base = base
 		req.Query = bus.Query
+		req.Aggs = bus.Aggs
 		return c.callGet(ctx, req)
 
 	case "find", "search":
@@ -47,6 +48,7 @@ func (c *comet) Do(ctx context.Context, bus *consensus.Bus) (*consensus.Response
 			Size:  bus.List.Size,
 			Query: bus.Query,
 			Base:  base,
+			Aggs:  bus.Aggs,
 		}
 		return c.callSearch(ctx, req)
 	case "create":
@@ -74,14 +76,14 @@ func (c *comet) Do(ctx context.Context, bus *consensus.Bus) (*consensus.Response
 
 func (c *comet) callSearch(ctx context.Context, req *SearchReq) (*consensus.Response, error) {
 	dsl := make(map[string]interface{})
-	if req.Aggs != nil {
-		dsl["aggs"] = req.Aggs
-	}
 	if req.Query != nil {
 		dsl["query"] = req.Query
 	}
 	if len(dsl) == 0 {
 		dsl = nil
+	}
+	if req.Aggs != nil {
+		dsl["aggs"] = req.Aggs
 	}
 	formReq := &client2.FormReq{
 		DslQuery: dsl,
@@ -150,6 +152,9 @@ func (c *comet) callGet(ctx context.Context, req *GetReq) (*consensus.Response, 
 	dsl := make(map[string]interface{})
 	if req.Query != nil {
 		dsl["query"] = req.Query
+	}
+	if req.Aggs != nil {
+		dsl["aggs"] = req.Aggs
 	}
 	if len(dsl) == 0 {
 		dsl = nil

@@ -20,7 +20,7 @@ type SearchReq struct {
 	Size  int64
 	Sort  []string
 	Query types.Query
-	Aggs  types.Any
+	Aggs  types.Any `json:"aggs"`
 }
 
 type CreateReq struct {
@@ -33,6 +33,7 @@ type GetReq struct {
 	Base
 	Query types.Query `json:"query"`
 	Ref   types.Ref   `json:"ref"`
+	Aggs  types.Any   `json:"aggs"`
 }
 
 type UpdateReq struct {

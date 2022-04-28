@@ -108,6 +108,7 @@ func initRefData(ctx context.Context, optValue map[string]interface{}, data *Ref
 type ExtraData struct {
 	AppID   string `json:"appID"`
 	TableID string `json:"tableID"`
+	ID      string `json:"id"`
 }
 
 func initExtraData(ctx context.Context, optValue map[string]interface{}, extraData *ExtraData) (err error) {
@@ -116,6 +117,9 @@ func initExtraData(ctx context.Context, optValue map[string]interface{}, extraDa
 	}
 	if appID, ok := optValue[appIDKey]; ok {
 		err = SetFieldValue(ctx, appID, &extraData.AppID)
+	}
+	if id, ok := optValue["_id"]; ok {
+		err = SetFieldValue(ctx, id, &extraData.ID)
 	}
 	return
 }
