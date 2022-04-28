@@ -106,6 +106,11 @@ func (c *refs) Do(ctx context.Context, bus *consensus.Bus) (*consensus.Response,
 }
 
 func (c *refs) get(ctx context.Context, bus *consensus.Bus) (*consensus.Response, error) {
+	ids := consensus.GetIDByQuery(bus.Get.Query)
+	id := ""
+	if len(ids) > 0 {
+		id = ids[0]
+	}
 	resp, err := c.next.Do(ctx, bus)
 	if err != nil {
 		return nil, err
@@ -133,6 +138,7 @@ func (c *refs) get(ctx context.Context, bus *consensus.Bus) (*consensus.Response
 				extraValue: types.M{
 					appIDKey:   bus.AppID,
 					tableIDKey: bus.TableID,
+					"_id":      id,
 				},
 			}
 			com, err := c.component.getCom(reflect.ValueOf(t).String(), comReqs)
