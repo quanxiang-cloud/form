@@ -1,5 +1,3 @@
-
-
   # port 端口
   # e.g :80
 port: :80
@@ -48,10 +46,10 @@ dapr:
   topicFlow: form.Flow
 # -------------------- other service --------------------
 endpoint:
-  appCenter: "http://app-center"
-  org: "http://org"
-  search: "http://127.0.0.1:81"
+  appCenter: "http://appcenter.inner"
+  org: "http://org.inner"
   polyInner: "http://polyapi:9090"
+  structor: "localhost:8081"
 
 # -------------------- mongo --------------------
 mongo:

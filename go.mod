@@ -14,6 +14,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/quanxiang-cloud/cabin v0.0.6
 	github.com/quanxiang-cloud/structor v0.0.0-20220310021208-c5d38deab66c
+	github.com/stretchr/testify v1.7.0 // indirect
 	go.mongodb.org/mongo-driver v1.8.1
 	go.uber.org/zap v1.19.1
 	google.golang.org/grpc v1.40.0

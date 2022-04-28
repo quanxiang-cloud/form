@@ -517,5 +517,59 @@ func (a *associatedRecords) getTag() string {
 }
 
 func (a *associatedRecords) handlerFunc(ctx context.Context, action string) error {
-	return a.common.subGet(ctx, false)
+
+	switch action {
+	case "create":
+		extraData := &ExtraData{}
+		refData := &RefData{}
+		err := a.perInitData(ctx, refData, extraData)
+		if err != nil {
+			return err
+		}
+		err = a.common.addRelationShip(ctx, refData, extraData, refData.New)
+		if err != nil {
+			logger.Logger.Errorw(err.Error()+"add releation ship is nil ", header.GetRequestIDKV(ctx).Fuzzy()...)
+		}
+	case "update":
+		extraData := &ExtraData{}
+		refData := &RefData{}
+		err := a.perInitData(ctx, refData, extraData)
+		if err != nil {
+			return err
+		}
+		err = a.common.addRelationShip(ctx, refData, extraData, refData.New)
+		if err != nil {
+			logger.Logger.Errorw(err.Error()+"add releation ship is nil ", header.GetRequestIDKV(ctx).Fuzzy()...)
+		}
+		err = a.common.delete(ctx, refData, extraData, false)
+		if err != nil {
+			logger.Logger.Errorw(err.Error()+"delete releation ship is nil ", header.GetRequestIDKV(ctx).Fuzzy()...)
+		}
+	case "get":
+		a.common.subGet(ctx, true)
+	}
+	return nil
+}
+
+// 聚合组件。
+type aggregation struct {
+	common
+}
+
+func (a *aggregation) GetTag() string {
+	return "aggregation"
+}
+
+func (a *aggregation) handlerFunc(ctx context.Context, action string) error {
+	if action != "get" {
+		return nil
+	}
+	refData := &RefData{}
+	originalData := &ExtraData{}
+	err := a.perInitData(ctx, refData, originalData)
+	if err != nil {
+		return err
+	}
+	//
+	return nil
 }

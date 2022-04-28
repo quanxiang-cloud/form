@@ -7,12 +7,10 @@ import (
 	error2 "github.com/quanxiang-cloud/cabin/error"
 	id2 "github.com/quanxiang-cloud/cabin/id"
 	"github.com/quanxiang-cloud/cabin/logger"
-	redis2 "github.com/quanxiang-cloud/cabin/tailormade/db/redis"
 	time2 "github.com/quanxiang-cloud/cabin/time"
 	"github.com/quanxiang-cloud/form/internal/component/event"
 	"github.com/quanxiang-cloud/form/internal/models"
 	"github.com/quanxiang-cloud/form/internal/models/mysql"
-	"github.com/quanxiang-cloud/form/internal/models/redis"
 	"github.com/quanxiang-cloud/form/pkg/misc/code"
 	config2 "github.com/quanxiang-cloud/form/pkg/misc/config"
 	"gorm.io/gorm"
@@ -394,10 +392,10 @@ func NewPermit(conf *config2.Config) (Permit, error) {
 	if err != nil {
 		return nil, err
 	}
-	redisClient, err := redis2.NewClient(conf.Redis)
-	if err != nil {
-		return nil, err
-	}
+	//redisClient, err := redis2.NewClient(conf.Redis)
+	//if err != nil {
+	//	return nil, err
+	//}
 	//client, err := daprd.NewClient()
 	//if err != nil {
 	//	return nil, err
@@ -410,7 +408,7 @@ func NewPermit(conf *config2.Config) (Permit, error) {
 		roleGrantRepo: mysql.NewRoleGrantRepo(),
 		permitRepo:    mysql.NewPermitRepo(),
 		userRoleRepo:  mysql.NewUserRoleRepo(),
-		limitRepo:     redis.NewLimitRepo(redisClient),
+		//limitRepo:     redis.NewLimitRepo(redisClient),
 	}, nil
 }
 

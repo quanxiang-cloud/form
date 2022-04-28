@@ -23,6 +23,7 @@ endpoint:
   poly: "http://polyapi"
   form: "http://localhost:80"
   formInner: "http://localhost:8080"
+  search: "http://127.0.0.1:81"
 
 # --------------------- transport -----------------
 transport:

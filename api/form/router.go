@@ -2,6 +2,7 @@ package api
 
 import (
 	"github.com/quanxiang-cloud/form/internal/service/form"
+	"github.com/quanxiang-cloud/form/pkg/misc/client"
 	config2 "github.com/quanxiang-cloud/form/pkg/misc/config"
 
 	"github.com/gin-gonic/gin"
@@ -51,9 +52,9 @@ func NewRouter(c *config2.Config) (*Router, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	appCenterClient := client.NewAppCenterClient(c)
 	r := map[string]*gin.RouterGroup{
-		managerPath:  engine.Group("/api/v1/form/:appID/m"),
+		managerPath:  engine.Group("/api/v1/form/:appID/m", appCenterClient.CheckIsAppAdmin),
 		homePath:     engine.Group("/api/v1/form/:appID/home"),
 		v2HomePath:   engine.Group("/api/v2/form/:appID/home"),
 		internalPath: engineInner.Group("/api/v1/form/:appID/internal"),

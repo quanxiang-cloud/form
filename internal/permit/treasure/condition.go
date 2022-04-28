@@ -2,11 +2,11 @@ package treasure
 
 import (
 	"context"
+	"github.com/quanxiang-cloud/form/pkg/misc/client/lowcode"
 	"reflect"
 
 	"github.com/quanxiang-cloud/form/internal/permit"
 	"github.com/quanxiang-cloud/form/internal/service/types"
-	"github.com/quanxiang-cloud/form/pkg/misc/client"
 	"github.com/quanxiang-cloud/form/pkg/misc/config"
 )
 
@@ -19,14 +19,14 @@ const (
 // Condition condition.
 type Condition struct {
 	parsers   map[string]Parser
-	searchAPI client.SearchAPI
+	searchAPI lowcode.SearchAPI
 }
 
 // NewCondition new condition.
 func NewCondition(conf *config.Config) *Condition {
 	return &Condition{
 		parsers:   make(map[string]Parser),
-		searchAPI: client.NewSearchAPI(conf),
+		searchAPI: lowcode.NewSearchAPI(conf),
 	}
 }
 
