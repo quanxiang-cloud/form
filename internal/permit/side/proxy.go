@@ -2,18 +2,20 @@ package side
 
 import (
 	"bytes"
+	"compress/gzip"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"net/url"
+	"strings"
+
 	"github.com/quanxiang-cloud/cabin/logger"
 	"github.com/quanxiang-cloud/form/internal/models"
 	"github.com/quanxiang-cloud/form/internal/permit/treasure"
 	"github.com/quanxiang-cloud/form/internal/service/consensus"
 	httputil2 "github.com/quanxiang-cloud/form/pkg/httputil"
-	"io"
-	"net/http"
-	"net/url"
-	"strings"
 
 	"github.com/quanxiang-cloud/form/internal/permit"
 	"github.com/quanxiang-cloud/form/pkg/misc/config"
@@ -52,6 +54,7 @@ func NewNilModifyProxy(conf *config.Config, rawurl string) (*Proxy, error) {
 		isPermit:  false,
 	}, nil
 }
+
 func (p *Proxy) Do(ctx context.Context, req *permit.Request) (*permit.Response, error) {
 	var filters httputil2.ModifyResponse
 	if p.isPermit {
@@ -69,7 +72,9 @@ func (p *Proxy) Do(ctx context.Context, req *permit.Request) (*permit.Response, 
 
 const (
 	contentType         = "Content-Type"
+	contentEncoding     = "Content-Encoding"
 	mimeApplicationJSON = "application/json"
+	mimeGzip            = "gzip"
 )
 
 func Filter(permit *consensus.Permit) httputil2.ModifyResponse {
@@ -77,33 +82,80 @@ func Filter(permit *consensus.Permit) httputil2.ModifyResponse {
 		return filter(resp, permit)
 	}
 }
-func filter(resp *http.Response, permit *consensus.Permit) error {
+
+func filter(resp *http.Response, permit *consensus.Permit) (err error) {
 	if resp.StatusCode != http.StatusOK {
 		return nil
 	}
-	if permit == nil {
-		return nil
-	}
-	if permit.Types == models.InitType {
-		return nil
-	}
+
+	var (
+		cTypeFlag     = false
+		cEncodingFlag = false
+	)
+
 	ctype := resp.Header.Get(contentType)
-	if !strings.HasPrefix(ctype, mimeApplicationJSON) {
-		return fmt.Errorf("response data content-type is not %s", mimeApplicationJSON)
+	if strings.HasPrefix(strings.ToLower(ctype), mimeApplicationJSON) {
+		cTypeFlag = true
 	}
-	respDate, err := io.ReadAll(resp.Body)
+
+	cEncoding := resp.Header.Get(contentEncoding)
+	if strings.Contains(strings.ToLower(cEncoding), mimeGzip) {
+		cEncodingFlag = true
+	}
+
+	if cTypeFlag {
+		return doFilterJSON(resp, permit, cEncodingFlag)
+	}
+
+	defer resp.Body.Close()
+	_, err = io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
-	var result map[string]interface{}
 
+	buff := bytes.NewBufferString("")
+	resp.Body = io.NopCloser(buff)
+	resp.ContentLength = int64(buff.Len())
+	resp.Header.Set("Content-Length", fmt.Sprint(buff.Len()))
+
+	return nil
+}
+
+func doFilterJSON(resp *http.Response, permit *consensus.Permit, cEncodingFlag bool) (err error) {
+	if permit == nil {
+		return nil
+	}
+
+	if permit.Types == models.InitType || permit.ResponseAll {
+		return nil
+	}
+
+	var respDate []byte
+	if cEncodingFlag {
+		reder, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return err
+		}
+
+		defer reder.Close()
+		respDate, err = io.ReadAll(reder)
+	} else {
+		respDate, err = io.ReadAll(resp.Body)
+	}
+	defer resp.Body.Close()
+	if err != nil {
+		return err
+	}
+
+	var result map[string]interface{}
 	if err := json.Unmarshal(respDate, &result); err != nil {
 		return err
 	}
+
 	//if result["code"] != error2.Success {
 	//	return nil
 	//}
+
 	if !permit.ResponseAll {
 		treasure.Filter(result, permit.Response)
 	}
@@ -112,8 +164,24 @@ func filter(resp *http.Response, permit *consensus.Permit) error {
 		logger.Logger.Errorf("entity json marshal failed: %s", err.Error())
 		return err
 	}
-	resp.Body = io.NopCloser(bytes.NewReader(data))
+
+	buf := bytes.Buffer{}
+	w := gzip.NewWriter(&buf)
+	defer w.Close()
+
+	if cEncodingFlag {
+		_, err = w.Write(data)
+	} else {
+		_, err = buf.Write(data)
+	}
+
+	if err != nil {
+		return err
+	}
+
+	resp.Body = io.NopCloser(&buf)
 	resp.ContentLength = int64(len(data))
 	resp.Header.Set("Content-Length", fmt.Sprint(len(data)))
+
 	return nil
 }
