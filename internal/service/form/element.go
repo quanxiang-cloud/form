@@ -222,7 +222,7 @@ func (c *common) findOnePost(ctx context.Context, param *params) error {
 		return err
 	}
 
-	if len(relation) != 0 {
+	if len(relation) != 1 {
 		logger.Logger.Infow("relation  is not one ", header.GetRequestIDKV(ctx).Fuzzy()...)
 		return nil
 	}
