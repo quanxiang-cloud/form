@@ -67,8 +67,10 @@ func (a *appriseFlow) deleteApprise(ctx context.Context, bus *consensus.Bus) {
 	ids := make([]string, 0)
 	if len(bus.Get.OldQuery) == 0 {
 		ids = consensus.GetIDByQuery(bus.Get.Query)
+	} else {
+		ids = consensus.GetIDByQuery(bus.Get.OldQuery)
 	}
-	ids = consensus.GetIDByQuery(bus.Get.OldQuery)
+
 	data := &inform.FormData{
 		TableID: bus.TableID,
 		Entity: map[string]interface{}{
@@ -85,8 +87,10 @@ func (a *appriseFlow) updateApprise(ctx context.Context, bus *consensus.Bus) {
 	ids := make([]string, 0)
 	if len(bus.Get.OldQuery) == 0 {
 		ids = consensus.GetIDByQuery(bus.Get.Query)
+	} else {
+		ids = consensus.GetIDByQuery(bus.Get.OldQuery)
 	}
-	ids = consensus.GetIDByQuery(bus.Get.OldQuery)
+
 	for _, id := range ids {
 		entity := consensus.DefaultField(bus.CreatedOrUpdate.Entity,
 			consensus.WithUpdateID(id),

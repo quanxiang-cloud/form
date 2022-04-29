@@ -84,7 +84,12 @@ func (c *refs) Do(ctx context.Context, bus *consensus.Bus) (*consensus.Response,
 				},
 			}
 			if bus.Method == update {
-				ids := consensus.GetIDByQuery(bus.Get.Query)
+				ids := make([]string, 0)
+				if len(bus.Get.OldQuery) == 0 {
+					ids = consensus.GetIDByQuery(bus.Get.Query)
+				} else {
+					ids = consensus.GetIDByQuery(bus.Get.OldQuery)
+				}
 				if len(ids) > 0 {
 					comReqs.primaryEntity = types.M{
 						"_id": ids[0],
