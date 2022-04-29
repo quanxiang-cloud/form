@@ -38,8 +38,11 @@ func (p *Filters) Scan(data interface{}) error {
 }
 
 type TableRelationQuery struct {
-	AppID   string
-	TableID string
+	AppID        string
+	TableID      string
+	SubTableID   string
+	FieldName    string
+	SubTableType string
 }
 
 type TableRelationRepo interface {
