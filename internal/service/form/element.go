@@ -184,7 +184,7 @@ func (c *common) subGet(ctx context.Context, isReplace bool) error {
 	if err != nil {
 		return err
 	}
-	err = c.findOnePost(&params{
+	err = c.findOnePost(ctx, &params{
 		ctx:       ctx,
 		subResp:   subResp,
 		refData:   refData,
@@ -208,16 +208,25 @@ type params struct {
 
 // sub
 
-func (c *common) findOnePost(param *params) error {
+func (c *common) findOnePost(ctx context.Context, param *params) error {
 	replaceData := make([]interface{}, 0)
-	relation, _, err := c.ref.relationRepo.List(c.ref.db, &models.TableRelationQuery{}, 1, 10)
-	if len(relation) < 0 {
-		return nil
-	}
+	relation, _, err := c.ref.relationRepo.List(c.ref.db, &models.TableRelationQuery{
+		AppID:        param.refData.AppID,
+		TableID:      param.extraData.TableID,
+		FieldName:    c.key,
+		SubTableType: c.tag,
+		SubTableID:   param.refData.TableID,
+	}, 1, 10)
 
 	if err != nil {
 		return err
 	}
+
+	if len(relation) != 0 {
+		logger.Logger.Infow("relation  is not one ", header.GetRequestIDKV(ctx).Fuzzy()...)
+		return nil
+	}
+
 	mapID := make(map[string]types.M)
 	for i := 0; i < len(param.subResp.Entities); i++ {
 		e1 := param.subResp.Entities[i]

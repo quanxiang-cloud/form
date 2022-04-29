@@ -51,12 +51,21 @@ func (t *tableRelationRepo) Delete(db *gorm.DB, query *models.TableRelationQuery
 	}
 	return ql.Delete(resp).Error
 }
-
 func (t *tableRelationRepo) List(db *gorm.DB, query *models.TableRelationQuery, page, size int) ([]*models.TableRelation, int64, error) {
 	db = db.Table(t.TableName())
 	if query.AppID != "" {
 		db = db.Where("app_id = ?", query.AppID)
 	}
+	if query.SubTableID != "" {
+		db = db.Where("sub_table_id = ?", query.SubTableID)
+	}
+	if query.SubTableType != "" {
+		db = db.Where("sub_table_type = ?", query.SubTableType)
+	}
+	if query.FieldName != "" {
+		db = db.Where("field_name = ?", query.FieldName)
+	}
+
 	var (
 		count          int64
 		tableRelations []*models.TableRelation
