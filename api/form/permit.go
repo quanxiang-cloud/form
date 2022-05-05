@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"github.com/quanxiang-cloud/form/internal/models"
 	"net/http"
 
@@ -249,7 +250,7 @@ func (p *Permit) PathPermit(c *gin.Context) {
 	resp1 := make(service.ListPermitResp)
 	if role.Types == models.InitType {
 		for _, value := range uriAPIReq.List {
-			resp1[value.AccessPath] = true
+			resp1[fmt.Sprintf("%s-%s", value.AccessPath, value.Method)] = true
 		}
 		resp.Format(&resp1, nil).Context(c)
 		return
