@@ -160,6 +160,12 @@ func (p *permit) ListAndSelect(ctx context.Context, req *ListAndSelectReq) (*Lis
 	if err != nil {
 		return nil, err
 	}
+	if len(list) == 0 {
+		return &ListAndSelectResp{
+			OptionPer: make([]*Per, 0),
+			SelectPer: &Per{},
+		}, nil
+	}
 	ids := make([]string, len(list))
 	for index, value := range list {
 		ids[index] = value.RoleID
