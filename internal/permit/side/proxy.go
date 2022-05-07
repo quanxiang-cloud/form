@@ -113,10 +113,10 @@ func filter(resp *http.Response, permit *consensus.Permit) (err error) {
 		return err
 	}
 
-	buff := bytes.NewBufferString("")
-	resp.Body = io.NopCloser(buff)
-	resp.ContentLength = int64(buff.Len())
-	resp.Header.Set("Content-Length", fmt.Sprint(buff.Len()))
+	buf := []byte("")
+	resp.Body = io.NopCloser(bytes.NewReader(buf))
+	resp.ContentLength = int64(len(buf))
+	resp.Header.Set("Content-Length", fmt.Sprint(len(buf)))
 
 	return nil
 }
@@ -167,10 +167,10 @@ func doFilterJSON(resp *http.Response, permit *consensus.Permit, cEncodingFlag b
 
 	buf := bytes.Buffer{}
 	w := gzip.NewWriter(&buf)
-	defer w.Close()
 
 	if cEncodingFlag {
 		_, err = w.Write(data)
+		w.Close()
 	} else {
 		_, err = buf.Write(data)
 	}
@@ -179,7 +179,7 @@ func doFilterJSON(resp *http.Response, permit *consensus.Permit, cEncodingFlag b
 		return err
 	}
 
-	resp.Body = io.NopCloser(&buf)
+	resp.Body = io.NopCloser(bytes.NewReader(buf.Bytes()))
 	resp.ContentLength = int64(len(data))
 	resp.Header.Set("Content-Length", fmt.Sprint(len(data)))
 
