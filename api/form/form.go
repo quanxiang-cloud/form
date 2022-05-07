@@ -41,6 +41,43 @@ func action(ctr consensus.Guidance) gin.HandlerFunc {
 	}
 }
 
+type batchCreateResp struct {
+	Entity []consensus.Entity `json:"entity"`
+	Total  int                `json:"total"`
+}
+
+func batchCreate(ctr consensus.Guidance) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var err error
+		ctx := header.MutateContext(c)
+		var batch []*consensus.Bus
+		if err = c.ShouldBind(&batch); err != nil {
+			logger.Logger.WithName("action").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
+			c.AbortWithError(http.StatusBadRequest, err)
+			return
+		}
+		total := 0
+		entitys := make([]consensus.Entity, 0)
+		for _, bus := range batch {
+			err = initBus(c, bus, c.Param("action"))
+			if err != nil {
+				continue
+			}
+			do, errs := ctr.Do(ctx, bus)
+			if errs != nil {
+				continue
+			}
+			total++
+			entitys = append(entitys, do.Entity)
+		}
+		resp1 := &batchCreateResp{
+			Entity: entitys,
+			Total:  total,
+		}
+		resp.Format(resp1, nil).Context(c)
+	}
+}
+
 // checkURL CheckURL.
 func checkURL(c *gin.Context) (appID, tableName string, err error) {
 	appID, ok := c.Params.Get("appID")

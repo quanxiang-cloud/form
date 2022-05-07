@@ -77,7 +77,7 @@ type Sub struct {
 }
 
 type Response struct {
-	Entity   types.M        `json:"entity,omitempty"`
+	Entity   Entity         `json:"entity,omitempty"`
 	Total    int64          `json:"total"`
 	Entities types.Entities `json:"entities,omitempty"`
 }
