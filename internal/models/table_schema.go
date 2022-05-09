@@ -3,7 +3,6 @@ package models
 import (
 	"database/sql/driver"
 	"encoding/json"
-
 	"gorm.io/gorm"
 )
 
@@ -11,19 +10,16 @@ import (
 type SourceType int64
 
 const (
-	FormSource  SourceType = 1
-	ModelSource SourceType = 2
+	FormSource SourceType = 1
 )
 
 // TableSchema TableSchema.
 type TableSchema struct {
-	ID      string
-	AppID   string
-	TableID string
-
-	FieldLen int64
-	Title    string
-
+	ID          string
+	AppID       string
+	TableID     string
+	FieldLen    int64
+	Title       string
 	Description string
 	Source      SourceType
 	CreatedAt   int64
@@ -39,7 +35,7 @@ type SchemaProperties map[string]SchemaProps
 
 type SchemaProps struct {
 	Title      string           `json:"title,omitempty"`
-	IsNull     bool             `json:"is_null,omitempty"`
+	Required   bool             `json:"required,omitempty"`
 	Length     int              `json:"length,omitempty"`
 	Type       string           `json:"type,omitempty"`
 	ReadOnly   bool             `json:"read_only,omitempty"`

@@ -36,7 +36,7 @@ func GetMethod(schemasBus *schemasBus) spec.OperationProps {
 func PutMethod(schemasBus *schemasBus) spec.OperationProps {
 	responses := countAndEntityResp(schemasBus.schemas)
 	parameters := []spec.Parameter{
-		entityParameter(schemasBus.filterSchema),
+		//	entityParameter(schemasBus.filterSchema),
 		idParameter(),
 	}
 	return doOperationProps(&operation{
@@ -51,7 +51,7 @@ func PutMethod(schemasBus *schemasBus) spec.OperationProps {
 func DeleteMethod(schemasBus *schemasBus) spec.OperationProps {
 	responses := countResp()
 	parameters := []spec.Parameter{
-		entityParameter(schemasBus.schemas),
+		//entityParameter(schemasBus.schemas),
 		idParameter(),
 	}
 	return doOperationProps(&operation{
@@ -67,7 +67,7 @@ func PostMethod(schemasBus *schemasBus) spec.OperationProps {
 	responses := countAndEntityResp(schemasBus.schemas)
 
 	parameters := []spec.Parameter{
-		entityParameter(schemasBus.filterSchema),
+		//entityParameter(schemasBus.filterSchema),
 		idParameter(),
 	}
 	return doOperationProps(&operation{
@@ -113,7 +113,7 @@ func doOperationProps(operation *operation) spec.OperationProps {
 	}
 }
 
-func DoSchemas(appID, tableID, tableName string, schemas spec.SchemaProperties) (string, error) {
+func DoSchemas(appID, tableID, tableName string, schemas spec.SchemaProperties, require []string) (string, error) {
 	filterSystems := make(spec.SchemaProperties)
 	schemasbus := &schemasBus{
 		tableName:    tableName,
@@ -172,7 +172,7 @@ func DoSchemas(appID, tableID, tableName string, schemas spec.SchemaProperties) 
 					fmt.Sprintf(url1, appID, tableID, update): {
 						PathItemProps: spec.PathItemProps{
 							Post: &spec.Operation{ // get
-								OperationProps: V1Update(schemasbus),
+								OperationProps: V1Update(schemasbus, require),
 							},
 						},
 					},
@@ -186,7 +186,7 @@ func DoSchemas(appID, tableID, tableName string, schemas spec.SchemaProperties) 
 					fmt.Sprintf(url1, appID, tableID, create): {
 						PathItemProps: spec.PathItemProps{
 							Post: &spec.Operation{ // get
-								OperationProps: V1Create(schemasbus),
+								OperationProps: V1Create(schemasbus, require),
 							},
 						},
 					},
@@ -288,7 +288,7 @@ func DoSchemas1(appID, tableID, tableName string, schemas spec.SchemaProperties)
 					fmt.Sprintf(url1, appID, tableID, update): {
 						PathItemProps: spec.PathItemProps{
 							Post: &spec.Operation{ // get
-								OperationProps: V1Update(schemasbus),
+								OperationProps: V1Update(schemasbus, nil),
 							},
 						},
 					},
@@ -302,7 +302,7 @@ func DoSchemas1(appID, tableID, tableName string, schemas spec.SchemaProperties)
 					fmt.Sprintf(url1, appID, tableID, create): {
 						PathItemProps: spec.PathItemProps{
 							Post: &spec.Operation{ // get
-								OperationProps: V1Create(schemasbus),
+								OperationProps: V1Create(schemasbus, nil),
 							},
 						},
 					},

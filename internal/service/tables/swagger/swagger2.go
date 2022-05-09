@@ -56,10 +56,10 @@ func V1SearchMethod(schemasBus *schemasBus) spec.OperationProps {
 	})
 }
 
-func V1Update(schemasBus *schemasBus) spec.OperationProps {
+func V1Update(schemasBus *schemasBus, require []string) spec.OperationProps {
 	responses := countAndEntityResp(schemasBus.schemas)
 	parameters := []spec.Parameter{
-		v1EntityAndID(schemasBus.filterSchema),
+		v1EntityAndID(schemasBus.filterSchema, require),
 	}
 	return doOperationProps(&operation{
 		fmt.Sprintf("%s_%s", schemasBus.tableID, update),
@@ -70,10 +70,10 @@ func V1Update(schemasBus *schemasBus) spec.OperationProps {
 	})
 }
 
-func V1Create(schemasBus *schemasBus) spec.OperationProps {
+func V1Create(schemasBus *schemasBus, require []string) spec.OperationProps {
 	responses := countAndEntityResp(schemasBus.schemas)
 	parameters := []spec.Parameter{
-		v1OnlyEntity(schemasBus.filterSchema),
+		v1OnlyEntity(schemasBus.filterSchema, require),
 	}
 	return doOperationProps(&operation{
 		fmt.Sprintf("%s_%s", schemasBus.tableID, create),
