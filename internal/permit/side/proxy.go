@@ -118,6 +118,8 @@ func doFilterJSON(resp *httputil.Response, permit *consensus.Permit) (err error)
 		return err
 	}
 
+	logger.Logger.Infof("decode body after: %s", respDate)
+
 	var result map[string]interface{}
 	if err := json.Unmarshal(respDate, &result); err != nil {
 		return err
@@ -136,6 +138,7 @@ func doFilterJSON(resp *httputil.Response, permit *consensus.Permit) (err error)
 		return err
 	}
 
+	logger.Logger.Infof("encode body before: %s", data)
 	err = resp.EncodeWriteBody(data, false)
 	if err != nil {
 		return err
