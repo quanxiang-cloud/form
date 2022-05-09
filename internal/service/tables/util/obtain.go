@@ -123,9 +123,9 @@ func Convert1(schema map[string]interface{}) (s models.SchemaProperties, total i
 			case "title":
 				t, _ := v1.(string)
 				schemaProps.Title = t
-			case "not_null":
+			case "required":
 				t, _ := v1.(bool)
-				schemaProps.IsNull = t
+				schemaProps.Required = t
 			case "properties":
 				if p, ok := v1.(map[string]interface{}); ok {
 					s2, _, _ := Convert1(p)
@@ -157,12 +157,16 @@ func Convert1(schema map[string]interface{}) (s models.SchemaProperties, total i
 	return s, total, nil
 }
 
-func GetSpecSchema(properties models.SchemaProperties) spec.SchemaProperties {
+func GetSpecSchema(properties models.SchemaProperties) (spec.SchemaProperties, []string) {
 	if properties == nil {
-		return nil
+		return nil, nil
 	}
 	pr := make(spec.SchemaProperties, 0)
+	require := make([]string, 0)
 	for key, value := range properties {
+		if value.Required {
+			require = append(require, key)
+		}
 		d := spec.Schema{
 			SchemaProps: spec.SchemaProps{
 				Type:  []string{value.Type},
@@ -170,22 +174,25 @@ func GetSpecSchema(properties models.SchemaProperties) spec.SchemaProperties {
 			},
 		}
 		if value.Items != nil {
+			schema, requires := GetSpecSchema(value.Items.Properties)
 			d.Items = &spec.SchemaOrArray{
 				Schema: &spec.Schema{
 					SchemaProps: spec.SchemaProps{
 						Type:       []string{value.Items.Type},
-						Properties: GetSpecSchema(value.Items.Properties),
+						Properties: schema,
+						Required:   requires,
 					},
 				},
 			}
 		}
 		if value.Properties != nil {
-			schema := GetSpecSchema(value.Properties)
+			schema, requires := GetSpecSchema(value.Properties)
 			d.SchemaProps.Properties = schema
+			d.SchemaProps.Required = requires
 		}
 		pr[key] = d
 	}
-	return pr
+	return pr, require
 }
 
 func IsLayoutComponent(value interface{}) bool {
