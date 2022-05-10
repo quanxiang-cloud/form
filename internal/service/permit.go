@@ -661,9 +661,6 @@ func (p *permit) CreatePermit(ctx context.Context, req *CreatePerReq) (*CreatePe
 		ResponseAll: true,
 		Method:      req.Method,
 	}
-	if req.Method != "POST" {
-		permits.Method = fmt.Sprintf("%s,%s", "POST", req.Method)
-	}
 	permitArr = append(permitArr, permits)
 	err = p.permitRepo.BatchCreate(p.db, permitArr...)
 	if err != nil {
