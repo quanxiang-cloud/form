@@ -1,8 +1,6 @@
 package side
 
 import (
-	"bytes"
-	"compress/gzip"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -11,6 +9,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/quanxiang-cloud/cabin/lib/httputil"
 	"github.com/quanxiang-cloud/cabin/logger"
 	"github.com/quanxiang-cloud/form/internal/models"
 	"github.com/quanxiang-cloud/form/internal/permit/treasure"
@@ -71,10 +70,7 @@ func (p *Proxy) Do(ctx context.Context, req *permit.Request) (*permit.Response, 
 }
 
 const (
-	contentType         = "Content-Type"
-	contentEncoding     = "Content-Encoding"
 	mimeApplicationJSON = "application/json"
-	mimeGzip            = "gzip"
 )
 
 func Filter(permit *consensus.Permit) httputil2.ModifyResponse {
@@ -88,40 +84,27 @@ func filter(resp *http.Response, permit *consensus.Permit) (err error) {
 		return nil
 	}
 
-	var (
-		cTypeFlag     = false
-		cEncodingFlag = false
-	)
+	response := httputil.NewResponse(resp)
 
-	ctype := resp.Header.Get(contentType)
-	if strings.HasPrefix(strings.ToLower(ctype), mimeApplicationJSON) {
-		cTypeFlag = true
+	logger.Logger.Info("content-type", response.ContentType())
+	if strings.HasPrefix(strings.ToLower(response.ContentType()), mimeApplicationJSON) {
+		return doFilterJSON(response, permit)
 	}
 
-	cEncoding := resp.Header.Get(contentEncoding)
-	if strings.Contains(strings.ToLower(cEncoding), mimeGzip) {
-		cEncodingFlag = true
-	}
-
-	if cTypeFlag {
-		return doFilterJSON(resp, permit, cEncodingFlag)
-	}
-
-	defer resp.Body.Close()
-	_, err = io.ReadAll(resp.Body)
+	_, err = response.ReadRawBody(http.DefaultMaxHeaderBytes)
 	if err != nil {
 		return err
 	}
 
-	buf := []byte("")
-	resp.Body = io.NopCloser(bytes.NewReader(buf))
-	resp.ContentLength = int64(len(buf))
-	resp.Header.Set("Content-Length", fmt.Sprint(len(buf)))
+	buf := strings.NewReader("")
+	resp.Body = io.NopCloser(buf)
+	resp.ContentLength = buf.Size()
+	resp.Header.Set("Content-Length", fmt.Sprint(buf.Size()))
 
 	return nil
 }
 
-func doFilterJSON(resp *http.Response, permit *consensus.Permit, cEncodingFlag bool) (err error) {
+func doFilterJSON(resp *httputil.Response, permit *consensus.Permit) (err error) {
 	if permit == nil {
 		return nil
 	}
@@ -130,22 +113,12 @@ func doFilterJSON(resp *http.Response, permit *consensus.Permit, cEncodingFlag b
 		return nil
 	}
 
-	var respDate []byte
-	if cEncodingFlag {
-		reder, err := gzip.NewReader(resp.Body)
-		if err != nil {
-			return err
-		}
-
-		defer reder.Close()
-		respDate, err = io.ReadAll(reder)
-	} else {
-		respDate, err = io.ReadAll(resp.Body)
-	}
-	defer resp.Body.Close()
+	respDate, err := resp.DecodeCloseBody(http.DefaultMaxHeaderBytes)
 	if err != nil {
 		return err
 	}
+
+	logger.Logger.Infof("decode body after: %s", respDate)
 
 	var result map[string]interface{}
 	if err := json.Unmarshal(respDate, &result); err != nil {
@@ -165,21 +138,12 @@ func doFilterJSON(resp *http.Response, permit *consensus.Permit, cEncodingFlag b
 		return err
 	}
 
-	buf := bytes.Buffer{}
-	w := gzip.NewWriter(&buf)
-
-	if cEncodingFlag {
-		_, err = w.Write(data)
-		w.Close()
-	} else {
-		_, err = buf.Write(data)
-	}
-
+	logger.Logger.Infof("encode body before: %s", data)
+	err = resp.EncodeWriteBody(data, false)
 	if err != nil {
 		return err
 	}
 
-	resp.Body = io.NopCloser(bytes.NewReader(buf.Bytes()))
 	resp.ContentLength = int64(len(data))
 	resp.Header.Set("Content-Length", fmt.Sprint(len(data)))
 
