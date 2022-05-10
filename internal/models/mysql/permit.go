@@ -13,7 +13,7 @@ func (t *permitRepo) BatchCreate(db *gorm.DB, permits ...*models.Permit) error {
 
 func (t *permitRepo) Get(db *gorm.DB, roleID, path, method string) (*models.Permit, error) {
 	permits := new(models.Permit)
-	err := db.Table(t.TableName()).Where("role_id = ? and  path = ?  and method like ?", roleID, path, "%"+method+"%").Find(permits).Error
+	err := db.Table(t.TableName()).Where("role_id = ? and  path = ?  and method = ?", roleID, path, method).Find(permits).Error
 	if err != nil {
 		return nil, err
 	}
@@ -24,7 +24,7 @@ func (t *permitRepo) Delete(db *gorm.DB, query *models.PermitQuery) error {
 	resp := make([]models.Permit, 0)
 	ql := db.Table(t.TableName())
 	if query.RoleID != "" {
-		ql = ql.Where("role_id = ? ", query.RoleID)
+		ql = ql.Where("role_id = ?", query.RoleID)
 	}
 	if query.ID != "" {
 		ql = ql.Where("id = ?", query.ID)
@@ -33,7 +33,7 @@ func (t *permitRepo) Delete(db *gorm.DB, query *models.PermitQuery) error {
 		ql = ql.Where("path = ?", query.Path)
 	}
 	if query.Method != "" {
-		ql = ql.Where("method like ? ", "%"+query.Method+"%")
+		ql = ql.Where("method = ?", query.Method)
 	}
 	return ql.Delete(resp).Error
 }
@@ -56,7 +56,7 @@ func (t *permitRepo) Update(db *gorm.DB, query *models.PermitQuery, permit *mode
 		ql = ql.Where("path = ?", query.Path)
 	}
 	if query.Method != "" {
-		ql = ql.Where("method like ? ", "%"+query.Method+"%")
+		ql = ql.Where("method = ?", query.Method)
 	}
 	return ql.Updates(
 		setMap).Error

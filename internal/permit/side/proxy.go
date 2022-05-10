@@ -112,23 +112,15 @@ func doFilterJSON(resp *httputil.Response, permit *consensus.Permit) (err error)
 	if permit.Types == models.InitType || permit.ResponseAll {
 		return nil
 	}
-
 	respDate, err := resp.DecodeCloseBody(http.DefaultMaxHeaderBytes)
 	if err != nil {
 		return err
 	}
-
-	logger.Logger.Infof("decode body after: %s", respDate)
-
+	logger.Logger.Debugf("decode body after: %s", respDate)
 	var result map[string]interface{}
 	if err := json.Unmarshal(respDate, &result); err != nil {
 		return err
 	}
-
-	//if result["code"] != error2.Success {
-	//	return nil
-	//}
-
 	if !permit.ResponseAll {
 		treasure.Filter(result, permit.Response)
 	}
@@ -137,15 +129,12 @@ func doFilterJSON(resp *httputil.Response, permit *consensus.Permit) (err error)
 		logger.Logger.Errorf("entity json marshal failed: %s", err.Error())
 		return err
 	}
-
-	logger.Logger.Infof("encode body before: %s", data)
+	logger.Logger.Debugf("encode body before: %s", data)
 	err = resp.EncodeWriteBody(data, false)
 	if err != nil {
 		return err
 	}
-
 	resp.ContentLength = int64(len(data))
 	resp.Header.Set("Content-Length", fmt.Sprint(len(data)))
-
 	return nil
 }
