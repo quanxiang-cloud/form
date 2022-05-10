@@ -16,7 +16,7 @@ type appriseFlow struct {
 }
 
 func NewAppriseFlow(conf *config.Config) (consensus.Guidance, error) {
-	form, err := newForm()
+	form, err := newForm(conf)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func (a *appriseFlow) createApprise(ctx context.Context, bus *consensus.Bus) {
 	data.TableID = bus.TableID
 	data.Entity = bus.CreatedOrUpdate.Entity
 	inform.DefaultFormFiled(ctx, data, "post")
-	logger.Logger.Infof(" %s send kafk data:   %+v : ", data)
+	logger.Logger.Infow("create", "data is ", data)
 	a.inform.Send <- data
 }
 
@@ -67,8 +67,10 @@ func (a *appriseFlow) deleteApprise(ctx context.Context, bus *consensus.Bus) {
 	ids := make([]string, 0)
 	if len(bus.Get.OldQuery) == 0 {
 		ids = consensus.GetIDByQuery(bus.Get.Query)
+	} else {
+		ids = consensus.GetIDByQuery(bus.Get.OldQuery)
 	}
-	ids = consensus.GetIDByQuery(bus.Get.OldQuery)
+
 	data := &inform.FormData{
 		TableID: bus.TableID,
 		Entity: map[string]interface{}{
@@ -77,7 +79,7 @@ func (a *appriseFlow) deleteApprise(ctx context.Context, bus *consensus.Bus) {
 		},
 	}
 	inform.DefaultFormFiled(ctx, data, "delete")
-	logger.Logger.Infof(" %s send kafk data:   %+v : ", data)
+	logger.Logger.Infow("delete", "data is ", data)
 	a.inform.Send <- data
 }
 
@@ -85,8 +87,10 @@ func (a *appriseFlow) updateApprise(ctx context.Context, bus *consensus.Bus) {
 	ids := make([]string, 0)
 	if len(bus.Get.OldQuery) == 0 {
 		ids = consensus.GetIDByQuery(bus.Get.Query)
+	} else {
+		ids = consensus.GetIDByQuery(bus.Get.OldQuery)
 	}
-	ids = consensus.GetIDByQuery(bus.Get.OldQuery)
+
 	for _, id := range ids {
 		entity := consensus.DefaultField(bus.CreatedOrUpdate.Entity,
 			consensus.WithUpdateID(id),
@@ -96,7 +100,7 @@ func (a *appriseFlow) updateApprise(ctx context.Context, bus *consensus.Bus) {
 			Entity:  entity,
 		}
 		inform.DefaultFormFiled(ctx, data, "put")
-		logger.Logger.Infof(" %s send kafk data:   %+v : ", data)
+		logger.Logger.Infow("update", "data is ", data)
 		a.inform.Send <- data
 	}
 }

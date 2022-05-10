@@ -1,7 +1,5 @@
-
-
-  # port 端口
-  # e.g :80
+# port 端口
+# e.g :80
 port: :80
 portInner: :8080
 
@@ -24,10 +22,10 @@ log:
 
 # -------------------- mysql --------------------
 mysql:
-  host: 192.168.200.13:32258
+  host:
   db: form
-  user: root
-  password: qxp1234
+  user:
+  password:
   log: true
 #  -------------------- internalNet --------------------
 internalNet:
@@ -37,31 +35,31 @@ internalNet:
 # -------------------- redis --------------------
 redis:
   addrs:
-    - 192.168.200.18:6379
-    - 192.168.200.19:6379
-    - 192.168.200.20:6379
+    -
+    -
+    -
   username:
   password:
 # -------------------- dapr --------------------
 dapr:
   pubSubName : form-redis-pubsub
   topicFlow: form.Flow
-# -------------------- other service --------------------
+# -------------------- service host--------------------
 endpoint:
-  appCenter: "http://app-center"
-  org: "http://org"
-  search: "http://127.0.0.1:81"
+  appCenter: "http://appcenter.inner"
+  org: "http://org.inner"
   polyInner: "http://polyapi:9090"
+  structor: "localhost:8081"
 
 # -------------------- mongo --------------------
 mongo:
   hosts:
-    - 192.168.200.19:27017
-  direct: true
+    -
+  direct:
   credential:
-  authMechanism: SCRAM-SHA-1
-  authSource: admin
-  username: root
-  password: uyWxtvt6gCOy3VPLB3rTpa0rQ
-  passwordSet: false
+  authMechanism:
+  authSource:
+  username:
+  password:
+  passwordSet:
 

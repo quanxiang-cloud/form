@@ -1,6 +1,8 @@
 package api
 
 import (
+	"fmt"
+	"github.com/quanxiang-cloud/form/internal/models"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -227,21 +229,31 @@ func (p *Permit) ListAndSelect(c *gin.Context) {
 
 func (p *Permit) PathPermit(c *gin.Context) {
 	pf := getProfile(c)
-	req := &service.ListAndSelectReq{
+	req := &service.GetUserRoleReq{
 		AppID:  c.Param(_appID),
 		UserID: pf.userID,
+		DepID:  pf.depID,
 	}
 	ctx := header.MutateContext(c)
-	permit, err := p.permit.ListAndSelect(ctx, req)
+	role, err := p.permit.GetUserRole(ctx, req)
 	if err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 	uriAPIReq := &service.ListPermitReq{
-		RoleID: permit.SelectPer.RoleID,
+		RoleID: role.RoleID,
 	}
 	if err = c.ShouldBind(uriAPIReq); err != nil {
-
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+	resp1 := make(service.ListPermitResp)
+	if role.Types == models.InitType {
+		for _, value := range uriAPIReq.List {
+			resp1[fmt.Sprintf("%s-%s", value.AccessPath, value.Method)] = true
+		}
+		resp.Format(&resp1, nil).Context(c)
+		return
 	}
 	resp.Format(p.permit.ListPermit(ctx, uriAPIReq)).Context(c)
 }
@@ -277,6 +289,18 @@ func (p *Permit) GetUserRole(c *gin.Context) {
 	resp.Format(p.permit.GetUserRole(ctx, req)).Context(c)
 }
 
-func (p *Permit) CopyRole(context *gin.Context) {
-	// copy role
+func (p *Permit) CopyRole(c *gin.Context) {
+	pf := getProfile(c)
+	req := &service.CopyRoleReq{
+		UserID:   pf.userID,
+		UserName: pf.userName,
+		AppID:    c.Param("appID"),
+	}
+	ctx := header.MutateContext(c)
+	if err := c.ShouldBind(req); err != nil {
+		logger.Logger.WithName("SaveUserPerMatch").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+	resp.Format(p.permit.CopyRole(ctx, req)).Context(c)
 }

@@ -6,7 +6,7 @@ import (
 
 func countResp() *spec.Responses {
 	respSchemas := spec.SchemaProperties{
-		"count": spec.Schema{
+		"total": spec.Schema{
 			SchemaProps: spec.SchemaProps{
 				Description: "count",
 				Type:        []string{"number"},
@@ -27,7 +27,7 @@ func countAndEntityResp(schemas spec.SchemaProperties) *spec.Responses {
 				Properties:  schemas,
 			},
 		},
-		"count": spec.Schema{
+		"total": spec.Schema{
 			SchemaProps: spec.SchemaProps{
 				Description: "",
 				Type:        []string{"number"},
@@ -124,7 +124,7 @@ func response(schemas spec.SchemaProperties) *spec.Responses {
 	return resp
 }
 
-func entityParameter(schemas spec.SchemaProperties) spec.Parameter {
+func entityParameter(schemas spec.SchemaProperties, require []string) spec.Parameter {
 	return spec.Parameter{
 		ParamProps: spec.ParamProps{
 			Name:        "root",
@@ -135,6 +135,7 @@ func entityParameter(schemas spec.SchemaProperties) spec.Parameter {
 					Title:      "entity",
 					Type:       []string{"object"},
 					Properties: schemas,
+					Required:   require,
 				},
 			},
 		},
@@ -187,7 +188,7 @@ func v1QueryID() spec.Parameter {
 	}
 }
 
-func v1EntityAndID(schemas spec.SchemaProperties) spec.Parameter {
+func v1EntityAndID(schemas spec.SchemaProperties, require []string) spec.Parameter {
 	return spec.Parameter{
 		ParamProps: spec.ParamProps{
 			Name:        "root",
@@ -204,6 +205,7 @@ func v1EntityAndID(schemas spec.SchemaProperties) spec.Parameter {
 							SchemaProps: spec.SchemaProps{
 								Type:       []string{"object"},
 								Properties: schemas,
+								Required:   require,
 							},
 						},
 					},
@@ -234,7 +236,7 @@ func getIDPar() spec.SchemaProps {
 	}
 }
 
-func v1OnlyEntity(schemas spec.SchemaProperties) spec.Parameter {
+func v1OnlyEntity(schemas spec.SchemaProperties, require []string) spec.Parameter {
 	return spec.Parameter{
 		ParamProps: spec.ParamProps{
 			Name:        "root",
@@ -248,6 +250,7 @@ func v1OnlyEntity(schemas spec.SchemaProperties) spec.Parameter {
 							SchemaProps: spec.SchemaProps{
 								Type:       []string{"object"},
 								Properties: schemas,
+								Required:   require,
 							},
 						},
 					},
@@ -270,41 +273,14 @@ func v1Search() spec.Parameter {
 						"query": {
 							SchemaProps: spec.SchemaProps{
 								Type: []string{"object"},
-								Properties: spec.SchemaProperties{
-									"bool": {
-										SchemaProps: spec.SchemaProps{
-											Type: []string{"object"},
-											Properties: spec.SchemaProperties{
-												"must":     {SchemaProps: getItem("object")},
-												"must_not": {SchemaProps: getItem("object")},
-												"should":   {SchemaProps: getItem("object")},
-												"match": {
-													SchemaProps: spec.SchemaProps{
-														Type: []string{"object"},
-													},
-												},
-												"range": {
-													SchemaProps: spec.SchemaProps{
-														Type: []string{"object"},
-													},
-												},
-												"term": {
-													SchemaProps: spec.SchemaProps{
-														Type: []string{"object"},
-													},
-												},
-												"terms": {
-													SchemaProps: spec.SchemaProps{
-														Type: []string{"object"},
-													},
-												},
-											},
-										},
-									},
-								},
 							},
 						},
 						"size": {
+							SchemaProps: spec.SchemaProps{
+								Type: []string{"number"},
+							},
+						},
+						"page": {
 							SchemaProps: spec.SchemaProps{
 								Type: []string{"number"},
 							},

@@ -3,6 +3,9 @@ package form
 import (
 	"context"
 	"fmt"
+	"github.com/quanxiang-cloud/form/internal/service/types"
+	"github.com/quanxiang-cloud/form/pkg/misc/config"
+	"reflect"
 
 	"github.com/quanxiang-cloud/form/internal/service/consensus"
 	client2 "github.com/quanxiang-cloud/form/pkg/misc/client"
@@ -12,8 +15,8 @@ type comet struct {
 	formClient *client2.FormAPI
 }
 
-func newForm() (consensus.Guidance, error) {
-	formApi, err := client2.NewFormAPI()
+func newForm(config *config.Config) (consensus.Guidance, error) {
+	formApi, err := client2.NewFormAPI(config)
 	if err != nil {
 		return nil, err
 	}
@@ -37,6 +40,7 @@ func (c *comet) Do(ctx context.Context, bus *consensus.Bus) (*consensus.Response
 		}
 		req.Base = base
 		req.Query = bus.Query
+		req.Aggs = bus.Aggs
 		return c.callGet(ctx, req)
 
 	case "find", "search":
@@ -46,6 +50,7 @@ func (c *comet) Do(ctx context.Context, bus *consensus.Bus) (*consensus.Response
 			Size:  bus.List.Size,
 			Query: bus.Query,
 			Base:  base,
+			Aggs:  bus.Aggs,
 		}
 		return c.callSearch(ctx, req)
 	case "create":
@@ -73,15 +78,14 @@ func (c *comet) Do(ctx context.Context, bus *consensus.Bus) (*consensus.Response
 
 func (c *comet) callSearch(ctx context.Context, req *SearchReq) (*consensus.Response, error) {
 	dsl := make(map[string]interface{})
-	if req.Aggs != nil {
-		dsl["aggs"] = req.Aggs
-	}
 	if req.Query != nil {
 		dsl["query"] = req.Query
 	}
-
 	if len(dsl) == 0 {
 		dsl = nil
+	}
+	if req.Aggs != nil {
+		dsl["aggs"] = req.Aggs
 	}
 	formReq := &client2.FormReq{
 		DslQuery: dsl,
@@ -112,13 +116,34 @@ func (c *comet) callCreate(ctx context.Context, req *CreateReq) (*consensus.Resp
 	}
 	resp := new(consensus.Response)
 	resp.Total = insert.SuccessCount
-	//resp.Entity = req.Entity
+	resp.Entity = req.Entity
 	return resp, nil
 }
 
+func get(e consensus.Entity) types.Entity {
+	if e == nil {
+		return nil
+	}
+	value := reflect.ValueOf(e)
+	switch _t := reflect.TypeOf(e); _t.Kind() {
+	case reflect.Map:
+		iter := value.MapRange()
+		m := make(types.Entity)
+		for iter.Next() {
+			if !iter.Value().CanInterface() {
+				continue
+			}
+			m[iter.Key().String()] = iter.Value()
+		}
+		return m
+	default:
+		return nil
+	}
+	return nil
+
+}
+
 func (c *comet) callUpdate(ctx context.Context, req *UpdateReq) (*consensus.Response, error) {
-	req.Entity = consensus.DefaultField(req.Entity,
-		consensus.WithUpdated(req.UserID, req.UserName))
 	dsl := make(map[string]interface{})
 	if req.Query != nil {
 		dsl["query"] = req.Query
@@ -132,12 +157,13 @@ func (c *comet) callUpdate(ctx context.Context, req *UpdateReq) (*consensus.Resp
 		TableID:  getTableID(req.AppID, req.TableID),
 		DslQuery: dsl,
 	}
-	update, err := c.formClient.Update(ctx, formReq)
+	updates, err := c.formClient.Update(ctx, formReq)
 	if err != nil {
 		return nil, err
 	}
 	resp := &consensus.Response{}
-	resp.Total = update.SuccessCount
+	resp.Total = updates.SuccessCount
+	resp.Entity = req.Entity
 	return resp, nil
 }
 
@@ -152,6 +178,9 @@ func (c *comet) callGet(ctx context.Context, req *GetReq) (*consensus.Response, 
 	dsl := make(map[string]interface{})
 	if req.Query != nil {
 		dsl["query"] = req.Query
+	}
+	if req.Aggs != nil {
+		dsl["aggs"] = req.Aggs
 	}
 	if len(dsl) == 0 {
 		dsl = nil

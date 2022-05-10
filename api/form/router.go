@@ -2,6 +2,7 @@ package api
 
 import (
 	"github.com/quanxiang-cloud/form/internal/service/form"
+	"github.com/quanxiang-cloud/form/pkg/misc/client"
 	config2 "github.com/quanxiang-cloud/form/pkg/misc/config"
 
 	"github.com/gin-gonic/gin"
@@ -51,9 +52,9 @@ func NewRouter(c *config2.Config) (*Router, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	appCenterClient := client.NewAppCenterClient(c)
 	r := map[string]*gin.RouterGroup{
-		managerPath:  engine.Group("/api/v1/form/:appID/m"),
+		managerPath:  engine.Group("/api/v1/form/:appID/m", appCenterClient.CheckIsAppAdmin),
 		homePath:     engine.Group("/api/v1/form/:appID/home"),
 		v2HomePath:   engine.Group("/api/v2/form/:appID/home"),
 		internalPath: engineInner.Group("/api/v1/form/:appID/internal"),
@@ -87,7 +88,7 @@ func permitRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 		role.POST("/find", permits.FindRole)
 		role.POST("/grant/list/:roleID", permits.FindGrantRole)
 		role.POST("/grant/assign/:roleID", permits.AssignRoleGrant)
-		role.POST("/duplicatePer", permits.CopyRole)
+		role.POST("/copy", permits.CopyRole)
 	}
 	apiPermit := r[managerPath].Group("/apiPermit")
 	{
@@ -108,6 +109,7 @@ func permitRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 	{
 		r[internalPath].POST("/apiRole/userRole/get", permits.GetUserRole)
 		r[internalPath].POST("/apiPermit/find", permits.FindPermit)
+		r[internalPath].POST("/apiPermit/get", permits.GetPermit)
 		r[internalPath].POST("/apiRole/userRole/create", permits.CreateUserRole)
 		r[internalPath].POST("/apiRole/create", permits.CreateRole)
 		r[internalPath].POST("/apiRole/grant/assign/:roleID", permits.AssignRoleGrant)
@@ -128,14 +130,19 @@ func cometRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 	}
 	{
 		cometHome.POST("/:action", action(guide))
+		cometHome.POST("/:action/batch", batchCreate(guide))
+		inner.POST("/:action", action(guide))     // inner use。
+		innerHome.POST("/:action", action(guide)) // poly use
+
 		v2Path.GET("/:id", get(guide))
 		v2Path.DELETE("/:id", delete(guide))
 		v2Path.PUT("/:id", update(guide))
 		v2Path.POST("", create(guide))
-		v2Path.GET("", search(guide))
-		inner.POST("/:action", action(guide))     // inner use。
-		innerHome.POST("/:action", action(guide)) // poly use
+		cometHome.GET("", search(guide))
+		cometHome.GET("/relation", relation(guide))
+
 	}
+
 	table, err := NewTable(c)
 	if err != nil {
 		return err

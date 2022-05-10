@@ -1,4 +1,4 @@
-package client
+package lowcode
 
 import (
 	"context"
@@ -19,7 +19,7 @@ func TestName(t *testing.T) {
 		panic(err)
 	}
 	api := NewSearchAPI(conf)
-	subordinate, err := api.Subordinate(context.Background(), "f44e3fd5-1f4e-4c01-a799-d43ac1212ef8")
+	subordinate, err := api.Subordinate(context.Background(), "e0fbb3a2-ad03-4fc5-af7d-96a59267fdf8")
 	if err != nil {
 
 	}

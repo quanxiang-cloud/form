@@ -9,7 +9,6 @@ CREATE TABLE `role` (
     `creator_id`    VARCHAR(36) COMMENT 'creator id',
     `creator_name`   VARCHAR(16) COMMENT 'creator name',
     `types`        TINYINT(1)   COMMENT 'types 1 init 2 create',
-
     PRIMARY KEY (`id`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -21,7 +20,7 @@ CREATE TABLE `role_grant` (
     `owner` 	 VARCHAR(64) 	NOT NULL COMMENT 'owner id',
     `owner_name` VARCHAR(64)     NOT NULL COMMENT 'owner_nam',
     `types`        TINYINT(1)   COMMENT 'types 1 init 2 create',
-    `app_id`       VARCHAR(64)  COMMENT 'types 1 init 2 create',
+    `app_id`       VARCHAR(64)  COMMENT 'app id',
     `created_at`     BIGINT(20) 	    COMMENT 'create time',
     UNIQUE KEY `idx_global_name` (`role_id`, `owner`,`types`),
     PRIMARY KEY  (`id`)
@@ -41,10 +40,8 @@ CREATE TABLE `permit` (
     `created_at`     BIGINT(20) 	    COMMENT 'create time',
     `creator_id`    VARCHAR(36) COMMENT 'creator id',
     `creator_name`   VARCHAR(16) COMMENT 'creator name',
-    UNIQUE KEY `idx_global_name` (`role_id`, `path`),
     PRIMARY KEY  (`id`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
 
 DROP TABLE IF EXISTS `table`;
 

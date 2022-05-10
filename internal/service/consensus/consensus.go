@@ -30,12 +30,13 @@ type Foundation struct {
 type Get struct {
 	Query    types.Query `json:"query,omitempty" form:"query"`
 	OldQuery types.Query `json:"OldQuery"`
+	Aggs     types.Any   `json:"aggs"`
 }
 
 type List struct {
-	Page int64    `json:"page,omitempty"`
-	Size int64    `json:"size,omitempty"`
-	Sort []string `json:"sort,omitempty"`
+	Page int64    `json:"page,omitempty" form:"page"`
+	Size int64    `json:"size,omitempty" form:"size"`
+	Sort []string `json:"sort,omitempty" form:"sort"`
 }
 
 type CreatedOrUpdate struct {
@@ -49,11 +50,13 @@ type Incidental struct {
 }
 
 type Permit struct {
-	Name      string
-	Params    models.FiledPermit
-	Response  models.FiledPermit
-	Condition models.Condition
-	Types     models.RoleType
+	Name        string
+	Params      models.FiledPermit
+	Response    models.FiledPermit
+	Condition   models.Condition
+	Types       models.RoleType
+	ResponseAll bool
+	ParamsAll   bool
 }
 
 type Bus struct {
@@ -65,9 +68,16 @@ type Bus struct {
 	List
 	CreatedOrUpdate
 	Delete
+	Sub
 }
+type Sub struct {
+	PID      string `json:"pid" form:"pid"`
+	PTableID string `json:"pTableID" form:"pTableID"`
+	FieldKey string `json:"fieldKey" form:"fieldKey"`
+}
+
 type Response struct {
-	Entity   types.M        `json:"entity,omitempty"`
+	Entity   Entity         `json:"entity,omitempty"`
 	Total    int64          `json:"total"`
 	Entities types.Entities `json:"entities,omitempty"`
 }

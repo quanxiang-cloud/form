@@ -11,9 +11,9 @@ func (t *permitRepo) BatchCreate(db *gorm.DB, permits ...*models.Permit) error {
 	return db.Table(t.TableName()).CreateInBatches(permits, len(permits)).Error
 }
 
-func (t *permitRepo) Get(db *gorm.DB, roleID, path string) (*models.Permit, error) {
+func (t *permitRepo) Get(db *gorm.DB, roleID, path, method string) (*models.Permit, error) {
 	permits := new(models.Permit)
-	err := db.Table(t.TableName()).Where("role_id = ? and  path = ? ", roleID, path).Find(permits).Error
+	err := db.Table(t.TableName()).Where("role_id = ? and  path = ?  and method like ?", roleID, path, "%"+method+"%").Find(permits).Error
 	if err != nil {
 		return nil, err
 	}
@@ -32,10 +32,13 @@ func (t *permitRepo) Delete(db *gorm.DB, query *models.PermitQuery) error {
 	if query.Path != "" {
 		ql = ql.Where("path = ?", query.Path)
 	}
+	if query.Method != "" {
+		ql = ql.Where("method like ? ", "%"+query.Method+"%")
+	}
 	return ql.Delete(resp).Error
 }
 
-func (t *permitRepo) Update(db *gorm.DB, id string, permit *models.Permit) error {
+func (t *permitRepo) Update(db *gorm.DB, query *models.PermitQuery, permit *models.Permit) error {
 	setMap := make(map[string]interface{})
 	if permit.Params != nil {
 		setMap["params"] = permit.Params
@@ -46,7 +49,16 @@ func (t *permitRepo) Update(db *gorm.DB, id string, permit *models.Permit) error
 	if permit.Condition != nil {
 		setMap["condition"] = permit.Condition
 	}
-	return db.Table(t.TableName()).Where("id = ? ", id).Updates(
+	setMap["params_all"] = permit.ParamsAll
+	setMap["response_all"] = permit.ResponseAll
+	ql := db.Table(t.TableName())
+	if query.Path != "" {
+		ql = ql.Where("path = ?", query.Path)
+	}
+	if query.Method != "" {
+		ql = ql.Where("method like ? ", "%"+query.Method+"%")
+	}
+	return ql.Updates(
 		setMap).Error
 }
 

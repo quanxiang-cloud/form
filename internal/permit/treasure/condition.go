@@ -2,13 +2,12 @@ package treasure
 
 import (
 	"context"
-	"fmt"
-	"github.com/quanxiang-cloud/form/pkg/misc/client"
-	"github.com/quanxiang-cloud/form/pkg/misc/config"
+	"github.com/quanxiang-cloud/form/pkg/misc/client/lowcode"
 	"reflect"
 
 	"github.com/quanxiang-cloud/form/internal/permit"
 	"github.com/quanxiang-cloud/form/internal/service/types"
+	"github.com/quanxiang-cloud/form/pkg/misc/config"
 )
 
 const (
@@ -17,28 +16,26 @@ const (
 	_match = "match"
 )
 
+// Condition condition.
 type Condition struct {
 	parsers   map[string]Parser
-	searchAPI client.SearchAPI
+	searchAPI lowcode.SearchAPI
 }
 
-func NewCondition(config *config.Config) *Condition {
+// NewCondition new condition.
+func NewCondition(conf *config.Config) *Condition {
 	return &Condition{
 		parsers:   make(map[string]Parser),
-		searchAPI: client.NewSearchAPI(config),
+		searchAPI: lowcode.NewSearchAPI(conf),
 	}
 }
 
-func (c *Condition) SetParseValue(ctx context.Context, req *permit.Request) error {
+// SetParse set parser.
+func (c *Condition) SetParse(ctx context.Context, req *permit.Request) {
 	for _, parse := range parsers {
-		err := parse.SetValue(ctx, c, req)
-		if err != nil {
-			return err
-		}
-
-		c.parsers[parse.GetTag()] = parse
+		parse.Build(ctx, c, req)
+		c.parsers[parse.Tag()] = parse
 	}
-	return nil
 }
 
 var parsers = []Parser{
@@ -46,127 +43,139 @@ var parsers = []Parser{
 	&subordinate{},
 }
 
+// Parser parse param.
 type Parser interface {
-	GetTag() string
-	SetValue(context.Context, *Condition, *permit.Request) error
-	Parse(string, interface{})
+	Tag() string
+	Build(context.Context, *Condition, *permit.Request)
+	Parse(string, map[string]interface{}) error
 }
 
 type user struct {
-	value interface{}
+	ctx  context.Context
+	cond *Condition
+	req  *permit.Request
 }
 
-func (u *user) GetTag() string {
+// Tag tag.
+func (u *user) Tag() string {
 	return "$user"
 }
 
-func (u *user) SetValue(ctx context.Context, c *Condition, req *permit.Request) error {
-	u.value = req.UserID
+// Build build user.
+func (u *user) Build(ctx context.Context, cond *Condition, req *permit.Request) {
+	u.ctx = ctx
+	u.cond = cond
+	u.req = req
+}
+
+func (u *user) getValue() string {
+	return u.req.UserID
+}
+
+// Parse parse tag.
+func (u *user) Parse(key string, params map[string]interface{}) error {
+	value := u.getValue()
+
+	params[_match] = types.M{
+		key: value,
+	}
+	delete(params, u.Tag())
+
 	return nil
 }
 
-func (u *user) Parse(key string, valueSet interface{}) {
-	m, ok := valueSet.(map[string]interface{})
-	if ok {
-		m[_match] = types.M{
-			key: u.value,
-		}
-		delete(m, u.GetTag())
-	}
-}
-
 type subordinate struct {
-	value interface{}
+	ctx  context.Context
+	cond *Condition
+	req  *permit.Request
 }
 
-func (s *subordinate) GetTag() string {
+// Tag tag.
+func (s *subordinate) Tag() string {
 	return "$subordinate"
 }
 
-func (s *subordinate) SetValue(ctx context.Context, c *Condition, req *permit.Request) error {
-	// TODO set subordinate value
-	resp, err := c.searchAPI.Subordinate(ctx, req.UserID)
+// Build build.
+func (s *subordinate) Build(ctx context.Context, cond *Condition, req *permit.Request) {
+	s.ctx = ctx
+	s.cond = cond
+	s.req = req
+}
+
+func (s *subordinate) getValue() ([]string, error) {
+	resp, err := s.cond.searchAPI.Subordinate(s.ctx, s.req.UserID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	ids := make([]string, resp.Total)
 	for index, value := range resp.Users {
 		ids[index] = value.ID
 	}
-	s.value = ids
+
+	return ids, nil
+}
+
+// Parse parse param.
+func (s *subordinate) Parse(key string, params map[string]interface{}) error {
+	value, err := s.getValue()
+	if err != nil {
+		return err
+	}
+
+	params[_terms] = types.M{
+		key: value,
+	}
+	delete(params, s.Tag())
+
 	return nil
 }
 
-func (s *subordinate) Parse(key string, valueSet interface{}) {
-	m, ok := valueSet.(map[string]interface{})
-	if ok {
-		m[_terms] = types.M{
-			key: s.value,
-		}
-		delete(m, s.GetTag())
-	}
-}
-
+// ParseCondition parse param.
 func (c *Condition) ParseCondition(condition interface{}) error {
-	if condition == nil {
-		return nil
-	}
-
-	switch condType := reflect.TypeOf(condition); condType.Kind() {
+	condType := reflect.TypeOf(condition)
+	switch condType.Kind() {
 	case reflect.Ptr:
 		return c.ParseCondition(reflect.ValueOf(condition).Elem().Interface())
 	case reflect.Map:
 		condValue := reflect.ValueOf(condition)
-		if len(condValue.MapKeys()) == 0 {
-			return nil
-		}
-		if !condValue.CanInterface() {
+
+		if !c.checkMapLen(condValue) {
 			return nil
 		}
 
-		for _, key := range condValue.MapKeys() {
-			fmt.Println(key.String())
-			if key.String() != _bool {
-				err := c.parse(condValue.Interface())
-				if err != nil {
-					return err
-				}
-			} else {
-				bool2 := condValue.MapIndex(key)
-				if !bool2.CanInterface() {
-					return nil
-				}
-				err := c.parseBool(bool2.Interface())
-				if err != nil {
-					return err
-				}
+		if key := condValue.MapKeys()[0]; key.String() == _bool {
+			bool2 := condValue.MapIndex(key)
+			if bool2.CanInterface() {
+				return c.parseBool(bool2.Interface())
 			}
-
 		}
+
+		return c.parse(condition)
 	}
+
 	return nil
 }
 
 func (c *Condition) parseBool(bool2 interface{}) error {
-	switch paramType := reflect.TypeOf(bool2); paramType.Kind() {
+	paramType := reflect.TypeOf(bool2)
+	switch paramType.Kind() {
 	case reflect.Ptr:
 		return c.parseBool(reflect.ValueOf(bool2).Elem().Interface())
 	case reflect.Map:
 		paramVal := reflect.ValueOf(bool2)
-		for _, key := range paramVal.MapKeys() {
 
-			if !paramVal.MapIndex(key).CanInterface() {
-				return nil
-			}
-
-			param := paramVal.MapIndex(key).Interface()
-			err := c.parseParam(param)
-			if err != nil {
-				return err
-			}
-
+		if !c.checkMapLen(paramVal) {
+			return nil
 		}
+
+		key := paramVal.MapKeys()[0]
+		if !paramVal.MapIndex(key).CanInterface() {
+			return nil
+		}
+
+		return c.parseParam(paramVal.MapIndex(key).Interface())
 	}
+
 	return nil
 }
 
@@ -181,13 +190,15 @@ func (c *Condition) parseParam(param interface{}) error {
 				return nil
 			}
 
-			elem := elemVal.Index(index).Interface()
-			err := c.parse(elem)
+			err := c.parse(elemVal.Index(index).Interface())
 			if err != nil {
 				return err
 			}
 		}
+
+		return nil
 	}
+
 	return nil
 }
 
@@ -198,27 +209,32 @@ func (c *Condition) parse(elem interface{}) error {
 	case reflect.Map:
 		parseVal := reflect.ValueOf(elem)
 
-		if len(parseVal.MapKeys()) == 0 {
+		if !c.checkMapLen(parseVal) {
 			return nil
 		}
 
-		for _, key := range parseVal.MapKeys() {
-			fmt.Println(key.String())
-			if key.String() != _bool {
-				data := parseVal.MapIndex(key)
+		if key := parseVal.MapKeys()[0]; key.String() != _bool {
+			data := parseVal.MapIndex(key)
 
-				parser, ok := c.parsers[key.String()]
-				if !ok {
-					return nil
-				}
-				parser.Parse(data.Elem().String(), parseVal.Interface())
-			} else {
-				if err := c.ParseCondition(elem); err != nil {
-					return err
-				}
+			parser, ok := c.parsers[key.String()]
+			if !ok {
+				return nil
 			}
+
+			params, ok := elem.(map[string]interface{})
+			if !ok {
+				return nil
+			}
+
+			return parser.Parse(data.Elem().String(), params)
 		}
 
+		return c.ParseCondition(elem)
 	}
+
 	return nil
+}
+
+func (c *Condition) checkMapLen(value reflect.Value) bool {
+	return len(value.MapKeys()) == 1
 }

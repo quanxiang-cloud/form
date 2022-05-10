@@ -16,6 +16,7 @@ var cs = []components{
 	&serial{},
 	&foreignTable{},
 	&associatedRecords{},
+	&aggregation{},
 }
 
 var ErrNoComponents = errors.New("no ErrNoComponents like this")
