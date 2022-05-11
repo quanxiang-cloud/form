@@ -623,7 +623,7 @@ func (a *aggregation) handlerFunc(ctx context.Context, action string) error {
 			return err
 		}
 		if agg == nil {
-			setValue(a.primaryEntity, a.key, agg)
+			setValue(a.primaryEntity, a.key, 112)
 			return nil
 		}
 	}

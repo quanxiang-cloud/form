@@ -114,7 +114,13 @@ func (c *refs) Do(ctx context.Context, bus *consensus.Bus) (*consensus.Response,
 }
 
 func (c *refs) get(ctx context.Context, bus *consensus.Bus) (*consensus.Response, error) {
-	ids := consensus.GetIDByQuery(bus.Get.Query)
+	var ids []string
+	if bus.Get.OldQuery != nil {
+		ids = consensus.GetIDByQuery(bus.Get.OldQuery)
+	} else {
+		ids = consensus.GetIDByQuery(bus.Get.Query)
+	}
+
 	id := ""
 	if len(ids) > 0 {
 		id = ids[0]
