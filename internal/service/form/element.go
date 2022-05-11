@@ -403,7 +403,8 @@ func (c *common) delete(ctx context.Context, refData *RefData, originalData *Ext
 	}
 	subConditions := consensus.GetSimple(consensus.TermsKey, subIDs, refData.Deleted)
 	fieldNameConditions := consensus.GetSimple(consensus.TermKey, fieldName, c.key)
-	dslQuery := consensus.GetBool("must", subConditions, fieldNameConditions)
+	pid := consensus.GetSimple(consensus.TermsKey, "primitiveID", originalData.ID)
+	dslQuery := consensus.GetBool("must", subConditions, fieldNameConditions, pid)
 
 	universal := consensus.Universal{
 		UserID:   c.userID,

@@ -83,6 +83,7 @@ func (c *refs) Do(ctx context.Context, bus *consensus.Bus) (*consensus.Response,
 					tableIDKey: bus.TableID,
 				},
 			}
+			id := ""
 			if bus.Method == update {
 				ids := make([]string, 0)
 				if len(bus.Get.OldQuery) == 0 {
@@ -91,11 +92,13 @@ func (c *refs) Do(ctx context.Context, bus *consensus.Bus) (*consensus.Response,
 					ids = consensus.GetIDByQuery(bus.Get.OldQuery)
 				}
 				if len(ids) > 0 {
+					id = ids[0]
 					comReqs.primaryEntity = types.M{
 						"_id": ids[0],
 					}
 				}
 			}
+			comReqs.extraValue["id"] = id
 			com, err := c.component.getCom(reflect.ValueOf(t).String(), comReqs)
 			if err != nil {
 				logger.Logger.Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
