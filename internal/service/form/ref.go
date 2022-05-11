@@ -98,7 +98,7 @@ func (c *refs) Do(ctx context.Context, bus *consensus.Bus) (*consensus.Response,
 					}
 				}
 			}
-			comReqs.extraValue["id"] = id
+			comReqs.extraValue["_id"] = id
 			com, err := c.component.getCom(reflect.ValueOf(t).String(), comReqs)
 			if err != nil {
 				logger.Logger.Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
