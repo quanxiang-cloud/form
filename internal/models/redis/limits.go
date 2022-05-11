@@ -14,6 +14,7 @@ type limitRepo struct {
 }
 
 func (p *limitRepo) DeletePermitByPath(ctx context.Context, roleID, path string) error {
+	// FIXME p.PerKey()+roleID
 	return p.c.HDel(ctx, p.PerKey()+roleID, path).Err()
 }
 

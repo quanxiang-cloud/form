@@ -4,15 +4,16 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/quanxiang-cloud/cabin/logger"
-	"github.com/quanxiang-cloud/cabin/tailormade/header"
-	"github.com/quanxiang-cloud/form/internal/permit"
-	"github.com/quanxiang-cloud/form/pkg/misc/config"
 	"io"
 	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+
+	"github.com/quanxiang-cloud/cabin/logger"
+	"github.com/quanxiang-cloud/cabin/tailormade/header"
+	"github.com/quanxiang-cloud/form/internal/permit"
+	"github.com/quanxiang-cloud/form/pkg/misc/config"
 )
 
 // Transport Transport
@@ -50,6 +51,7 @@ func DoPoxy(ctx context.Context, req *permit.Request, p *Proxys, modify ModifyRe
 	r := req.Echo.Request()
 	r.Host = p.Url.Host
 	if !IsQueryMethod(req.Echo.Request().Method) {
+		// FIXME should check Content-Type is JSON or not.
 		data, err := json.Marshal(req.Data)
 		if err != nil {
 			logger.Logger.WithName("form proxy").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
