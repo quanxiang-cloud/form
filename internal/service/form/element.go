@@ -622,7 +622,10 @@ func (a *aggregation) handlerFunc(ctx context.Context, action string) error {
 		if err != nil {
 			return err
 		}
-		setValue(a.primaryEntity, a.key, agg)
+		if agg == nil {
+			setValue(a.primaryEntity, a.key, agg)
+			return nil
+		}
 		return nil
 	}
 	agg, err := a.doAgg(ctx, refData.AggType, refData, data)
