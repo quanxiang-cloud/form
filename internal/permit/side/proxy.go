@@ -82,8 +82,7 @@ func Filter(permit *consensus.Permit) httputil2.ModifyResponse {
 }
 
 func filter(resp *http.Response, permit *consensus.Permit) (err error) {
-	// FIXME checkout 301 302
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode < http.StatusOK || resp.StatusCode > http.StatusIMUsed {
 		return nil
 	}
 
