@@ -232,9 +232,11 @@ func getIDPar() spec.SchemaProps {
 							},
 						},
 					},
+					Required: []string{"_id"},
 				},
 			},
 		},
+		Required: []string{"term"},
 	}
 }
 
