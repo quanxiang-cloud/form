@@ -2,6 +2,8 @@ package treasure
 
 import (
 	"context"
+	"github.com/quanxiang-cloud/cabin/logger"
+	"github.com/quanxiang-cloud/cabin/tailormade/header"
 	"github.com/quanxiang-cloud/form/pkg/misc/client/lowcode"
 	"reflect"
 
@@ -104,6 +106,7 @@ func (s *subordinate) Build(ctx context.Context, cond *Condition, req *permit.Re
 
 func (s *subordinate) getValue() ([]string, error) {
 	resp, err := s.cond.searchAPI.Subordinate(s.ctx, s.req.UserID)
+
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +114,8 @@ func (s *subordinate) getValue() ([]string, error) {
 	for index, value := range resp.Users {
 		ids[index] = value.ID
 	}
-
+	logger.Logger.WithName("subordinate data").Infow("data",
+		"req id ", header.GetRequestIDKV(s.ctx).Fuzzy()[1], "resp total ", resp.Total, "ids", ids)
 	return ids, nil
 }
 
