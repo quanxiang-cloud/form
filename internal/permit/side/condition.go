@@ -47,7 +47,6 @@ func (c *Condition) Do(ctx context.Context, req *permit.Request) (*permit.Respon
 	}
 
 	// 判单来源。
-	// TODO
 	oldQuery := req.Data[_query]
 	var query permit.Object
 	switch req.Method {

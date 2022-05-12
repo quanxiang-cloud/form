@@ -40,9 +40,11 @@ func NewAuth(conf *config.Config) (*Auth, error) {
 
 func (a *Auth) Auth(ctx context.Context, req *permit.Request) (*consensus.Permit, error) {
 	match, err := a.getUserRole(ctx, req)
-	// FIXME
-	if err != nil || match == nil {
+	if err != nil {
 		return nil, err
+	}
+	if match == nil {
+		return nil, nil
 	}
 	if match.RoleID == models.RoleInit {
 		return &consensus.Permit{

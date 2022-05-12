@@ -25,13 +25,9 @@ func GetRequestArgs(c echo.Context, d interface{}) error {
 	if method == http.MethodGet || method == http.MethodDelete || method == http.MethodHead {
 		q := c.QueryParams()
 		raw := QueryToBody(q, false)
-		// FIXME return json.Unmarshal([]byte(raw), d)
-		err := json.Unmarshal([]byte(raw), d)
-		return err
+		return json.Unmarshal([]byte(raw), d)
 	}
-	// FIXME return BindBody(c, d)
-	err := BindBody(c, d)
-	return err
+	return BindBody(c, d)
 }
 
 // IsQueryMethod check if http method is query

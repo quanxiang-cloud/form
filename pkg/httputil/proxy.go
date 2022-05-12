@@ -33,12 +33,12 @@ func Transport(conf *config.Config) *http.Transport {
 }
 
 type Proxys struct {
-	Url       *url.URL
+	URL       *url.URL
 	Transport http.RoundTripper
 }
 
 func DoPoxy(ctx context.Context, req *permit.Request, p *Proxys, modify ModifyResponse) error {
-	proxy := httputil.NewSingleHostReverseProxy(p.Url)
+	proxy := httputil.NewSingleHostReverseProxy(p.URL)
 	proxy.Transport = p.Transport
 	if modify != nil {
 		proxy.ModifyResponse = modify
@@ -49,9 +49,8 @@ func DoPoxy(ctx context.Context, req *permit.Request, p *Proxys, modify ModifyRe
 		return
 	}
 	r := req.Request
-	r.Host = p.Url.Host
+	r.Host = p.URL.Host
 	if !IsQueryMethod(req.Method) {
-		// FIXME should check Content-Type is JSON or not.
 		data, err := json.Marshal(req.Data)
 		if err != nil {
 			logger.Logger.WithName("form proxy").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)

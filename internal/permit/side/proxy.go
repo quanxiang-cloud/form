@@ -60,9 +60,8 @@ func (p *Proxy) Do(ctx context.Context, req *permit.Request) (*permit.Response, 
 	if p.isPermit {
 		filters = Filter(req.Permit)
 	}
-	// FIXME typo
 	err := httputil2.DoPoxy(ctx, req, &httputil2.Proxys{
-		Url:       p.url,
+		URL:       p.url,
 		Transport: p.transport,
 	}, filters)
 	if err != nil {
