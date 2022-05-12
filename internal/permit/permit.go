@@ -2,10 +2,10 @@ package permit
 
 import (
 	"context"
-
-	"github.com/quanxiang-cloud/form/internal/service/consensus"
+	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/quanxiang-cloud/form/internal/service/consensus"
 )
 
 type Permit interface {
@@ -13,8 +13,9 @@ type Permit interface {
 }
 
 type Request struct {
-	// FIXME Permit should not be tied to a specific network framework, like echo、gin.
-	Echo echo.Context
+	*http.Request
+	*echo.Response
+
 	Data map[string]interface{}
 	Universal
 	Permit *consensus.Permit
@@ -26,5 +27,7 @@ type Universal struct {
 	DepID  string `header:"Department-Id"`
 }
 
-type Object map[string]interface{}
-type Response struct{}
+type (
+	Object   map[string]interface{}
+	Response struct{}
+)

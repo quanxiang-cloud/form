@@ -16,7 +16,7 @@ import (
 	"github.com/quanxiang-cloud/form/pkg/misc/config"
 )
 
-// Transport Transport
+// Transport Transport.
 func Transport(conf *config.Config) *http.Transport {
 	return &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
@@ -48,9 +48,9 @@ func DoPoxy(ctx context.Context, req *permit.Request, p *Proxys, modify ModifyRe
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	r := req.Echo.Request()
+	r := req.Request
 	r.Host = p.Url.Host
-	if !IsQueryMethod(req.Echo.Request().Method) {
+	if !IsQueryMethod(req.Method) {
 		// FIXME should check Content-Type is JSON or not.
 		data, err := json.Marshal(req.Data)
 		if err != nil {
@@ -60,7 +60,7 @@ func DoPoxy(ctx context.Context, req *permit.Request, p *Proxys, modify ModifyRe
 		r.Body = io.NopCloser(bytes.NewReader(data))
 		r.ContentLength = int64(len(data))
 	}
-	proxy.ServeHTTP(req.Echo.Response(), r)
+	proxy.ServeHTTP(req.Response, r)
 	return nil
 }
 

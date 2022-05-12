@@ -15,7 +15,8 @@ import (
 func Permit(form permit.Permit) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		req := &permit.Request{
-			Echo: c,
+			Request:  c.Request(),
+			Response: c.Response(),
 		}
 		ctx := echo2.MutateContext(c)
 		if err := bindParams(c, req); err != nil {

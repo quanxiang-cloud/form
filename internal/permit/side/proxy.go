@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/quanxiang-cloud/cabin/lib/httputil"
@@ -88,9 +89,8 @@ func filter(resp *http.Response, permit *consensus.Permit) (err error) {
 
 	response := httputil.NewResponse(resp)
 
-	logger.Logger.Info("content-type", response.ContentType())
-	// FIXME if Content-Type is not JSON, just return a error.
-	if strings.HasPrefix(strings.ToLower(response.ContentType()), mimeApplicationJSON) {
+	logger.Logger.Info("content-type ", response.ContentType())
+	if strings.HasPrefix(response.ContentType(), mimeApplicationJSON) {
 		return doFilterJSON(response, permit)
 	}
 
@@ -109,7 +109,6 @@ func filter(resp *http.Response, permit *consensus.Permit) (err error) {
 }
 
 func doFilterJSON(resp *httputil.Response, permit *consensus.Permit) (err error) {
-	// FIXME Make this judgment first, after `resp.StatusCode != http.StatusOK "L85"`
 	if permit == nil {
 		return nil
 	}
@@ -123,30 +122,26 @@ func doFilterJSON(resp *httputil.Response, permit *consensus.Permit) (err error)
 		return err
 	}
 
-	// FIXME User data must not be printed at any time
-	logger.Logger.Debugf("decode body after: %s", respDate)
 	var result map[string]interface{}
 	if err := json.Unmarshal(respDate, &result); err != nil {
 		return err
 	}
 
-	// FIXME conflict with precondition `if permit.Types == models.InitType || permit.ResponseAll "L117"`
-	if !permit.ResponseAll {
-		treasure.Filter(result, permit.Response)
-	}
+	treasure.Filter(result, permit.Response)
+
 	data, err := json.Marshal(result)
 	if err != nil {
 		logger.Logger.Errorf("entity json marshal failed: %s", err.Error())
 		return err
 	}
-	logger.Logger.Debugf("encode body before: %s", data)
+
 	err = resp.EncodeWriteBody(data, false)
 	if err != nil {
 		return err
 	}
-	resp.ContentLength = int64(len(data))
 
-	// FIXME use strconv.Itoa(),not fmt
-	resp.Header.Set("Content-Length", fmt.Sprint(len(data)))
+	resp.ContentLength = int64(len(data))
+	resp.Header.Set("Content-Length", strconv.Itoa(len(data)))
+
 	return nil
 }
