@@ -20,8 +20,8 @@ func Permit(form permit.Permit) echo.HandlerFunc {
 		ctx := echo2.MutateContext(c)
 		if err := bindParams(c, req); err != nil {
 			logger.Logger.WithName("bind params").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
-			c.NoContent(http.StatusBadRequest)
-			return nil
+
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
 
 		resp, err := form.Do(ctx, req)
@@ -29,14 +29,14 @@ func Permit(form permit.Permit) echo.HandlerFunc {
 			return err
 		}
 
-		// FIXME should define an error to handle StatusForbidden
 		if resp == nil {
-			c.NoContent(http.StatusForbidden)
-			return nil
+			return echo.NewHTTPError(http.StatusForbidden)
 		}
+
 		return nil
 	}
 }
+
 func bindParams(c echo.Context, i *permit.Request) error {
 	if err := httputil.GetRequestArgs(c, &i.Data); err != nil {
 		return err
