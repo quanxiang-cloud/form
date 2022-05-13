@@ -83,6 +83,7 @@ func NewRouter(c *config2.Config) (*Router, error) {
 		c:           c,
 		engine:      engine,
 		engineInner: engineInner,
+		Probe:       probe,
 	}, nil
 }
 
