@@ -6,6 +6,7 @@ import (
 	"github.com/quanxiang-cloud/form/internal/permit/side"
 	config2 "github.com/quanxiang-cloud/form/pkg/misc/config"
 	echo2 "github.com/quanxiang-cloud/form/pkg/misc/echo"
+	"github.com/quanxiang-cloud/form/pkg/misc/probe"
 )
 
 const (
@@ -27,6 +28,8 @@ type Router struct {
 	c *config2.Config
 
 	engine *echo.Echo
+
+	Probe *probe.Probe
 }
 
 func NewRouter(c *config2.Config) (*Router, error) {
@@ -43,7 +46,18 @@ func NewRouter(c *config2.Config) (*Router, error) {
 			return nil, err
 		}
 	}
+	probe := probe.New()
+	{
+		engine.GET("liveness", func(c echo.Context) error {
+			probe.LivenessProbe(c.Response(), c.Request())
+			return nil
+		})
+		engine.Any("readiness", func(c echo.Context) error {
+			probe.ReadinessProbe(c.Response(), c.Request())
+			return nil
+		})
 
+	}
 	return &Router{
 		c:      c,
 		engine: engine,
