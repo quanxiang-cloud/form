@@ -6,6 +6,7 @@ import (
 
 	daprd "github.com/dapr/go-sdk/client"
 	"github.com/quanxiang-cloud/form/pkg/misc/config"
+	daprd2 "github.com/quanxiang-cloud/form/pkg/misc/dapr"
 )
 
 // FormData FormData.
@@ -27,7 +28,7 @@ type HookManger struct {
 
 // NewHookManger NewHookManger.
 func NewHookManger(ctx context.Context, conf *config.Config) (*HookManger, error) {
-	client, err := daprd.NewClient()
+	client, err := daprd2.InitDaprClientIfNil()
 	if err != nil {
 		return nil, err
 	}
