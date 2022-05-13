@@ -61,6 +61,7 @@ func NewRouter(c *config2.Config) (*Router, error) {
 	return &Router{
 		c:      c,
 		engine: engine,
+		Probe:  probe,
 	}, nil
 }
 
