@@ -686,12 +686,6 @@ func (p *permit) checkExist(ctx context.Context, req *CreatePerReq) (bool, error
 		method: req.Method,
 		path:   req.AccessPath,
 	})
-	if req.Method != "POST" {
-		checks = append(checks, &check{
-			method: "POST",
-			path:   req.AccessPath,
-		})
-	}
 	for _, value := range checks {
 		exit, err := p.permitRepo.Get(p.db, req.RoleID, value.path, value.method)
 		if err != nil {
