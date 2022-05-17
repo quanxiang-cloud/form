@@ -129,8 +129,14 @@ func cometRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 		return err
 	}
 	{
-		cometHome.POST("/:action", action(guide))
+		cometHome.POST("/get", action1(guide))
+		cometHome.POST("/search", action1(guide))
+		cometHome.POST("/update", action1(guide))
+		cometHome.POST("/create", action1(guide))
+		cometHome.POST("/delete", action1(guide))
+
 		cometHome.POST("/:action/batch", batchCreate(guide))
+
 		inner.POST("/:action", action(guide))     // inner use。
 		innerHome.POST("/:action", action(guide)) // poly use
 
