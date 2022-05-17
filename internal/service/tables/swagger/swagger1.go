@@ -155,6 +155,29 @@ func DoSchemas(appID, tableID, tableName string, schemas spec.SchemaProperties, 
 			Produces: []string{"application/json"},
 			Paths: &spec.Paths{
 				Paths: map[string]spec.PathItem{
+					fmt.Sprintf(url2, appID, tableID): {
+						PathItemProps: spec.PathItemProps{
+							Get: &spec.Operation{ // search
+								OperationProps: SearchMethod(schemasbus),
+							},
+							Post: &spec.Operation{ // create
+								OperationProps: PostMethod(schemasbus),
+							},
+						},
+					},
+					fmt.Sprintf(url3, appID, tableID): {
+						PathItemProps: spec.PathItemProps{
+							Get: &spec.Operation{ // get
+								OperationProps: GetMethod(schemasbus),
+							},
+							Put: &spec.Operation{ //  put
+								OperationProps: PutMethod(schemasbus),
+							},
+							Delete: &spec.Operation{ //  delete
+								OperationProps: DeleteMethod(schemasbus),
+							},
+						},
+					},
 					fmt.Sprintf(url1, appID, tableID, get): {
 						PathItemProps: spec.PathItemProps{
 							Post: &spec.Operation{ // get

@@ -41,6 +41,28 @@ func action(ctr consensus.Guidance) gin.HandlerFunc {
 	}
 }
 
+func action1(ctr consensus.Guidance) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx := header.MutateContext(c)
+
+		bus := &consensus.Bus{}
+		urls := strings.Split(c.Request.URL.String(), "/")
+		err := initBus(c, bus, urls[len(urls)-1])
+		if err != nil {
+			logger.Logger.WithName("action").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
+			c.AbortWithError(http.StatusBadRequest, err)
+			return
+		}
+		if err = c.ShouldBind(bus); err != nil {
+			c.AbortWithError(http.StatusBadRequest, err)
+			return
+		}
+		do, err := ctr.Do(ctx, bus)
+
+		resp.Format(do, err).Context(c)
+	}
+}
+
 type batchCreateResp struct {
 	Entity []consensus.Entity `json:"entity"`
 	Total  int                `json:"total"`
@@ -92,7 +114,6 @@ func checkURL(c *gin.Context) (appID, tableName string, err error) {
 func get(ctr consensus.Guidance) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := header.MutateContext(c)
-
 		bus := &consensus.Bus{}
 		err := initBus(c, bus, "get")
 		if err != nil {
