@@ -16,6 +16,7 @@ type Request struct {
 	Data map[string]interface{}
 	Universal
 	Permit *consensus.Permit
+	Path   string
 }
 
 type Universal struct {

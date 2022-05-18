@@ -70,9 +70,15 @@ func polyRouter(c *config2.Config, r map[string]*echo.Group) error {
 		logger.Logger.WithName("instantiation poly cor").Error(err)
 		return err
 	}
+	p, err := side.NewNilModifyProxy(c, c.Endpoint.Poly)
+	if err != nil {
+		return err
+	}
+
 	group := r[ployPath]
 	{
 		group.Any("/request/system/app/:appID/*", Permit(cor))
+		group.Any("/request/system/app/:appID/raw/inner/form/*", Permit(p)) // 对于form
 	}
 	return nil
 }
@@ -95,7 +101,11 @@ func formRouter(c *config2.Config, r map[string]*echo.Group) error {
 	}
 	v2Form := r[v2FormPath]
 	{
-		v2Form.Any("/*", Permit(cor))
+		v2Form.GET("/:appID/home/form/:tableID/:id", Permit(cor), V2FormPath)
+		v2Form.DELETE("/:appID/home/form/:tableID/:id", Permit(cor), V2FormPath)
+		v2Form.PUT("/:appID/home/form/:tableID/:id", Permit(cor), V2FormPath)
+		v2Form.POST("/:appID/home/form/:tableID", Permit(cor))
+		v2Form.GET("/:appID/home/form/:tableID", Permit(cor))
 	}
 	return nil
 }
