@@ -39,6 +39,10 @@ func NewAuth(conf *config.Config) (*Auth, error) {
 }
 
 func (a *Auth) Auth(ctx context.Context, req *permit.Request) (*consensus.Permit, error) {
+	if req.UserID == "" {
+		logger.Logger.Errorw("userID is blank", header.GetRequestIDKV(ctx).Fuzzy()...)
+		return nil, nil
+	}
 	match, err := a.getUserRole(ctx, req)
 	if err != nil {
 		return nil, err
