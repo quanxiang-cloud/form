@@ -9,6 +9,7 @@ require (
 	github.com/go-openapi/spec v0.20.4
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/labstack/echo/v4 v4.2.1
+
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/quanxiang-cloud/cabin v0.0.7-0.20220509082325-73b8615baea6
 	github.com/quanxiang-cloud/structor v0.0.0-20220310021208-c5d38deab66c
