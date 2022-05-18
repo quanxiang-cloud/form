@@ -76,7 +76,7 @@ func (a *Auth) getUserRole(ctx context.Context, req *permit.Request) (*models.Us
 }
 
 func (a *Auth) getCachePermit(ctx context.Context, roleID string, req *permit.Request) (*models.Limits, error) {
-	resp, err := a.form.GetPermit(ctx, req.AppID, roleID, req.Echo.Path(), req.Echo.Request().Method)
+	resp, err := a.form.GetPermit(ctx, req.AppID, roleID, req.Path, req.Echo.Request().Method)
 	if err != nil || resp == nil {
 		return nil, err
 	}
