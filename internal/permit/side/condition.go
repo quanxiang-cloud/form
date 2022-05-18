@@ -42,18 +42,16 @@ func NewCondition(conf *config.Config, rawurl string) (*Condition, error) {
 
 // Do is a guard for permit.
 func (c *Condition) Do(ctx context.Context, req *permit.Request) (*permit.Response, error) {
-
 	if req.Permit.Types == models.InitType {
 		return c.next.Do(ctx, req)
 	}
 
 	// 判单来源。
-	// TODO
 	oldQuery := req.Data[_query]
 	var query permit.Object
-	switch req.Echo.Request().Method {
+	switch req.Method {
 	case http.MethodGet:
-		//query = req.Query
+		// query = req.Query
 	case http.MethodPost:
 		bytes, err := json.Marshal(oldQuery)
 		if err != nil {
@@ -84,14 +82,14 @@ func (c *Condition) Do(ctx context.Context, req *permit.Request) (*permit.Respon
 			},
 		}
 	}
-	switch req.Echo.Request().Method {
+	switch req.Method {
 	case http.MethodGet:
 		queryBytes, err := json.Marshal(newQuery)
 		if err != nil {
 			return nil, err
 		}
 
-		str, err := url.QueryUnescape(req.Echo.Request().URL.RawQuery)
+		str, err := url.QueryUnescape(req.URL.RawQuery)
 		if err != nil {
 			return nil, err
 		}
@@ -103,7 +101,7 @@ func (c *Condition) Do(ctx context.Context, req *permit.Request) (*permit.Respon
 
 		v.Set("query", string(queryBytes))
 
-		req.Echo.Request().URL.RawQuery = v.Encode()
+		req.URL.RawQuery = v.Encode()
 	case http.MethodPost:
 		req.Data[_query] = newQuery
 	}

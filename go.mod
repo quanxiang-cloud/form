@@ -9,6 +9,7 @@ require (
 	github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8
 	github.com/go-openapi/spec v0.20.4
 	github.com/go-redis/redis/v8 v8.11.4
+	github.com/labstack/echo v3.3.10+incompatible
 	github.com/labstack/echo/v4 v4.7.2
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/quanxiang-cloud/cabin v0.0.7-0.20220509082325-73b8615baea6

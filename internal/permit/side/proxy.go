@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/quanxiang-cloud/cabin/lib/httputil"
@@ -60,7 +61,7 @@ func (p *Proxy) Do(ctx context.Context, req *permit.Request) (*permit.Response, 
 		filters = Filter(req.Permit)
 	}
 	err := httputil2.DoPoxy(ctx, req, &httputil2.Proxys{
-		Url:       p.url,
+		URL:       p.url,
 		Transport: p.transport,
 	}, filters)
 	if err != nil {
@@ -80,17 +81,18 @@ func Filter(permit *consensus.Permit) httputil2.ModifyResponse {
 }
 
 func filter(resp *http.Response, permit *consensus.Permit) (err error) {
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode < http.StatusOK || resp.StatusCode > http.StatusIMUsed {
 		return nil
 	}
 
 	response := httputil.NewResponse(resp)
 
-	logger.Logger.Info("content-type", response.ContentType())
-	if strings.HasPrefix(strings.ToLower(response.ContentType()), mimeApplicationJSON) {
+	logger.Logger.Info("content-type ", response.ContentType())
+	if strings.HasPrefix(response.ContentType(), mimeApplicationJSON) {
 		return doFilterJSON(response, permit)
 	}
 
+	// FIXME we do not care other Content-Type.
 	_, err = response.ReadRawBody(http.DefaultMaxHeaderBytes)
 	if err != nil {
 		return err
@@ -112,29 +114,32 @@ func doFilterJSON(resp *httputil.Response, permit *consensus.Permit) (err error)
 	if permit.Types == models.InitType || permit.ResponseAll {
 		return nil
 	}
+	// FIXME type
 	respDate, err := resp.DecodeCloseBody(http.DefaultMaxHeaderBytes)
 	if err != nil {
 		return err
 	}
-	logger.Logger.Debugf("decode body after: %s", respDate)
+
 	var result map[string]interface{}
 	if err := json.Unmarshal(respDate, &result); err != nil {
 		return err
 	}
-	if !permit.ResponseAll {
-		treasure.Filter(result, permit.Response)
-	}
+
+	treasure.Filter(result, permit.Response)
+
 	data, err := json.Marshal(result)
 	if err != nil {
 		logger.Logger.Errorf("entity json marshal failed: %s", err.Error())
 		return err
 	}
-	logger.Logger.Debugf("encode body before: %s", data)
+
 	err = resp.EncodeWriteBody(data, false)
 	if err != nil {
 		return err
 	}
+
 	resp.ContentLength = int64(len(data))
-	resp.Header.Set("Content-Length", fmt.Sprint(len(data)))
+	resp.Header.Set("Content-Length", strconv.Itoa(len(data)))
+
 	return nil
 }

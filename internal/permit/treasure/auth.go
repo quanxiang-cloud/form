@@ -40,8 +40,11 @@ func NewAuth(conf *config.Config) (*Auth, error) {
 
 func (a *Auth) Auth(ctx context.Context, req *permit.Request) (*consensus.Permit, error) {
 	match, err := a.getUserRole(ctx, req)
-	if err != nil || match == nil {
+	if err != nil {
 		return nil, err
+	}
+	if match == nil {
+		return nil, nil
 	}
 	if match.RoleID == models.RoleInit {
 		return &consensus.Permit{
@@ -64,21 +67,31 @@ func (a *Auth) Auth(ctx context.Context, req *permit.Request) (*consensus.Permit
 
 func (a *Auth) getUserRole(ctx context.Context, req *permit.Request) (*models.UserRoles, error) {
 	resp, err := a.form.GetCacheMatchRole(ctx, req.UserID, req.DepID, req.AppID)
-	if err != nil || resp == nil {
+	if err != nil {
 		return nil, err
 	}
+
+	if resp == nil {
+		return nil, nil
+	}
+
 	if resp.Types == models.InitType {
 		resp.RoleID = models.RoleInit
 	}
+
 	return &models.UserRoles{
 		RoleID: resp.RoleID,
 	}, nil
 }
 
 func (a *Auth) getCachePermit(ctx context.Context, roleID string, req *permit.Request) (*models.Limits, error) {
-	resp, err := a.form.GetPermit(ctx, req.AppID, roleID, req.Path, req.Echo.Request().Method)
-	if err != nil || resp == nil {
+	resp, err := a.form.GetPermit(ctx, req.AppID, roleID, req.Path, req.Method)
+	if err != nil {
 		return nil, err
+	}
+
+	if resp == nil {
+		return nil, nil
 	}
 	getPermit := &models.Limits{
 		Path:        resp.Path,

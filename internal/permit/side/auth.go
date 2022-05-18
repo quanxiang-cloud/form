@@ -2,6 +2,7 @@ package side
 
 import (
 	"context"
+
 	"github.com/quanxiang-cloud/form/internal/models"
 	"github.com/quanxiang-cloud/form/internal/permit"
 	"github.com/quanxiang-cloud/form/internal/permit/treasure"
@@ -22,7 +23,6 @@ func NewAuth(conf *config.Config, rawurl string) (*Auth, error) {
 		return nil, err
 	}
 	next, err := NewCondition(conf, rawurl)
-
 	if err != nil {
 		return nil, err
 	}
@@ -31,6 +31,7 @@ func NewAuth(conf *config.Config, rawurl string) (*Auth, error) {
 		next: next,
 	}, nil
 }
+
 func (a *Auth) Do(ctx context.Context, req *permit.Request) (*permit.Response, error) {
 	p, err := a.auth.Auth(ctx, req)
 	if err != nil {
@@ -46,8 +47,8 @@ func (a *Auth) Do(ctx context.Context, req *permit.Request) (*permit.Response, e
 	if !p.ParamsAll {
 		treasure.Filter(req.Data, p.Params)
 	}
-	if httputil2.IsQueryMethod(req.Echo.Request().Method) {
-		req.Echo.Request().URL.RawQuery = httputil2.ObjectBodyToQuery(req.Data)
+	if httputil2.IsQueryMethod(req.Method) {
+		req.URL.RawQuery = httputil2.ObjectBodyToQuery(req.Data)
 	}
 	return a.next.Do(ctx, req)
 }

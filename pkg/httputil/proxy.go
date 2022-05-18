@@ -4,18 +4,19 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/quanxiang-cloud/cabin/logger"
-	"github.com/quanxiang-cloud/cabin/tailormade/header"
-	"github.com/quanxiang-cloud/form/internal/permit"
-	"github.com/quanxiang-cloud/form/pkg/misc/config"
 	"io"
 	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+
+	"github.com/quanxiang-cloud/cabin/logger"
+	"github.com/quanxiang-cloud/cabin/tailormade/header"
+	"github.com/quanxiang-cloud/form/internal/permit"
+	"github.com/quanxiang-cloud/form/pkg/misc/config"
 )
 
-// Transport Transport
+// Transport Transport.
 func Transport(conf *config.Config) *http.Transport {
 	return &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
@@ -32,12 +33,12 @@ func Transport(conf *config.Config) *http.Transport {
 }
 
 type Proxys struct {
-	Url       *url.URL
+	URL       *url.URL
 	Transport http.RoundTripper
 }
 
 func DoPoxy(ctx context.Context, req *permit.Request, p *Proxys, modify ModifyResponse) error {
-	proxy := httputil.NewSingleHostReverseProxy(p.Url)
+	proxy := httputil.NewSingleHostReverseProxy(p.URL)
 	proxy.Transport = p.Transport
 	if modify != nil {
 		proxy.ModifyResponse = modify
@@ -47,9 +48,9 @@ func DoPoxy(ctx context.Context, req *permit.Request, p *Proxys, modify ModifyRe
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	r := req.Echo.Request()
-	r.Host = p.Url.Host
-	if !IsQueryMethod(req.Echo.Request().Method) {
+	r := req.Request
+	r.Host = p.URL.Host
+	if !IsQueryMethod(req.Method) {
 		data, err := json.Marshal(req.Data)
 		if err != nil {
 			logger.Logger.WithName("form proxy").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
@@ -58,7 +59,7 @@ func DoPoxy(ctx context.Context, req *permit.Request, p *Proxys, modify ModifyRe
 		r.Body = io.NopCloser(bytes.NewReader(data))
 		r.ContentLength = int64(len(data))
 	}
-	proxy.ServeHTTP(req.Echo.Response(), r)
+	proxy.ServeHTTP(req.Response, r)
 	return nil
 }
 

@@ -2,8 +2,9 @@ package httputil
 
 import (
 	"encoding/json"
-	"github.com/labstack/echo/v4"
 	"net/http"
+
+	"github.com/labstack/echo/v4"
 )
 
 // BindBody bind gin body
@@ -24,11 +25,9 @@ func GetRequestArgs(c echo.Context, d interface{}) error {
 	if method == http.MethodGet || method == http.MethodDelete || method == http.MethodHead {
 		q := c.QueryParams()
 		raw := QueryToBody(q, false)
-		err := json.Unmarshal([]byte(raw), d)
-		return err
+		return json.Unmarshal([]byte(raw), d)
 	}
-	err := BindBody(c, d)
-	return err
+	return BindBody(c, d)
 }
 
 // IsQueryMethod check if http method is query

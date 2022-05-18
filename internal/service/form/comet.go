@@ -3,12 +3,9 @@ package form
 import (
 	"context"
 	"fmt"
-	"github.com/quanxiang-cloud/form/internal/service/types"
-	"github.com/quanxiang-cloud/form/pkg/misc/config"
-	"reflect"
-
 	"github.com/quanxiang-cloud/form/internal/service/consensus"
 	client2 "github.com/quanxiang-cloud/form/pkg/misc/client"
+	"github.com/quanxiang-cloud/form/pkg/misc/config"
 )
 
 type comet struct {
@@ -26,7 +23,6 @@ func newForm(config *config.Config) (consensus.Guidance, error) {
 }
 
 func (c *comet) Do(ctx context.Context, bus *consensus.Bus) (*consensus.Response, error) {
-	// TODO
 	base := Base{
 		AppID:   bus.AppID,
 		TableID: bus.TableID,
@@ -118,29 +114,6 @@ func (c *comet) callCreate(ctx context.Context, req *CreateReq) (*consensus.Resp
 	resp.Total = insert.SuccessCount
 	resp.Entity = req.Entity
 	return resp, nil
-}
-
-func get(e consensus.Entity) types.Entity {
-	if e == nil {
-		return nil
-	}
-	value := reflect.ValueOf(e)
-	switch _t := reflect.TypeOf(e); _t.Kind() {
-	case reflect.Map:
-		iter := value.MapRange()
-		m := make(types.Entity)
-		for iter.Next() {
-			if !iter.Value().CanInterface() {
-				continue
-			}
-			m[iter.Key().String()] = iter.Value()
-		}
-		return m
-	default:
-		return nil
-	}
-	return nil
-
 }
 
 func (c *comet) callUpdate(ctx context.Context, req *UpdateReq) (*consensus.Response, error) {
