@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+
 	daprd "github.com/dapr/go-sdk/client"
 	error2 "github.com/quanxiang-cloud/cabin/error"
 	id2 "github.com/quanxiang-cloud/cabin/id"
@@ -380,7 +381,7 @@ type OptionReq struct {
 	data event.Data
 }
 
-//Option Option
+//Option Option.
 type Option func(ctx context.Context, req *OptionReq)
 
 func RoleUserOption(permit2 Permit) Option {
@@ -394,7 +395,6 @@ func RoleUserOption(permit2 Permit) Option {
 			logger.Logger.Errorw("", "xxxxx")
 			return
 		}
-
 	}
 }
 
@@ -620,9 +620,8 @@ type CreatePerReq struct {
 
 type CreatePerResp struct{}
 
-// CreatePermit CreatePermit 如果是表单， (uri , post)    (accessPath , post ,get)
+// CreatePermit CreatePermit 如果是表单， (uri , post)    (accessPath , post ,get).
 func (p *permit) CreatePermit(ctx context.Context, req *CreatePerReq) (*CreatePerResp, error) {
-
 	exist, err := p.checkExist(ctx, req)
 	if err != nil {
 		return nil, err

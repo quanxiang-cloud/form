@@ -1,34 +1,19 @@
 package backup
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"io"
 	"net/http"
 	"os"
 
 	"github.com/quanxiang-cloud/cabin/tailormade/client"
+	"github.com/quanxiang-cloud/form/internal/models"
+	"github.com/quanxiang-cloud/form/pkg/backup/internal/aide"
+	"github.com/quanxiang-cloud/form/pkg/backup/internal/aide/impl"
 )
 
 var formHost string
 
-var (
-	exportTableURL         = "%s/api/v1/form/%s/internal/backup/export/table"
-	exportPermitURL        = "%s/api/v1/form/%s/internal/backup/export/permit"
-	exportRoleURL          = "%s/api/v1/form/%s/internal/backup/export/role"
-	exportTableRelationURL = "%s/api/v1/form/%s/internal/backup/export/tableRelation"
-	exportTableSchemaURL   = "%s/api/v1/form/%s/internal/backup/export/tableSchema"
-)
-
-var (
-	importTableURL         = "%s/api/v1/form/%s/internal/backup/import/table"
-	importPermitURL        = "%s/api/v1/form/%s/internal/backup/import/permit"
-	importRoleURL          = "%s/api/v1/form/%s/internal/backup/import/role"
-	importTableRelationURL = "%s/api/v1/form/%s/internal/backup/import/tableRelation"
-	importTableSchemaURL   = "%s/api/v1/form/%s/internal/backup/import/tableSchema"
-)
-
+// nolint:gochecknoinits
 func init() {
 	formHost = os.Getenv("FORM_HOST")
 	if formHost == "" {
@@ -36,112 +21,86 @@ func init() {
 	}
 }
 
+// Backup backup.
 type Backup struct {
-	client http.Client
+	formHost string
+	client   http.Client
 }
 
 // NewBackup create a backup instance.
 func NewBackup(conf client.Config) *Backup {
 	return &Backup{
-		client: client.New(conf),
+		client:   client.New(conf),
+		formHost: formHost,
 	}
 }
 
-// Object is the backup object.
-type Object []interface{}
-
-// BackupReq is the request of export.
-type BackupReq struct {
-	AppID string `json:"appID"`
-	Page  int    `json:"page"`
-	Size  int    `json:"size"`
-}
-
-// BackupResp is the response of export.
-type BackupResp struct {
-	Result  `json:",inline"`
-	Data    Object `json:"data"`
-	Count   int    `json:"count"`
-	HasNext bool   `json:"hasNext"`
+var aides = []aide.Aide{
+	&impl.Table{},
+	&impl.TableRelation{},
+	&impl.TableSchema{},
+	&impl.Role{},
 }
 
 // Result is the result of export.
 type Result struct {
-	Permits        Object `json:"permits"`
-	Schemas        Object `json:"schemas"`
-	Roles          Object `json:"roles"`
-	Tables         Object `json:"tables"`
-	TableRelations Object `json:"tableRelations"`
+	Permits        []*models.Permit        `json:"permits"`
+	TableSchemas   []*models.TableSchema   `json:"tableSchemas"`
+	Roles          []*models.Role          `json:"roles"`
+	Tables         []*models.Table         `json:"tables"`
+	TableRelations []*models.TableRelation `json:"tableRelations"`
 }
 
-const (
-	startPage = 1
-	maxSize   = 999
-)
-
-func (b *Backup) Export(ctx context.Context, appID string, w io.Writer) error {
+// Export export.
+func (b *Backup) Export(ctx context.Context, opts *aide.ExportOption) (*Result, error) {
 	result := &Result{}
+	dataes := make(map[string]interface{})
 
-	for _, backup := range backups {
-		backup.Initialize(appID, b.client)
+	opts.Client = b.client
+	opts.Host = b.formHost
 
-		err := backup.Export(ctx, result)
+	for _, a := range aides {
+		objs, err := a.Export(ctx, opts)
 		if err != nil {
-			return err
+			return nil, err
+		}
+
+		for key, val := range objs {
+			dataes[key] = val
 		}
 	}
 
-	dataBytes, err := json.Marshal(result)
+	err := aide.Serialize(dataes, result)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	_, err = io.Copy(w, bytes.NewReader(dataBytes))
-
-	return err
+	return result, nil
 }
 
-type ImportReq struct {
-	Data Object `json:"data"`
-}
+// Import import.
+func (b *Backup) Import(ctx context.Context, result *Result, opts *aide.ImportOption) (map[string]string, error) {
+	ids := make(map[string]string)
 
-type ImportResp struct{}
-
-func (b *Backup) Import(ctx context.Context, appID string, r io.Reader) error {
-	buf := bytes.Buffer{}
-	_, err := io.Copy(&buf, r)
+	var objs map[string]aide.Object
+	err := aide.Serialize(result, &objs)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	result := &Result{}
-	err = json.Unmarshal(buf.Bytes(), result)
-	if err != nil {
-		return err
-	}
+	opts.Client = b.client
+	opts.Host = b.formHost
 
-	for _, backup := range backups {
-		backup.Initialize(appID, b.client)
-
-		err := backup.Import(ctx, result)
+	for _, a := range aides {
+		idMap, err := a.Import(ctx, objs, opts)
 		if err != nil {
-			return err
+			return nil, err
+		}
+
+		for key, val := range idMap {
+			ids[key] = val
 		}
 	}
 
-	return nil
-}
-
-type backup interface {
-	Initialize(string, http.Client)
-	Export(context.Context, *Result) error
-	Import(context.Context, *Result) error
-}
-
-var backups = []backup{
-	&table{},
-	&tableRelation{},
-	&tableScheme{},
-	&permit{},
-	&role{},
+	return ids, nil
 }

@@ -125,7 +125,7 @@ func initExtraData(ctx context.Context, optValue map[string]interface{}, extraDa
 }
 
 // SetFieldValue SetFieldValue.
-func SetFieldValue(ctx context.Context, data interface{}, ptr interface{}) error {
+func SetFieldValue(ctx context.Context, data, ptr interface{}) error {
 	if data == nil {
 		return nil
 	}
