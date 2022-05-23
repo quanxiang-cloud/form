@@ -3,9 +3,10 @@ package form
 import (
 	"context"
 	"fmt"
+	"reflect"
+
 	"github.com/quanxiang-cloud/form/internal/service/types"
 	"github.com/quanxiang-cloud/form/pkg/misc/config"
-	"reflect"
 
 	"github.com/quanxiang-cloud/form/internal/service/consensus"
 	client2 "github.com/quanxiang-cloud/form/pkg/misc/client"
@@ -140,7 +141,6 @@ func get(e consensus.Entity) types.Entity {
 		return nil
 	}
 	return nil
-
 }
 
 func (c *comet) callUpdate(ctx context.Context, req *UpdateReq) (*consensus.Response, error) {

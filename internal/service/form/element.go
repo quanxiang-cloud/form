@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
+
 	"github.com/quanxiang-cloud/cabin/logger"
 	"github.com/quanxiang-cloud/cabin/tailormade/header"
 	"github.com/quanxiang-cloud/form/internal/models"
-	"reflect"
 
 	"github.com/quanxiang-cloud/form/internal/models/redis"
 	"github.com/quanxiang-cloud/form/internal/service/consensus"
@@ -26,7 +27,6 @@ type common struct {
 	refValue      types.Ref        // ref 结构
 	primaryEntity consensus.Entity // 主表的entity
 	extraValue    types.M          // 透传的数据
-
 }
 
 type comReq struct {
@@ -195,7 +195,6 @@ func (c *common) subGet(ctx context.Context, isReplace bool) error {
 		return err
 	}
 	return nil
-
 }
 
 type params struct {
@@ -217,7 +216,6 @@ func (c *common) findOnePost(ctx context.Context, param *params) error {
 		SubTableType: c.tag,
 		SubTableID:   param.refData.TableID,
 	}, 1, 10)
-
 	if err != nil {
 		return err
 	}
@@ -247,7 +245,7 @@ func (c *common) findOnePost(ctx context.Context, param *params) error {
 	return nil
 }
 
-// PropertiesFilter PropertiesFilter
+// PropertiesFilter PropertiesFilter.
 func propertiesFilter(oldProperties map[string]interface{}, filter []string) {
 	if filter == nil {
 		return
@@ -527,7 +525,6 @@ func (a *associatedRecords) getTag() string {
 }
 
 func (a *associatedRecords) handlerFunc(ctx context.Context, action string) error {
-
 	switch action {
 	case "create":
 		extraData := &ExtraData{}
@@ -585,7 +582,6 @@ func (a *aggregation) handlerFunc(ctx context.Context, action string) error {
 		return err
 	}
 	if extra.ID == "" {
-
 	}
 	data := make([]interface{}, 0)
 	idCondition := consensus.GetSimple(consensus.TermsKey, "primitiveID", extra.ID)
@@ -677,8 +673,8 @@ func getResult(data interface{}, fieldName string) interface{} {
 	return nil
 }
 
-// AggregationQuery AggregationQuery
-func aggregationQuery(data interface{}, ids interface{}) {
+// AggregationQuery AggregationQuery.
+func aggregationQuery(data, ids interface{}) {
 	if data == nil {
 		return
 	}

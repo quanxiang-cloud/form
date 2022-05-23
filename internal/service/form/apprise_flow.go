@@ -42,7 +42,7 @@ func (a *appriseFlow) Do(ctx context.Context, bus *consensus.Bus) (*consensus.Re
 	if do.Total == 0 {
 		return do, err
 	}
-	//create update delete
+	// create update delete
 	switch bus.Method {
 	case "create":
 		a.createApprise(ctx, bus)

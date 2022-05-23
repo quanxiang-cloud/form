@@ -2,11 +2,12 @@ package util
 
 import (
 	"fmt"
+	"reflect"
+
 	"github.com/go-openapi/spec"
 	error2 "github.com/quanxiang-cloud/cabin/error"
 	"github.com/quanxiang-cloud/form/internal/models"
 	"github.com/quanxiang-cloud/form/pkg/misc/code"
-	"reflect"
 )
 
 const (
@@ -32,7 +33,7 @@ func GetMapToMap(schema map[string]interface{}, key string) (map[string]interfac
 	return nil, error2.New(code.ErrParameter)
 }
 
-// GetMapToString GetMapToString
+// GetMapToString GetMapToString.
 func GetMapToString(schema map[string]interface{}, key string) string {
 	value, ok := schema[key]
 	if !ok {
@@ -44,7 +45,7 @@ func GetMapToString(schema map[string]interface{}, key string) string {
 	return ""
 }
 
-// GetAsMap GetAsMap
+// GetAsMap GetAsMap.
 func GetAsMap(v interface{}) (map[string]interface{}, error) {
 	if m, ok := v.(map[string]interface{}); ok {
 		return m, nil
@@ -213,7 +214,6 @@ func IsLayoutComponent(value interface{}) bool {
 		return false
 	}
 	return false
-
 }
 
 func FilterSystem(sourceStruct spec.SchemaProperties, dst spec.SchemaProperties) {

@@ -2,6 +2,7 @@ package inform
 
 import (
 	"context"
+
 	"github.com/quanxiang-cloud/cabin/logger"
 
 	daprd "github.com/dapr/go-sdk/client"
@@ -47,7 +48,6 @@ func (manager *HookManger) Start(ctx context.Context) {
 		case sendData := <-manager.Send:
 			logger.Logger.Infow("listen channel start", "data is ", sendData)
 			if err := manager.publish(ctx, manager.conf.Dapr.TopicFlow, sendData); err != nil {
-
 				continue
 			}
 			logger.Logger.Infow("success", "data is ", sendData, "topic", manager.conf.Dapr.TopicFlow, "pubsubName", manager.conf.Dapr.PubSubName)

@@ -51,7 +51,7 @@ func PutMethod(schemasBus *schemasBus) spec.OperationProps {
 func DeleteMethod(schemasBus *schemasBus) spec.OperationProps {
 	responses := countResp()
 	parameters := []spec.Parameter{
-		//entityParameter(schemasBus.schemas),
+		// entityParameter(schemasBus.schemas),
 		idParameter(),
 	}
 	return doOperationProps(&operation{
@@ -67,7 +67,7 @@ func PostMethod(schemasBus *schemasBus) spec.OperationProps {
 	responses := countAndEntityResp(schemasBus.schemas)
 
 	parameters := []spec.Parameter{
-		//entityParameter(schemasBus.filterSchema),
+		// entityParameter(schemasBus.filterSchema),
 		idParameter(),
 	}
 	return doOperationProps(&operation{
