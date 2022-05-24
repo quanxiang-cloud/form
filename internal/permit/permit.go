@@ -2,6 +2,7 @@ package permit
 
 import (
 	"context"
+
 	"github.com/quanxiang-cloud/form/internal/service/consensus"
 
 	"github.com/labstack/echo/v4"
@@ -12,6 +13,7 @@ type Permit interface {
 }
 
 type Request struct {
+	// FIXME Permit should not be tied to a specific network framework, like echo、gin.
 	Echo echo.Context
 	Data map[string]interface{}
 	Universal

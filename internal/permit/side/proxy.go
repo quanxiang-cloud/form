@@ -59,6 +59,7 @@ func (p *Proxy) Do(ctx context.Context, req *permit.Request) (*permit.Response, 
 	if p.isPermit {
 		filters = Filter(req.Permit)
 	}
+	// FIXME typo
 	err := httputil2.DoPoxy(ctx, req, &httputil2.Proxys{
 		Url:       p.url,
 		Transport: p.transport,
@@ -80,6 +81,7 @@ func Filter(permit *consensus.Permit) httputil2.ModifyResponse {
 }
 
 func filter(resp *http.Response, permit *consensus.Permit) (err error) {
+	// FIXME checkout 301 302
 	if resp.StatusCode != http.StatusOK {
 		return nil
 	}
@@ -87,10 +89,12 @@ func filter(resp *http.Response, permit *consensus.Permit) (err error) {
 	response := httputil.NewResponse(resp)
 
 	logger.Logger.Info("content-type", response.ContentType())
+	// FIXME if Content-Type is not JSON, just return a error.
 	if strings.HasPrefix(strings.ToLower(response.ContentType()), mimeApplicationJSON) {
 		return doFilterJSON(response, permit)
 	}
 
+	// FIXME we do not care other Content-Type.
 	_, err = response.ReadRawBody(http.DefaultMaxHeaderBytes)
 	if err != nil {
 		return err
@@ -105,6 +109,7 @@ func filter(resp *http.Response, permit *consensus.Permit) (err error) {
 }
 
 func doFilterJSON(resp *httputil.Response, permit *consensus.Permit) (err error) {
+	// FIXME Make this judgment first, after `resp.StatusCode != http.StatusOK "L85"`
 	if permit == nil {
 		return nil
 	}
@@ -112,15 +117,20 @@ func doFilterJSON(resp *httputil.Response, permit *consensus.Permit) (err error)
 	if permit.Types == models.InitType || permit.ResponseAll {
 		return nil
 	}
+	// FIXME type
 	respDate, err := resp.DecodeCloseBody(http.DefaultMaxHeaderBytes)
 	if err != nil {
 		return err
 	}
+
+	// FIXME User data must not be printed at any time
 	logger.Logger.Debugf("decode body after: %s", respDate)
 	var result map[string]interface{}
 	if err := json.Unmarshal(respDate, &result); err != nil {
 		return err
 	}
+
+	// FIXME conflict with precondition `if permit.Types == models.InitType || permit.ResponseAll "L117"`
 	if !permit.ResponseAll {
 		treasure.Filter(result, permit.Response)
 	}
@@ -135,6 +145,8 @@ func doFilterJSON(resp *httputil.Response, permit *consensus.Permit) (err error)
 		return err
 	}
 	resp.ContentLength = int64(len(data))
+
+	// FIXME use strconv.Itoa(),not fmt
 	resp.Header.Set("Content-Length", fmt.Sprint(len(data)))
 	return nil
 }

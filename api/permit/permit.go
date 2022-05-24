@@ -1,8 +1,9 @@
 package router
 
 import (
-	"github.com/quanxiang-cloud/form/pkg/httputil"
 	"net/http"
+
+	"github.com/quanxiang-cloud/form/pkg/httputil"
 
 	"github.com/labstack/echo/v4"
 	"github.com/quanxiang-cloud/cabin/logger"
@@ -27,6 +28,8 @@ func Permit(form permit.Permit) echo.HandlerFunc {
 		if err != nil {
 			return err
 		}
+
+		// FIXME should define an error to handle StatusForbidden
 		if resp == nil {
 			c.NoContent(http.StatusForbidden)
 			return nil
