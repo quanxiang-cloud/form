@@ -7,8 +7,8 @@ import (
 
 	"github.com/quanxiang-cloud/cabin/tailormade/client"
 	"github.com/quanxiang-cloud/form/internal/models"
-	"github.com/quanxiang-cloud/form/pkg/backup/internal/aide"
-	"github.com/quanxiang-cloud/form/pkg/backup/internal/aide/impl"
+	"github.com/quanxiang-cloud/form/pkg/backup/aide"
+	"github.com/quanxiang-cloud/form/pkg/backup/aide/impl"
 )
 
 var formHost string
