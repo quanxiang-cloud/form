@@ -8,7 +8,7 @@ import (
 	id2 "github.com/quanxiang-cloud/cabin/id"
 	time2 "github.com/quanxiang-cloud/cabin/time"
 	"github.com/quanxiang-cloud/form/internal/models"
-	"github.com/quanxiang-cloud/form/pkg/backup/internal/aide"
+	"github.com/quanxiang-cloud/form/pkg/backup/aide"
 )
 
 var (
