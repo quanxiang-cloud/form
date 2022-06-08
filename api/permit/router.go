@@ -10,9 +10,10 @@ import (
 )
 
 const (
-	ployPath = "poly"
-	formPath = "form"
-	cache    = "cache"
+	ployPath   = "poly"
+	formPath   = "form"
+	cache      = "cache"
+	v2FormPath = "v2Form"
 )
 
 type router func(c *config2.Config, r map[string]*echo.Group) error
@@ -36,9 +37,10 @@ func NewRouter(c *config2.Config) (*Router, error) {
 	engine := newRouter(c)
 
 	r := map[string]*echo.Group{
-		ployPath: engine.Group("/api/v1/polyapi"),
-		formPath: engine.Group("/api/v1/form"),
-		cache:    engine.Group("/cache"),
+		ployPath:   engine.Group("/api/v1/polyapi"),
+		formPath:   engine.Group("/api/v1/form"),
+		cache:      engine.Group("/cache"),
+		v2FormPath: engine.Group("/api/v2/form"),
 	}
 
 	for _, f := range routers {
@@ -83,9 +85,15 @@ func polyRouter(c *config2.Config, r map[string]*echo.Group) error {
 		logger.Logger.WithName("instantiation poly cor").Error(err)
 		return err
 	}
+	p, err := side.NewNilModifyProxy(c, c.Endpoint.Poly)
+	if err != nil {
+		return err
+	}
+
 	group := r[ployPath]
 	{
 		group.Any("/request/system/app/:appID/*", Permit(cor))
+		group.Any("/request/system/app/:appID/raw/inner/form/*", Permit(p)) // 对于form
 	}
 	return nil
 }
@@ -105,6 +113,14 @@ func formRouter(c *config2.Config, r map[string]*echo.Group) error {
 	{
 		group.Any("/*", Permit(p))
 		group.Any("/:appID/home/form/:tableID/:action", Permit(cor))
+	}
+	v2Form := r[v2FormPath]
+	{
+		v2Form.GET("/:appID/home/form/:tableID/:id", Permit(cor), V2FormPath)
+		v2Form.DELETE("/:appID/home/form/:tableID/:id", Permit(cor), V2FormPath)
+		v2Form.PUT("/:appID/home/form/:tableID/:id", Permit(cor), V2FormPath)
+		v2Form.POST("/:appID/home/form/:tableID", Permit(cor))
+		v2Form.GET("/:appID/home/form/:tableID", Permit(cor))
 	}
 	return nil
 }
