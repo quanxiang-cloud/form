@@ -39,6 +39,10 @@ func NewAuth(conf *config.Config) (*Auth, error) {
 }
 
 func (a *Auth) Auth(ctx context.Context, req *permit.Request) (*consensus.Permit, error) {
+	if req.UserID == ""{
+		logger.Logger.Errorw("userID is blank",header.GetRequestIDKV(ctx).Fuzzy()...)
+		return  nil ,nil
+	}
 	match, err := a.getUserRole(ctx, req)
 	if err != nil || match == nil {
 		return nil, err
@@ -76,7 +80,7 @@ func (a *Auth) getUserRole(ctx context.Context, req *permit.Request) (*models.Us
 }
 
 func (a *Auth) getCachePermit(ctx context.Context, roleID string, req *permit.Request) (*models.Limits, error) {
-	resp, err := a.form.GetPermit(ctx, req.AppID, roleID, req.Echo.Request().URL.Path, req.Echo.Request().Method)
+	resp, err := a.form.GetPermit(ctx, req.AppID, roleID, req.Path, req.Echo.Request().Method)
 	if err != nil || resp == nil {
 		return nil, err
 	}

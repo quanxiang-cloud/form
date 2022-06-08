@@ -4,6 +4,7 @@ import (
 	"github.com/quanxiang-cloud/form/internal/service/form"
 	"github.com/quanxiang-cloud/form/pkg/misc/client"
 	config2 "github.com/quanxiang-cloud/form/pkg/misc/config"
+	"github.com/quanxiang-cloud/form/pkg/misc/probe"
 
 	"github.com/gin-gonic/gin"
 	gin2 "github.com/quanxiang-cloud/cabin/tailormade/gin"
@@ -31,6 +32,8 @@ type Router struct {
 	engine *gin.Engine
 
 	engineInner *gin.Engine
+
+	Probe *probe.Probe
 }
 
 type router func(c *config2.Config, r map[string]*gin.RouterGroup) error
@@ -66,11 +69,21 @@ func NewRouter(c *config2.Config) (*Router, error) {
 			return nil, err
 		}
 	}
+	probe := probe.New()
+	{
+		engine.GET("liveness", func(c *gin.Context) {
+			probe.LivenessProbe(c.Writer, c.Request)
+		})
 
+		engine.Any("readiness", func(c *gin.Context) {
+			probe.ReadinessProbe(c.Writer, c.Request)
+		})
+	}
 	return &Router{
 		c:           c,
 		engine:      engine,
 		engineInner: engineInner,
+		Probe:       probe,
 	}, nil
 }
 
@@ -129,8 +142,10 @@ func cometRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 		return err
 	}
 	{
-		cometHome.POST("/:action", action(guide))
+		cometHome.POST("/action", action(guide))
+
 		cometHome.POST("/:action/batch", batchCreate(guide))
+
 		inner.POST("/:action", action(guide))     // inner use。
 		innerHome.POST("/:action", action(guide)) // poly use
 
@@ -138,6 +153,8 @@ func cometRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 		v2Path.DELETE("/:id", delete(guide))
 		v2Path.PUT("/:id", update(guide))
 		v2Path.POST("", create(guide))
+		v2Path.GET("", search(guide))
+
 		cometHome.GET("", search(guide))
 		cometHome.GET("/relation", relation(guide))
 

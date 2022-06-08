@@ -27,8 +27,10 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	go router.Run()
 
+	go router.Run()
+	router.Probe.SetRunning()
+	logger.Logger.Info("running...")
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGHUP, syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT)
 	for {
