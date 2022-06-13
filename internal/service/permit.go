@@ -3,20 +3,24 @@ package service
 import (
 	"context"
 	"fmt"
+	redis2 "github.com/quanxiang-cloud/cabin/tailormade/db/redis"
+	"github.com/quanxiang-cloud/form/internal/models/redis"
+	"github.com/quanxiang-cloud/form/internal/service/consensus"
 
 	daprd "github.com/dapr/go-sdk/client"
 	error2 "github.com/quanxiang-cloud/cabin/error"
 	id2 "github.com/quanxiang-cloud/cabin/id"
-	"github.com/quanxiang-cloud/cabin/logger"
-	redis2 "github.com/quanxiang-cloud/cabin/tailormade/db/redis"
 	time2 "github.com/quanxiang-cloud/cabin/time"
 	"github.com/quanxiang-cloud/form/internal/component/event"
 	"github.com/quanxiang-cloud/form/internal/models"
 	"github.com/quanxiang-cloud/form/internal/models/mysql"
-	"github.com/quanxiang-cloud/form/internal/models/redis"
 	"github.com/quanxiang-cloud/form/pkg/misc/code"
 	config2 "github.com/quanxiang-cloud/form/pkg/misc/config"
 	"gorm.io/gorm"
+)
+
+const (
+	object = "object"
 )
 
 type Permit interface {
@@ -53,6 +57,8 @@ type Permit interface {
 	GetUserRole(ctx context.Context, req *GetUserRoleReq) (*GetUserRoleResp, error)
 
 	CopyRole(ctx context.Context, req *CopyRoleReq) (*CopyRoleResp, error)
+
+	PerPoly(ctx context.Context, req *PerPolyReq) (*PerPolyResp, error)
 }
 
 type permit struct {
@@ -383,20 +389,6 @@ type OptionReq struct {
 
 //Option Option.
 type Option func(ctx context.Context, req *OptionReq)
-
-func RoleUserOption(permit2 Permit) Option {
-	return func(ctx context.Context, req *OptionReq) {
-		k2, ok := permit2.(*permit)
-		if !ok {
-			return
-		}
-		err := k2.publish(ctx, "form-user-match", req.data)
-		if err != nil {
-			logger.Logger.Errorw("", "xxxxx")
-			return
-		}
-	}
-}
 
 func NewPermit(conf *config2.Config) (Permit, error) {
 	db, err := CreateMysqlConn(conf)
@@ -919,6 +911,82 @@ func (p *permit) GetUserRole(ctx context.Context, req *GetUserRoleReq) (*GetUser
 	return resp, nil
 }
 
-func (p *permit) publish(ctx context.Context, topic string, data interface{}) error {
-	return nil
+type PerPolyReq struct {
+	UserID string `json:"userID"`
+	AppID  string `json:"appID"`
+	DepID  string `json:"depID"`
+	Path   string `json:"path"`
+}
+
+type PerPolyResp struct {
+}
+
+type perCache map[string]*per
+
+type per struct {
+	Params      models.FiledPermit
+	Response    models.FiledPermit
+	Condition   models.Condition
+	ResponseAll bool
+	ParamsAll   bool
+}
+
+func (p *permit) PerPoly(ctx context.Context, req *PerPolyReq) (*PerPolyResp, error) {
+	list, _, err := p.permitRepo.List(p.db, &models.PermitQuery{
+		RoleIDs: []string{},
+		Path:    req.Path,
+	}, 1, 99)
+	if err != nil {
+		return nil, err
+	}
+	var persss *per
+
+	for _, value := range list {
+		if persss != nil {
+			persss = &per{
+				Params:      value.Params,
+				Response:    value.Response,
+				Condition:   value.Condition,
+				ResponseAll: value.ResponseAll,
+				ParamsAll:   value.ParamsAll,
+			}
+		}
+
+	}
+
+	return &PerPolyResp{}, nil
+}
+
+func FiledPermitPoly(source models.FiledPermit, dst models.FiledPermit) {
+	if dst == nil {
+		dst = make(models.FiledPermit)
+	}
+	for key, value := range source {
+		v, ok := dst[key]
+		if ok && value.Type == object {
+			FiledPermitPoly(value.Properties, v.Properties)
+		} else {
+			dst[key] = value
+		}
+	}
+}
+
+// 简单  复杂
+
+// 简单 简单
+
+// 复杂 简单
+
+// 复杂 复杂
+
+func ConditionPoly(source models.Condition, dst models.Condition) models.Condition {
+	sQuery := source["query"]
+	dQuery := dst["query"]
+	if sQuery == nil {
+		return source
+	}
+	if dQuery == nil {
+		return dst
+	}
+	return consensus.GetBool("should", sQuery, dQuery)
 }

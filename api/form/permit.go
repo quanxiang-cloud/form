@@ -270,7 +270,7 @@ func (p *Permit) CreateUserRole(c *gin.Context) {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
-	resp.Format(p.permit.CreateUserRole(ctx, req, service.RoleUserOption(p.permit))).Context(c)
+	resp.Format(p.permit.CreateUserRole(ctx, req)).Context(c)
 }
 
 func (p *Permit) GetUserRole(c *gin.Context) {
@@ -303,4 +303,18 @@ func (p *Permit) CopyRole(c *gin.Context) {
 		return
 	}
 	resp.Format(p.permit.CopyRole(ctx, req)).Context(c)
+}
+
+func (p *Permit) PerPoly(c *gin.Context) {
+	req := &service.PerPolyReq{
+		AppID: c.Param("appID"),
+	}
+	ctx := header.MutateContext(c)
+	if err := c.ShouldBind(req); err != nil {
+		logger.Logger.WithName("SaveUserPerMatch").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+	resp.Format(p.permit.PerPoly(ctx, req)).Context(c)
+
 }

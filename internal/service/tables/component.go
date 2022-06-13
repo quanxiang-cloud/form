@@ -3,9 +3,9 @@ package tables
 import (
 	"context"
 	"encoding/json"
+	redis2 "github.com/quanxiang-cloud/cabin/tailormade/db/redis"
 
 	id2 "github.com/quanxiang-cloud/cabin/id"
-	redis2 "github.com/quanxiang-cloud/cabin/tailormade/db/redis"
 	"github.com/quanxiang-cloud/form/internal/models"
 	"github.com/quanxiang-cloud/form/internal/models/mysql"
 	"github.com/quanxiang-cloud/form/internal/models/redis"

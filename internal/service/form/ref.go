@@ -2,14 +2,14 @@ package form
 
 import (
 	"context"
+	redis2 "github.com/quanxiang-cloud/cabin/tailormade/db/redis"
+	"github.com/quanxiang-cloud/form/internal/models/redis"
 	"reflect"
 
 	"github.com/quanxiang-cloud/cabin/logger"
-	redis2 "github.com/quanxiang-cloud/cabin/tailormade/db/redis"
 	"github.com/quanxiang-cloud/cabin/tailormade/header"
 	"github.com/quanxiang-cloud/form/internal/models"
 	"github.com/quanxiang-cloud/form/internal/models/mysql"
-	"github.com/quanxiang-cloud/form/internal/models/redis"
 	"github.com/quanxiang-cloud/form/internal/service"
 	"github.com/quanxiang-cloud/form/internal/service/consensus"
 	"github.com/quanxiang-cloud/form/internal/service/types"
