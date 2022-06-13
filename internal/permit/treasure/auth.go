@@ -2,8 +2,6 @@ package treasure
 
 import (
 	"context"
-	"time"
-
 	"github.com/quanxiang-cloud/cabin/logger"
 
 	redis2 "github.com/quanxiang-cloud/cabin/tailormade/db/redis"
@@ -14,12 +12,6 @@ import (
 	"github.com/quanxiang-cloud/form/internal/service/consensus"
 	"github.com/quanxiang-cloud/form/pkg/misc/client/lowcode"
 	"github.com/quanxiang-cloud/form/pkg/misc/config"
-)
-
-const (
-	lockPerMatch = "lockPerMatch"
-	lockTimeout  = time.Duration(30) * time.Second // 30秒
-	timeSleep    = time.Millisecond * 500          // 0.5 秒
 )
 
 type Auth struct {
@@ -43,6 +35,9 @@ func (a *Auth) Auth(ctx context.Context, req *permit.Request) (*consensus.Permit
 		logger.Logger.Errorw("userID is blank", header.GetRequestIDKV(ctx).Fuzzy()...)
 		return nil, nil
 	}
+	// 判断 app  是否聚合
+	// 绝活
+
 	match, err := a.getUserRole(ctx, req)
 	if err != nil {
 		return nil, err
@@ -106,49 +101,4 @@ func (a *Auth) getCachePermit(ctx context.Context, roleID string, req *permit.Re
 		ResponseAll: resp.ResponseAll,
 	}
 	return getPermit, nil
-}
-
-func (a *Auth) getUserRole1(ctx context.Context, req *permit.Request) (*models.UserRoles, error) {
-	for i := 0; i < 5; i++ {
-		perMatch, err := a.redis.GetPerMatch(ctx, req.AppID, req.UserID)
-		if err != nil {
-			logger.Logger.Errorw(req.UserID, header.GetRequestIDKV(ctx).Fuzzy(), err.Error())
-			return nil, err
-		}
-		if perMatch != nil {
-			return perMatch, nil
-		}
-
-		// acquire distributed locks
-		lock, err := a.redis.Lock(ctx, lockPerMatch, 1, lockTimeout)
-		if err != nil {
-			return nil, err
-		}
-		if !lock {
-			<-time.After(timeSleep)
-			continue
-		}
-		break
-	}
-	defer a.redis.UnLock(ctx, lockPerMatch)
-	resp, err := a.form.GetCacheMatchRole(ctx, req.UserID, req.DepID, req.AppID)
-	if err != nil || resp == nil {
-		return nil, err
-	}
-	perMatch := &models.UserRoles{
-		RoleID: resp.RoleID,
-		UserID: req.UserID,
-		AppID:  req.AppID,
-	}
-	if resp.Types == models.InitType {
-		perMatch.RoleID = models.RoleInit
-		resp.RoleID = models.RoleInit
-	}
-	err = a.redis.CreatePerMatch(ctx, perMatch)
-	if err != nil {
-		logger.Logger.Errorw("create per match")
-	}
-	return &models.UserRoles{
-		RoleID: resp.RoleID,
-	}, nil
 }
