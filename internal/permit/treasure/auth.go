@@ -15,8 +15,9 @@ import (
 )
 
 type Auth struct {
-	redis models.LimitsRepo
-	form  *lowcode.Form
+	redis     models.LimitsRepo
+	form      *lowcode.Form
+	appCenter *lowcode.AppCenter
 }
 
 func NewAuth(conf *config.Config) (*Auth, error) {
@@ -25,8 +26,9 @@ func NewAuth(conf *config.Config) (*Auth, error) {
 		return nil, err
 	}
 	return &Auth{
-		redis: redis.NewLimitRepo(redisClient),
-		form:  lowcode.NewForm(conf.InternalNet),
+		redis:     redis.NewLimitRepo(redisClient),
+		form:      lowcode.NewForm(conf.InternalNet),
+		appCenter: lowcode.NewAppCenter(conf.InternalNet),
 	}, nil
 }
 
@@ -36,7 +38,25 @@ func (a *Auth) Auth(ctx context.Context, req *permit.Request) (*consensus.Permit
 		return nil, nil
 	}
 	// 判断 app  是否聚合
-	// 绝活
+	app, err := a.appCenter.GetOne(ctx, req.AppID)
+	if err != nil {
+		return nil, err
+	}
+	if app.PerPoly { // 要聚合权限
+		// 要聚合权限
+		poly, errs := a.form.PerPoly(ctx, req.AppID, req.Path, req.UserID, req.DepID)
+		if errs != nil {
+			return nil, errs
+		}
+		return &consensus.Permit{
+			Types:       poly.Types,
+			Params:      poly.Params,
+			Response:    poly.Response,
+			Condition:   poly.Condition,
+			ParamsAll:   poly.ParamsAll,
+			ResponseAll: poly.ResponseAll,
+		}, nil
+	}
 
 	match, err := a.getUserRole(ctx, req)
 	if err != nil || match == nil {
@@ -51,7 +71,6 @@ func (a *Auth) Auth(ctx context.Context, req *permit.Request) (*consensus.Permit
 	if err != nil || permits == nil {
 		return nil, err
 	}
-
 	return &consensus.Permit{
 		Params:      permits.Params,
 		Response:    permits.Response,

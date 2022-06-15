@@ -15,6 +15,7 @@ import (
 const (
 	appCenter    = "/api/v1/app-center"
 	checkIsAdmin = "/checkIsAdmin"
+	getOne       = "/getOne"
 )
 
 type appCenterAPI struct {
@@ -33,6 +34,7 @@ func NewAppCenterAPI(conf *config.Config) AppCenterAPI {
 // AppCenterAPI 应用壳管理对外接口
 type AppCenterAPI interface {
 	CheckIsAdmin(ctx context.Context, appID, userID string, isSuper bool) (*CheckAppAdminResp, error)
+	GetOne(ctx context.Context, appID string) (*AppResp, error)
 }
 
 // CheckAppAdminResp CheckAppAdmin
@@ -107,4 +109,22 @@ func isSuper(roles []string) bool {
 		}
 	}
 	return false
+}
+
+type AppResp struct {
+	Id      string `json:"id"`
+	PerPoly bool   `json:"perPoly"`
+}
+
+func (a *appCenterAPI) GetOne(ctx context.Context, appID string) (*AppResp, error) {
+	resp := &AppResp{}
+	err := client.POST(ctx, &a.client, fmt.Sprintf("%s%s%s", a.conf.Endpoint.AppCenter, appCenter, getOne), struct {
+		AppID string `json:"appID"`
+	}{
+		AppID: appID,
+	}, resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
 }

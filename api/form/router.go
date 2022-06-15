@@ -124,6 +124,8 @@ func permitRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 		r[internalPath].POST("/apiPermit/find", permits.FindPermit)
 		r[internalPath].POST("/apiPermit/get", permits.GetPermit)
 		r[internalPath].POST("/apiRole/userRole/create", permits.CreateUserRole)
+		r[internalPath].POST("/apiRole/perPoly", permits.PerPoly)
+		// app center
 		r[internalPath].POST("/apiRole/create", permits.CreateRole)
 		r[internalPath].POST("/apiRole/grant/assign/:roleID", permits.AssignRoleGrant)
 

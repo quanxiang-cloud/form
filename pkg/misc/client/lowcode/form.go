@@ -15,6 +15,7 @@ var (
 	getUserRoleURL  = "%s/api/v1/form/%s/internal/apiRole/userRole/get"
 	getPermitURl    = "%s/api/v1/form/%s/internal/apiPermit/get"
 	saveUserRoleURL = "%s/api/v1/form/%s/internal/apiRole/userRole/create"
+	getPerPolyURL   = "%s/api/v1/form/%s/internal/apiRole/perPoly"
 )
 
 func init() {
@@ -115,5 +116,34 @@ func (f *Form) saveRoleUsers(ctx context.Context, appID, roleID, userID string) 
 		return nil, err
 	}
 
+	return resp, nil
+}
+
+type PerPolyResp struct {
+	Params      models.FiledPermit
+	Response    models.FiledPermit
+	Condition   models.Condition
+	ResponseAll bool
+	ParamsAll   bool
+	Types       models.RoleType
+}
+
+func (f *Form) PerPoly(ctx context.Context, appID, path, userID, depID string) (*PerPolyResp, error) {
+	resp := &PerPolyResp{}
+	saveUserRoleURLs := fmt.Sprintf(getPerPolyURL, formHost, appID)
+	err := client.POST(ctx, &f.client, saveUserRoleURLs, struct {
+		AppID  string `json:"appID"`
+		Path   string `json:"path"`
+		DepID  string `json:"depID"`
+		UserID string `json:"userID"`
+	}{
+		AppID:  appID,
+		Path:   path,
+		UserID: userID,
+		DepID:  depID,
+	}, resp)
+	if err != nil {
+		return nil, err
+	}
 	return resp, nil
 }

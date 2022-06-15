@@ -1,8 +1,6 @@
 package api
 
 import (
-	"fmt"
-	"github.com/quanxiang-cloud/form/internal/models"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -229,33 +227,18 @@ func (p *Permit) ListAndSelect(c *gin.Context) {
 
 func (p *Permit) PathPermit(c *gin.Context) {
 	pf := getProfile(c)
-	req := &service.GetUserRoleReq{
+	req := &service.HomePerListReq{
 		AppID:  c.Param(_appID),
 		UserID: pf.userID,
 		DepID:  pf.depID,
 	}
 	ctx := header.MutateContext(c)
-	role, err := p.permit.GetUserRole(ctx, req)
-	if err != nil {
+	if err := c.ShouldBind(req); err != nil {
+		logger.Logger.WithName("HomePerList").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
-	uriAPIReq := &service.ListPermitReq{
-		RoleID: role.RoleID,
-	}
-	if err = c.ShouldBind(uriAPIReq); err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
-		return
-	}
-	resp1 := make(service.ListPermitResp)
-	if role.Types == models.InitType {
-		for _, value := range uriAPIReq.List {
-			resp1[fmt.Sprintf("%s-%s", value.AccessPath, value.Method)] = true
-		}
-		resp.Format(&resp1, nil).Context(c)
-		return
-	}
-	resp.Format(p.permit.ListPermit(ctx, uriAPIReq)).Context(c)
+	resp.Format(p.permit.HomePerList(ctx, req)).Context(c)
 }
 
 func (p *Permit) CreateUserRole(c *gin.Context) {

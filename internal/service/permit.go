@@ -6,6 +6,7 @@ import (
 	redis2 "github.com/quanxiang-cloud/cabin/tailormade/db/redis"
 	"github.com/quanxiang-cloud/form/internal/models/redis"
 	"github.com/quanxiang-cloud/form/internal/service/consensus"
+	"github.com/quanxiang-cloud/form/pkg/misc/client"
 
 	daprd "github.com/dapr/go-sdk/client"
 	error2 "github.com/quanxiang-cloud/cabin/error"
@@ -59,6 +60,8 @@ type Permit interface {
 	CopyRole(ctx context.Context, req *CopyRoleReq) (*CopyRoleResp, error)
 
 	PerPoly(ctx context.Context, req *PerPolyReq) (*PerPolyResp, error)
+
+	HomePerList(ctx context.Context, req *HomePerListReq) (*ListPermitResp, error)
 }
 
 type permit struct {
@@ -70,6 +73,7 @@ type permit struct {
 	daprClient    daprd.Client
 	conf          *config2.Config
 	userRoleRepo  models.UserRoleRepo
+	appCenterAPI  client.AppCenterAPI
 }
 
 type CopyRoleReq struct {
@@ -145,6 +149,7 @@ type ListAndSelectReq struct {
 type ListAndSelectResp struct {
 	OptionPer []*Per `json:"optionPer"`
 	SelectPer *Per   `json:"selectPer"`
+	PerPoly   bool   `json:"perPoly"`
 }
 
 type Per struct {
@@ -153,6 +158,15 @@ type Per struct {
 }
 
 func (p *permit) ListAndSelect(ctx context.Context, req *ListAndSelectReq) (*ListAndSelectResp, error) {
+	one, err := p.appCenterAPI.GetOne(ctx, req.AppID)
+	if err != nil {
+		return nil, err
+	}
+	if one.PerPoly {
+		return &ListAndSelectResp{
+			PerPoly: one.PerPoly,
+		}, nil
+	}
 	ow := make([]string, 0)
 	if req.UserID != "" {
 		ow = append(ow, req.UserID)
@@ -399,10 +413,11 @@ func NewPermit(conf *config2.Config) (Permit, error) {
 	if err != nil {
 		return nil, err
 	}
+	appCenterAPI := client.NewAppCenterAPI(conf)
 	return &permit{
-		db:   db,
-		conf: conf,
-
+		db:            db,
+		conf:          conf,
+		appCenterAPI:  appCenterAPI,
 		roleRepo:      mysql.NewRoleRepo(),
 		roleGrantRepo: mysql.NewRoleGrantRepo(),
 		permitRepo:    mysql.NewPermitRepo(),
@@ -919,45 +934,86 @@ type PerPolyReq struct {
 }
 
 type PerPolyResp struct {
-}
-
-type perCache map[string]*per
-
-type per struct {
 	Params      models.FiledPermit
 	Response    models.FiledPermit
 	Condition   models.Condition
 	ResponseAll bool
 	ParamsAll   bool
+	Types       models.RoleType
 }
 
 func (p *permit) PerPoly(ctx context.Context, req *PerPolyReq) (*PerPolyResp, error) {
+	ow := make([]string, 0)
+
+	if req.UserID != "" {
+		ow = append(ow, req.UserID)
+	}
+	if req.DepID != "" {
+		ow = append(ow, req.DepID)
+	}
+	grants, _, err := p.roleGrantRepo.List(p.db, &models.RoleGrantQuery{
+		Owners: ow,
+		AppID:  req.AppID,
+	}, 1, 99)
+	if err != nil {
+		return nil, err
+	}
+	mapRole := make(map[string]struct{})
+	roleID := make([]string, 0)
+	for _, value := range grants {
+		_, ok := mapRole[value.RoleID]
+		if ok {
+			continue
+		}
+		// 判断角色
+		role, errs := p.roleRepo.Get(p.db, value.RoleID)
+		if errs != nil {
+			return nil, errs
+		}
+		if role.Types == models.InitType {
+			return &PerPolyResp{
+				Types: models.InitType,
+			}, nil
+		}
+		mapRole[value.RoleID] = struct{}{}
+		roleID = append(roleID, value.RoleID)
+	}
 	list, _, err := p.permitRepo.List(p.db, &models.PermitQuery{
-		RoleIDs: []string{},
+		RoleIDs: roleID,
 		Path:    req.Path,
 	}, 1, 99)
 	if err != nil {
 		return nil, err
 	}
-	var persss *per
-
+	var per *PerPolyResp
 	for _, value := range list {
-		if persss != nil {
-			persss = &per{
+		if per == nil {
+			per = &PerPolyResp{
 				Params:      value.Params,
 				Response:    value.Response,
 				Condition:   value.Condition,
 				ResponseAll: value.ResponseAll,
 				ParamsAll:   value.ParamsAll,
 			}
+			continue
 		}
-
+		if !per.ParamsAll {
+			FiledPermitPoly(value.Params, per.Params)
+		}
+		if !per.ResponseAll {
+			FiledPermitPoly(value.Response, per.Response)
+		}
+		per.ParamsAll = value.ParamsAll
+		per.ResponseAll = value.ResponseAll
+		per.Condition = ConditionPoly(per.Condition, value.Condition)
 	}
-
-	return &PerPolyResp{}, nil
+	return per, nil
 }
 
 func FiledPermitPoly(source models.FiledPermit, dst models.FiledPermit) {
+	if source == nil {
+		return
+	}
 	if dst == nil {
 		dst = make(models.FiledPermit)
 	}
@@ -971,14 +1027,6 @@ func FiledPermitPoly(source models.FiledPermit, dst models.FiledPermit) {
 	}
 }
 
-// 简单  复杂
-
-// 简单 简单
-
-// 复杂 简单
-
-// 复杂 复杂
-
 func ConditionPoly(source models.Condition, dst models.Condition) models.Condition {
 	sQuery := source["query"]
 	dQuery := dst["query"]
@@ -989,4 +1037,85 @@ func ConditionPoly(source models.Condition, dst models.Condition) models.Conditi
 		return dst
 	}
 	return consensus.GetBool("should", sQuery, dQuery)
+}
+
+type HomePerListReq struct {
+	UserID string     `json:"userID"`
+	DepID  string     `json:"depID"`
+	AppID  string     `json:"appID"`
+	List   []*ListRes `json:"paths" binding:"required"`
+}
+
+func (p *permit) HomePerList(ctx context.Context, req *HomePerListReq) (*ListPermitResp, error) {
+	// 先判断是不是聚合
+	one, err := p.appCenterAPI.GetOne(ctx, req.AppID)
+	if err != nil {
+		return nil, err
+	}
+	resp := make(ListPermitResp)
+	if one.PerPoly {
+		ow := make([]string, 0)
+		if req.UserID != "" {
+			ow = append(ow, req.UserID)
+		}
+		if req.DepID != "" {
+			ow = append(ow, req.DepID)
+		}
+
+		grants, _, err := p.roleGrantRepo.List(p.db, &models.RoleGrantQuery{
+			Owners: []string{req.UserID, req.DepID},
+			AppID:  req.AppID,
+		}, 1, 99)
+		if err != nil {
+			return nil, err
+		}
+		mapRole := make(map[string]struct{})
+		roleID := make([]string, 0)
+		for _, value := range grants {
+			_, ok := mapRole[value.RoleID]
+			if ok {
+				continue
+			}
+			// 判断角色
+			mapRole[value.RoleID] = struct{}{}
+			roleID = append(roleID, value.RoleID)
+		}
+
+		for _, values := range req.List {
+			_, total, err := p.permitRepo.List(p.db, &models.PermitQuery{
+				RoleIDs: roleID,
+				Path:    values.URI,
+				Method:  values.Method,
+			}, 1, 99)
+			if err != nil {
+				continue
+			}
+			if total != 0 {
+				key := fmt.Sprintf("%s-%s", values.AccessPath, values.Method)
+				resp[key] = true
+			}
+		}
+		return &resp, nil
+
+	}
+	role, err := p.GetUserRole(ctx, &GetUserRoleReq{
+		AppID:  req.AppID,
+		UserID: req.UserID,
+		DepID:  req.DepID,
+	})
+	if err != nil {
+		return nil, err
+	}
+	if role.Types == models.InitType {
+		for _, value := range req.List {
+			resp[fmt.Sprintf("%s-%s", value.AccessPath, value.Method)] = true
+		}
+
+		return &resp, nil
+	}
+	return p.ListPermit(ctx, &ListPermitReq{
+
+		List:   req.List,
+		RoleID: role.RoleID,
+	})
 }

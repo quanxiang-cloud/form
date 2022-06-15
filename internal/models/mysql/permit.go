@@ -79,6 +79,9 @@ func (t *permitRepo) List(db *gorm.DB, query *models.PermitQuery, page, size int
 	if len(query.RoleIDs) != 0 {
 		db = db.Where("role_id in ?", query.RoleIDs)
 	}
+	if query.Method != "" {
+		db = db.Where("method = ?", query.Method)
+	}
 
 	var (
 		count   int64
