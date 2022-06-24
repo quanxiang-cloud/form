@@ -3,7 +3,6 @@ module github.com/quanxiang-cloud/form
 go 1.16
 
 require (
-	github.com/aerospike/aerospike-client-go v4.5.0+incompatible // indirect
 	github.com/dapr/go-sdk v1.3.1
 	github.com/gin-gonic/gin v1.7.7
 	github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8

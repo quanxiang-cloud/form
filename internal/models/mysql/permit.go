@@ -58,6 +58,9 @@ func (t *permitRepo) Update(db *gorm.DB, query *models.PermitQuery, permit *mode
 	if query.Method != "" {
 		ql = ql.Where("method = ?", query.Method)
 	}
+	if query.RoleID != "" {
+		ql = ql.Where("role_id = ?", query.RoleID)
+	}
 	return ql.Updates(
 		setMap).Error
 }

@@ -67,7 +67,15 @@ func (c *Condition) Do(ctx context.Context, req *permit.Request) (*permit.Respon
 		dataes = append(dataes, query)
 	}
 	condition := req.Permit.Condition
-	if condition != nil && len(condition) != 0 {
+	i, ok := condition[_query]
+	if !ok {
+		logger.Logger.Infow("query is nil ", header.GetRequestIDKV(ctx).Fuzzy()...)
+	}
+	s, ok := i.(map[string]interface{})
+	if !ok {
+		logger.Logger.Infow("query is not map ", header.GetRequestIDKV(ctx).Fuzzy()...)
+	}
+	if s != nil && len(s) != 0 {
 		err := c.cond.ParseCondition(condition[_query])
 		if err != nil {
 			logger.Logger.WithName("form condition").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)

@@ -164,7 +164,9 @@ func (p *permit) ListAndSelect(ctx context.Context, req *ListAndSelectReq) (*Lis
 	}
 	if one.PerPoly {
 		return &ListAndSelectResp{
-			PerPoly: one.PerPoly,
+			PerPoly:   one.PerPoly,
+			SelectPer: &Per{},
+			OptionPer: make([]*Per, 0),
 		}, nil
 	}
 	ow := make([]string, 0)
@@ -715,6 +717,7 @@ type UpdatePerReq struct {
 	Path        string             `json:"accessPath"`
 	URI         string             `json:"uri"`
 	Method      string             `json:"method"`
+	RoleID      string             `json:"roleID"`
 }
 
 type UpdatePerResp struct{}
@@ -725,6 +728,7 @@ func (p *permit) UpdatePermit(ctx context.Context, req *UpdatePerReq) (*UpdatePe
 		err := p.permitRepo.Update(p.db, &models.PermitQuery{
 			Path:   req.URI,
 			Method: req.Method,
+			RoleID: req.RoleID,
 		}, &models.Permit{
 			Params:      req.Params,
 			Response:    req.Response,
@@ -741,6 +745,7 @@ func (p *permit) UpdatePermit(ctx context.Context, req *UpdatePerReq) (*UpdatePe
 	err := p.permitRepo.Update(p.db, &models.PermitQuery{
 		Path:   req.Path,
 		Method: req.Method,
+		RoleID: req.RoleID,
 	}, &models.Permit{
 		Params:      req.Params,
 		Response:    req.Response,
@@ -978,6 +983,12 @@ func (p *permit) PerPoly(ctx context.Context, req *PerPolyReq) (*PerPolyResp, er
 		mapRole[value.RoleID] = struct{}{}
 		roleID = append(roleID, value.RoleID)
 	}
+
+	get, err := p.permitRepo.Get(p.db, "0a3338e4-a98b-4ce6-9b01-e06f9235dae8", "/api/v1/form/4s8jv/home/form/v5m29/search", "POST")
+	if err != nil {
+
+	}
+	fmt.Println(get)
 	list, _, err := p.permitRepo.List(p.db, &models.PermitQuery{
 		RoleIDs: roleID,
 		Path:    req.Path,
@@ -997,15 +1008,22 @@ func (p *permit) PerPoly(ctx context.Context, req *PerPolyReq) (*PerPolyResp, er
 			}
 			continue
 		}
+		if value.ParamsAll {
+			per.ParamsAll = value.ParamsAll
+		}
+		if value.ResponseAll {
+			per.ResponseAll = value.ResponseAll
+		}
 		if !per.ParamsAll {
 			FiledPermitPoly(value.Params, per.Params)
 		}
 		if !per.ResponseAll {
 			FiledPermitPoly(value.Response, per.Response)
 		}
-		per.ParamsAll = value.ParamsAll
-		per.ResponseAll = value.ResponseAll
 		per.Condition = ConditionPoly(per.Condition, value.Condition)
+	}
+	per.Condition = models.Condition{
+		"query": per.Condition,
 	}
 	return per, nil
 }
@@ -1084,7 +1102,7 @@ func (p *permit) HomePerList(ctx context.Context, req *HomePerListReq) (*ListPer
 		for _, values := range req.List {
 			_, total, err := p.permitRepo.List(p.db, &models.PermitQuery{
 				RoleIDs: roleID,
-				Path:    values.URI,
+				Path:    values.AccessPath,
 				Method:  values.Method,
 			}, 1, 99)
 			if err != nil {

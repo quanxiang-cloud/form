@@ -37,7 +37,7 @@ func (a *Auth) Auth(ctx context.Context, req *permit.Request) (*consensus.Permit
 		logger.Logger.Errorw("userID is blank", header.GetRequestIDKV(ctx).Fuzzy()...)
 		return nil, nil
 	}
-	// 判断 app  是否聚合
+	//判断 app  是否聚合
 	app, err := a.appCenter.GetOne(ctx, req.AppID)
 	if err != nil {
 		return nil, err
