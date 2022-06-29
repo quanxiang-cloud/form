@@ -120,12 +120,13 @@ func (f *Form) saveRoleUsers(ctx context.Context, appID, roleID, userID string) 
 }
 
 type PerPolyResp struct {
-	Params      models.FiledPermit
-	Response    models.FiledPermit
-	Condition   models.Condition
-	ResponseAll bool
-	ParamsAll   bool
-	Types       models.RoleType
+	Params      models.FiledPermit `json:"params"`
+	Response    models.FiledPermit `json:"response"`
+	Condition   models.Condition   `json:"condition"`
+	ResponseAll bool               `json:"responseAll"`
+	ParamsAll   bool               `json:"ParamsAll"`
+	Types       models.RoleType    `json:"types"`
+	ID          string             `json:"id"`
 }
 
 func (f *Form) PerPoly(ctx context.Context, appID, path, userID, depID string) (*PerPolyResp, error) {

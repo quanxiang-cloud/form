@@ -45,8 +45,12 @@ func (a *Auth) Auth(ctx context.Context, req *permit.Request) (*consensus.Permit
 	if app.PerPoly { // 要聚合权限
 		// 要聚合权限
 		poly, errs := a.form.PerPoly(ctx, req.AppID, req.Path, req.UserID, req.DepID)
+
 		if errs != nil {
 			return nil, errs
+		}
+		if poly.ID == "" {
+			return nil, nil
 		}
 		return &consensus.Permit{
 			Types:       poly.Types,
@@ -59,9 +63,13 @@ func (a *Auth) Auth(ctx context.Context, req *permit.Request) (*consensus.Permit
 	}
 
 	match, err := a.getUserRole(ctx, req)
-	if err != nil || match == nil {
+	if err != nil {
 		return nil, err
 	}
+	if match == nil {
+		return nil, nil
+	}
+
 	if match.RoleID == models.RoleInit {
 		return &consensus.Permit{
 			Types: models.InitType,

@@ -907,6 +907,9 @@ func (p *permit) GetUserRole(ctx context.Context, req *GetUserRoleReq) (*GetUser
 		Owners: ow,
 		AppID:  req.AppID,
 	}, 1, 999)
+	if err != nil {
+		return nil, err
+	}
 	if total == 0 || len(grant) == 0 {
 		return resp, nil
 	}
@@ -939,12 +942,13 @@ type PerPolyReq struct {
 }
 
 type PerPolyResp struct {
-	Params      models.FiledPermit
-	Response    models.FiledPermit
-	Condition   models.Condition
-	ResponseAll bool
-	ParamsAll   bool
-	Types       models.RoleType
+	Params      models.FiledPermit `json:"params"`
+	Response    models.FiledPermit `json:"response"`
+	Condition   models.Condition   `json:"condition"`
+	ResponseAll bool               `json:"responseAll"`
+	ParamsAll   bool               `json:"ParamsAll"`
+	Types       models.RoleType    `json:"types"`
+	ID          string             `json:"id"`
 }
 
 func (p *permit) PerPoly(ctx context.Context, req *PerPolyReq) (*PerPolyResp, error) {
@@ -983,12 +987,11 @@ func (p *permit) PerPoly(ctx context.Context, req *PerPolyReq) (*PerPolyResp, er
 		mapRole[value.RoleID] = struct{}{}
 		roleID = append(roleID, value.RoleID)
 	}
+	var per *PerPolyResp
 
-	get, err := p.permitRepo.Get(p.db, "0a3338e4-a98b-4ce6-9b01-e06f9235dae8", "/api/v1/form/4s8jv/home/form/v5m29/search", "POST")
-	if err != nil {
-
+	if len(roleID) <= 0 {
+		return per, nil
 	}
-	fmt.Println(get)
 	list, _, err := p.permitRepo.List(p.db, &models.PermitQuery{
 		RoleIDs: roleID,
 		Path:    req.Path,
@@ -996,10 +999,10 @@ func (p *permit) PerPoly(ctx context.Context, req *PerPolyReq) (*PerPolyResp, er
 	if err != nil {
 		return nil, err
 	}
-	var per *PerPolyResp
 	for _, value := range list {
 		if per == nil {
 			per = &PerPolyResp{
+				ID:          id2.StringUUID(),
 				Params:      value.Params,
 				Response:    value.Response,
 				Condition:   value.Condition,
@@ -1021,9 +1024,6 @@ func (p *permit) PerPoly(ctx context.Context, req *PerPolyReq) (*PerPolyResp, er
 			FiledPermitPoly(value.Response, per.Response)
 		}
 		per.Condition = ConditionPoly(per.Condition, value.Condition)
-	}
-	per.Condition = models.Condition{
-		"query": per.Condition,
 	}
 	return per, nil
 }
@@ -1054,7 +1054,9 @@ func ConditionPoly(source models.Condition, dst models.Condition) models.Conditi
 	if dQuery == nil {
 		return dst
 	}
-	return consensus.GetBool("should", sQuery, dQuery)
+	return models.Condition{
+		"query": consensus.GetBool("should", sQuery, dQuery),
+	}
 }
 
 type HomePerListReq struct {
@@ -1098,7 +1100,9 @@ func (p *permit) HomePerList(ctx context.Context, req *HomePerListReq) (*ListPer
 			mapRole[value.RoleID] = struct{}{}
 			roleID = append(roleID, value.RoleID)
 		}
-
+		if len(roleID) <= 0 {
+			return &resp, nil
+		}
 		for _, values := range req.List {
 			_, total, err := p.permitRepo.List(p.db, &models.PermitQuery{
 				RoleIDs: roleID,
