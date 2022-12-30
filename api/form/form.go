@@ -247,6 +247,9 @@ func initBus(c *gin.Context, bus *consensus.Bus, method string) error {
 	depIDS := strings.Split(c.GetHeader(_departmentID), ",")
 	bus.DepID = depIDS[0]
 	bus.Path = c.Request.RequestURI
+	requestID := c.GetHeader("Request-Id")
+	bus.RequestID = requestID
+	logger.Logger.WithName("bus init").Infof("%s", requestID)
 	return nil
 }
 

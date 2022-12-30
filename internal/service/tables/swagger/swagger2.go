@@ -21,7 +21,7 @@ func V1GetMethod(schemasBus *schemasBus) spec.OperationProps {
 	}
 	return doOperationProps(&operation{
 		fmt.Sprintf("%s_%s", schemasBus.tableID, get),
-		util.GetSummary(schemasBus.tableName, "查询单条v1"),
+		util.GetSummary(schemasBus.tableName, "查询单条"),
 		responses,
 
 		parameters,
@@ -35,7 +35,7 @@ func V1Delete(schemasBus *schemasBus) spec.OperationProps {
 	}
 	return doOperationProps(&operation{
 		fmt.Sprintf("%s_%s", schemasBus.tableID, delete),
-		util.GetSummary(schemasBus.tableName, "删除v1"),
+		util.GetSummary(schemasBus.tableName, "删除"),
 		responses,
 
 		parameters,
@@ -49,7 +49,7 @@ func V1SearchMethod(schemasBus *schemasBus) spec.OperationProps {
 	}
 	return doOperationProps(&operation{
 		fmt.Sprintf("%s_%s", schemasBus.tableID, search),
-		util.GetSummary(schemasBus.tableName, "查询多条v1"),
+		util.GetSummary(schemasBus.tableName, "查询多条"),
 		responses,
 
 		parameters,
@@ -63,7 +63,7 @@ func V1Update(schemasBus *schemasBus, require []string) spec.OperationProps {
 	}
 	return doOperationProps(&operation{
 		fmt.Sprintf("%s_%s", schemasBus.tableID, update),
-		util.GetSummary(schemasBus.tableName, "更新v1"),
+		util.GetSummary(schemasBus.tableName, "更新"),
 		responses,
 
 		parameters,
@@ -77,7 +77,7 @@ func V1Create(schemasBus *schemasBus, require []string) spec.OperationProps {
 	}
 	return doOperationProps(&operation{
 		fmt.Sprintf("%s_%s", schemasBus.tableID, create),
-		util.GetSummary(schemasBus.tableName, "创建v1"),
+		util.GetSummary(schemasBus.tableName, "创建"),
 		responses,
 
 		parameters,

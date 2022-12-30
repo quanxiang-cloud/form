@@ -2,9 +2,9 @@ package api
 
 import (
 	"github.com/quanxiang-cloud/form/internal/service/form"
-	"github.com/quanxiang-cloud/form/pkg/misc/client"
 	config2 "github.com/quanxiang-cloud/form/pkg/misc/config"
 	"github.com/quanxiang-cloud/form/pkg/misc/probe"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	gin2 "github.com/quanxiang-cloud/cabin/tailormade/gin"
@@ -43,6 +43,7 @@ var routers = []router{
 	innerRouter,
 	permitRouter,
 	tableRouter,
+	projectRouter,
 }
 
 // NewRouter enable routing.
@@ -55,9 +56,9 @@ func NewRouter(c *config2.Config) (*Router, error) {
 	if err != nil {
 		return nil, err
 	}
-	appCenterClient := client.NewAppCenterClient(c)
+	//appCenterClient := client.NewAppCenterClient(c)
 	r := map[string]*gin.RouterGroup{
-		managerPath:  engine.Group("/api/v1/form/:appID/m", appCenterClient.CheckIsAppAdmin),
+		managerPath:  engine.Group("/api/v1/form/:appID/m"), // appCenterClient.CheckIsAppAdmin
 		homePath:     engine.Group("/api/v1/form/:appID/home"),
 		v2HomePath:   engine.Group("/api/v2/form/:appID/home"),
 		internalPath: engineInner.Group("/api/v1/form/:appID/internal"),
@@ -85,6 +86,33 @@ func NewRouter(c *config2.Config) (*Router, error) {
 		engineInner: engineInner,
 		Probe:       probe,
 	}, nil
+}
+
+func projectRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
+	project, err := NewProject(c)
+	if err != nil {
+		return err
+	}
+	p := r[managerPath].Group("", func(c *gin.Context) {
+		if c.Param("appID") != "project" {
+			c.AbortWithStatus(http.StatusNotFound)
+			return
+		}
+	})
+
+	{
+		p.POST("/create", project.CreateProject)
+		p.POST("/delete", project.DeleteProject)
+		p.POST("/list", project.ListProject)
+		p.POST("/grant/user", project.AssignProjectUser)
+		p.POST("/grant/list", project.ListProjectUser)
+
+	}
+	p1 := r[internalPath].Group("/project")
+	{
+		p1.POST("/user/list", project.ListProjectUser)
+	}
+	return nil
 }
 
 func permitRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
@@ -150,6 +178,7 @@ func cometRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 
 		inner.POST("/:action", action(guide))     // inner use。
 		innerHome.POST("/:action", action(guide)) // poly use
+		innerHome.POST("/create/batch", batchCreate(guide))
 
 		v2Path.GET("/:id", get(guide))
 		v2Path.DELETE("/:id", delete(guide))

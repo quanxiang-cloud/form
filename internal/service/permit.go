@@ -981,6 +981,7 @@ func (p *permit) PerPoly(ctx context.Context, req *PerPolyReq) (*PerPolyResp, er
 		}
 		if role.Types == models.InitType {
 			return &PerPolyResp{
+				ID:    id2.StringUUID(),
 				Types: models.InitType,
 			}, nil
 		}
@@ -1048,10 +1049,18 @@ func FiledPermitPoly(source models.FiledPermit, dst models.FiledPermit) {
 func ConditionPoly(source models.Condition, dst models.Condition) models.Condition {
 	sQuery := source["query"]
 	dQuery := dst["query"]
-	if sQuery == nil {
+	s, ok := sQuery.(map[string]interface{})
+	if !ok {
+		return nil
+	}
+	d, ok := dQuery.(map[string]interface{})
+	if !ok {
+		return nil
+	}
+	if sQuery == nil || len(s) == 0 {
 		return source
 	}
-	if dQuery == nil {
+	if dQuery == nil || len(d) == 0 {
 		return dst
 	}
 	return models.Condition{

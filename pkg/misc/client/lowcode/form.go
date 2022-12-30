@@ -16,6 +16,7 @@ var (
 	getPermitURl    = "%s/api/v1/form/%s/internal/apiPermit/get"
 	saveUserRoleURL = "%s/api/v1/form/%s/internal/apiRole/userRole/create"
 	getPerPolyURL   = "%s/api/v1/form/%s/internal/apiRole/perPoly"
+	projectUser     = "%s/api/v1/form/%s/internal/project/user/list"
 )
 
 func init() {
@@ -146,5 +147,37 @@ func (f *Form) PerPoly(ctx context.Context, appID, path, userID, depID string) (
 	if err != nil {
 		return nil, err
 	}
+	return resp, nil
+}
+
+type UserProjectResp struct {
+	List  []*projectUserVO `json:"list"`
+	Total int64            `json:"total"`
+}
+
+type projectUserVO struct {
+	ID          string `json:"id"`
+	ProjectID   string `json:"projectID"`
+	ProjectName string `json:"projectName"`
+	UserID      string `json:"userID"`
+	UserName    string `json:"userName"`
+}
+
+func (f *Form) UserProject(ctx context.Context, userID string) (*UserProjectResp, error) {
+	resp := &UserProjectResp{}
+	saveUserRoleURLs := fmt.Sprintf(projectUser, formHost, "test")
+	err := client.POST(ctx, &f.client, saveUserRoleURLs, struct {
+		Page   int    `json:"page"`
+		Size   int    `json:"size"`
+		UserID string `json:"userID "`
+	}{
+		UserID: userID,
+		Page:   1,
+		Size:   999,
+	}, resp)
+	if err != nil {
+		return nil, err
+	}
+
 	return resp, nil
 }
