@@ -12,7 +12,7 @@ import (
 
 var (
 	mysqlDBInst *gorm.DB
-	regexpForm  = regexp.MustCompile(`^[^.]+(\.[^.]+){2}$`)
+	regexpForm  = regexp.MustCompile(`(?s-m:^/api/v1/polyapi/request/system/app/\w+/raw/inner/form/\w+/[\w.]+$)`)
 )
 
 func CreateMysqlConn(conf *config.Config) (*gorm.DB, error) {

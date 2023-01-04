@@ -10,7 +10,9 @@ type AppCenterMock struct {
 }
 
 func (a AppCenterMock) GetOne(ctx context.Context, appID string) (*AppResp, error) {
-	return &AppResp{}, nil
+	return &AppResp{
+		PerPoly: false,
+	}, nil
 }
 
 func (a AppCenterMock) CheckIsAdmin(ctx context.Context, appID, userID string, isSuper bool) (*CheckAppAdminResp, error) {
