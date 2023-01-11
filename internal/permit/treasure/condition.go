@@ -72,7 +72,10 @@ func (p *project) Build(ctx context.Context, cond *Condition, req *permit.Reques
 }
 
 func (p *project) getValue() ([]string, error) {
+	logger.Logger.WithName("project user data").Infow("data",
+		"req id ", header.GetRequestIDKV(p.ctx).Fuzzy()[1], "resp total ", p.req.UserID)
 	resp, err := p.cond.formAPI.UserProject(p.ctx, p.req.UserID)
+
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +96,7 @@ func (p *project) Parse(key string, params map[string]interface{}) error {
 		return err
 	}
 	params[_terms] = types.M{
-		"project_id.value": value,
+		"project_id": value,
 	}
 	delete(params, p.Tag())
 	return nil

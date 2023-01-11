@@ -85,15 +85,15 @@ func polyRouter(c *config2.Config, r map[string]*echo.Group) error {
 		logger.Logger.WithName("instantiation poly cor").Error(err)
 		return err
 	}
-	p, err := side.NewNilModifyProxy(c, c.Endpoint.Poly)
-	if err != nil {
-		return err
-	}
+	//p, err := side.NewNilModifyProxy(c, c.Endpoint.Poly)
+	//if err != nil {
+	//	return err
+	//}
 
 	group := r[ployPath]
 	{
 		group.Any("/request/system/app/:appID/*", Permit(cor))
-		group.Any("/request/system/app/:appID/raw/inner/form/*", Permit(p)) // 对于form
+		group.Any("/request/system/app/:appID/raw/inner/form/*", Permit(cor)) // 对于form
 	}
 	return nil
 }

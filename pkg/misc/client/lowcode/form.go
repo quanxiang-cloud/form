@@ -169,7 +169,7 @@ func (f *Form) UserProject(ctx context.Context, userID string) (*UserProjectResp
 	err := client.POST(ctx, &f.client, saveUserRoleURLs, struct {
 		Page   int    `json:"page"`
 		Size   int    `json:"size"`
-		UserID string `json:"userID "`
+		UserID string `json:"userID"`
 	}{
 		UserID: userID,
 		Page:   1,

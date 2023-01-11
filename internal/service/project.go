@@ -92,7 +92,7 @@ type ListProjectUserReq struct {
 	Page      int    `json:"page"`
 	Size      int    `json:"size"`
 	ProjectID string `json:"projectID"`
-	UserID    string `json:"userID "`
+	UserID    string `json:"userID"`
 }
 
 type ListProjectUserResp struct {
@@ -111,6 +111,7 @@ type projectUserVO struct {
 func (p *project) ListProjectUser(ctx context.Context, req *ListProjectUserReq) (*ListProjectUserResp, error) {
 	list, total, err := p.projectUerRepo.List(p.db, &models.ProjectUserQuery{
 		ProjectID: req.ProjectID,
+		UserID:    req.UserID,
 	}, req.Page, req.Size)
 	if err != nil {
 		return nil, err

@@ -162,8 +162,11 @@ func (c *comet) callUpdate(ctx context.Context, req *UpdateReq) (*consensus.Resp
 		return nil, err
 	}
 	resp := &consensus.Response{}
-	resp.Total = updates.SuccessCount
-	resp.Entity = req.Entity
+	resp.Total = 0
+	if updates.SuccessCount > 0 {
+		resp.Total = updates.SuccessCount
+		resp.Entity = req.Entity
+	}
 	return resp, nil
 }
 
