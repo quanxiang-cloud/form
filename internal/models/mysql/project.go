@@ -30,7 +30,27 @@ func (project *projectRepo) Delete(db *gorm.DB, query *models.ProjectQuery) erro
 }
 
 func (project *projectRepo) Update(db *gorm.DB, query *models.ProjectQuery, p *models.Project) error {
-	return nil
+	setMap := make(map[string]interface{})
+	if p.Name != "" {
+		setMap["name"] = p.Name
+	}
+	if p.Description != "" {
+		setMap["description"] = p.Description
+	}
+	if p.Status != "" {
+		setMap["status"] = p.Status
+	}
+	if p.EndAt != 0 {
+		setMap["end_at"] = p.EndAt
+	}
+	if p.StartAt != 0 {
+		setMap["start_at"] = p.StartAt
+	}
+	if p.Remark != "" {
+		setMap["remark"] = p.Remark
+	}
+	return db.Table(project.TableName()).Where("id = ? ", query.ID).Updates(
+		setMap).Error
 }
 
 func (project *projectRepo) List(db *gorm.DB, query *models.ProjectQuery, page, size int) ([]*models.Project, int64, error) {
@@ -46,6 +66,7 @@ func (project *projectRepo) List(db *gorm.DB, query *models.ProjectQuery, page, 
 	if err != nil {
 		return nil, 0, err
 	}
+
 	err = db.Offset((page - 1) * size).Limit(size).Find(&projects).Error
 	if err != nil {
 		return nil, 0, err

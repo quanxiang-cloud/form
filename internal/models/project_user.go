@@ -11,9 +11,18 @@ type ProjectUser struct {
 }
 
 type ProjectUserQuery struct {
-	ProjectID string
-	UserIDs   []string
-	UserID    string
+	ProjectID    string
+	UserIDs      []string
+	UserID       string
+	SerialNumber string
+	// 开始时间
+	StartAt int64
+	// 结束时间
+	EndAt int64
+	// 状态
+	Status string
+	// 备注
+	Remark string
 }
 
 // ProjectUserRepo projectUserRepo.

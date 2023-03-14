@@ -2,7 +2,6 @@ package api
 
 import (
 	"github.com/quanxiang-cloud/form/internal/service/form"
-	"github.com/quanxiang-cloud/form/pkg/misc/client"
 	config2 "github.com/quanxiang-cloud/form/pkg/misc/config"
 	"github.com/quanxiang-cloud/form/pkg/misc/probe"
 	"net/http"
@@ -57,9 +56,9 @@ func NewRouter(c *config2.Config) (*Router, error) {
 	if err != nil {
 		return nil, err
 	}
-	appCenterClient := client.NewAppCenterClient(c)
+	//appCenterClient := client.NewAppCenterClient(c)
 	r := map[string]*gin.RouterGroup{
-		managerPath:  engine.Group("/api/v1/form/:appID/m", appCenterClient.CheckIsAppAdmin), //
+		managerPath:  engine.Group("/api/v1/form/:appID/m"), //appCenterClient.CheckIsAppAdmin
 		homePath:     engine.Group("/api/v1/form/:appID/home"),
 		v2HomePath:   engine.Group("/api/v2/form/:appID/home"),
 		internalPath: engineInner.Group("/api/v1/form/:appID/internal"),
@@ -85,7 +84,7 @@ func NewRouter(c *config2.Config) (*Router, error) {
 		c:           c,
 		engine:      engine,
 		engineInner: engineInner,
-		Probe:       probe,
+		//Probe:       probe,
 	}, nil
 }
 
@@ -105,8 +104,11 @@ func projectRouter(c *config2.Config, r map[string]*gin.RouterGroup) error {
 		p.POST("/create", project.CreateProject)
 		p.POST("/delete", project.DeleteProject)
 		p.POST("/list", project.ListProject)
+		p.POST("/getByID", project.GetProject)
+		p.POST("/update", project.UpdateProject)
 		p.POST("/grant/user", project.AssignProjectUser)
 		p.POST("/grant/list", project.ListProjectUser)
+		p.POST("/getByUserID", project.GetByUserID)
 
 	}
 	p1 := r[internalPath].Group("/project")

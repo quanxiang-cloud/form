@@ -3,16 +3,26 @@ package models
 import "gorm.io/gorm"
 
 type Project struct {
-	ID          string
-	Name        string
-	Description string
-	CreatedAt   int64
-	CreatorID   string
-	CreatorName string
+	ID           string
+	Name         string
+	Description  string
+	CreatedAt    int64
+	CreatorID    string
+	CreatorName  string
+	SerialNumber string
+	// 开始时间
+	StartAt int64
+	// 结束时间
+	EndAt int64
+	// 状态
+	Status string
+	// 备注
+	Remark string
 }
 
 type ProjectQuery struct {
-	ID string
+	ID  string
+	IDS []string
 }
 
 // ProjectRepo projectRepo.

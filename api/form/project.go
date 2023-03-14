@@ -90,3 +90,39 @@ func (p *Project) ListProjectUser(c *gin.Context) {
 	}
 	resp.Format(p.project.ListProjectUser(ctx, req)).Context(c)
 }
+
+// GetProject 根据项目id 获取项目信息
+func (p *Project) GetProject(c *gin.Context) {
+	req := &service.GetProjectReq{}
+	ctx := header.MutateContext(c)
+	if err := c.ShouldBind(req); err != nil {
+		logger.Logger.WithName("ListProjectUser").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	resp.Format(p.project.GetProject(ctx, req)).Context(c)
+}
+
+func (p *Project) UpdateProject(c *gin.Context) {
+	req := &service.UpdateProjectReq{}
+	ctx := header.MutateContext(c)
+	if err := c.ShouldBind(req); err != nil {
+		logger.Logger.WithName("ListProjectUser").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	resp.Format(p.project.UpdateProject(ctx, req)).Context(c)
+}
+
+// GetByUserID GetByUserID  通过userID 找到对应的项目
+func (p *Project) GetByUserID(c *gin.Context) {
+	req := &service.GetByUserIDReq{}
+	ctx := header.MutateContext(c)
+	if err := c.ShouldBind(req); err != nil {
+		logger.Logger.WithName("ListProjectUser").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	resp.Format(p.project.GetByUserID(ctx, req)).Context(c)
+
+}
