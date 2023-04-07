@@ -78,6 +78,7 @@ func CloneHeader(ctx context.Context, opts ...HeaderOpt) {
 
 // CTXHeader Context.
 func CTXHeader(c context.Context, ctx *gin.Context) context.Context {
+
 	c = context.WithValue(c, _magic, ctx.Request.Header.Get(string(_magic)))
 	c = context.WithValue(c, _seq, ctx.Request.Header.Get(string(_seq)))
 	c = context.WithValue(c, _version, ctx.Request.Header.Get(string(_version)))

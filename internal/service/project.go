@@ -47,10 +47,10 @@ func (p *project) GetByUserID(ctx context.Context, req *GetByUserIDReq) (*ListPr
 	if err != nil {
 		return nil, err
 	}
-	ids := make([]string, i)
-	if len(ids) == 0 {
+	if i == 0 {
 		return &ListProjectResp{}, nil
 	}
+	ids := make([]string, i)
 	for index, value := range list {
 		ids[index] = value.ProjectID
 	}
@@ -62,7 +62,7 @@ func (p *project) GetByUserID(ctx context.Context, req *GetByUserIDReq) (*ListPr
 	}
 	resp := &ListProjectResp{
 		Total: total,
-		List:  make([]*projectVo, len(list)),
+		List:  make([]*projectVo, total),
 	}
 	for index, values := range projects {
 		resp.List[index] = &projectVo{

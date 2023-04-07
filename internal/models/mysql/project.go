@@ -58,6 +58,9 @@ func (project *projectRepo) List(db *gorm.DB, query *models.ProjectQuery, page, 
 	//if query.AppID != "" {
 	//	db = db.Where("app_id = ?", query.AppID)
 	//}
+	if len(query.IDS) != 0 {
+		db = db.Where("id in ?", query.IDS)
+	}
 	var (
 		count    int64
 		projects []*models.Project

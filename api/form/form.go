@@ -3,6 +3,7 @@ package api
 import (
 	"errors"
 	"fmt"
+	"github.com/quanxiang-cloud/form/internal/service/form/inform"
 	"net/http"
 	"strings"
 
@@ -23,7 +24,7 @@ type profile struct {
 func action(ctr consensus.Guidance) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := header.MutateContext(c)
-
+		ctx = inform.CTXHeader(ctx, c)
 		bus := &consensus.Bus{}
 		err := initBus(c, bus, c.Param("action"))
 		if err != nil {
@@ -50,6 +51,7 @@ func batchCreate(ctr consensus.Guidance) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var err error
 		ctx := header.MutateContext(c)
+		ctx = inform.CTXHeader(ctx, c)
 		var batch []*consensus.Bus
 		if err = c.ShouldBind(&batch); err != nil {
 			logger.Logger.WithName("action").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
