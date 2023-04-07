@@ -65,6 +65,9 @@ func (t *tableRelationRepo) List(db *gorm.DB, query *models.TableRelationQuery, 
 	if query.FieldName != "" {
 		db = db.Where("field_name = ?", query.FieldName)
 	}
+	if query.TableID != "" {
+		db = db.Where("table_id = ?", query.TableID)
+	}
 
 	var (
 		count          int64
