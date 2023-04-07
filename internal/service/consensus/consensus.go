@@ -10,6 +10,8 @@ import (
 type Universal struct {
 	UserID string `json:"userID,omitempty"`
 
+	RequestID string `json:"requestID,omitempty"`
+
 	DepID string `json:"depID,omitempty"`
 
 	UserName string `json:"userName"`

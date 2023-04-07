@@ -3,8 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	redis2 "github.com/quanxiang-cloud/cabin/tailormade/db/redis"
-	"github.com/quanxiang-cloud/form/internal/models/redis"
 	"github.com/quanxiang-cloud/form/internal/service/consensus"
 	"github.com/quanxiang-cloud/form/pkg/misc/client"
 
@@ -69,11 +67,11 @@ type permit struct {
 	roleRepo      models.RoleRepo
 	roleGrantRepo models.RoleRantRepo
 	permitRepo    models.PermitRepo
-	limitRepo     models.LimitsRepo
-	daprClient    daprd.Client
-	conf          *config2.Config
-	userRoleRepo  models.UserRoleRepo
-	appCenterAPI  client.AppCenterAPI
+	//limitRepo     models.LimitsRepo
+	daprClient   daprd.Client
+	conf         *config2.Config
+	userRoleRepo models.UserRoleRepo
+	appCenterAPI client.AppCenterAPI
 }
 
 type CopyRoleReq struct {
@@ -411,11 +409,12 @@ func NewPermit(conf *config2.Config) (Permit, error) {
 	if err != nil {
 		return nil, err
 	}
-	redisClient, err := redis2.NewClient(conf.Redis)
+	//redisClient, err := redis2.NewClient(conf.Redis)
 	if err != nil {
 		return nil, err
 	}
 	appCenterAPI := client.NewAppCenterAPI(conf)
+	//appCenterAPI := client.NewAppCenterMock()
 	return &permit{
 		db:            db,
 		conf:          conf,
@@ -424,7 +423,7 @@ func NewPermit(conf *config2.Config) (Permit, error) {
 		roleGrantRepo: mysql.NewRoleGrantRepo(),
 		permitRepo:    mysql.NewPermitRepo(),
 		userRoleRepo:  mysql.NewUserRoleRepo(),
-		limitRepo:     redis.NewLimitRepo(redisClient),
+		//limitRepo:     redis.NewLimitRepo(redisClient),
 	}, nil
 }
 
@@ -981,6 +980,7 @@ func (p *permit) PerPoly(ctx context.Context, req *PerPolyReq) (*PerPolyResp, er
 		}
 		if role.Types == models.InitType {
 			return &PerPolyResp{
+				ID:    id2.StringUUID(),
 				Types: models.InitType,
 			}, nil
 		}
@@ -1048,10 +1048,18 @@ func FiledPermitPoly(source models.FiledPermit, dst models.FiledPermit) {
 func ConditionPoly(source models.Condition, dst models.Condition) models.Condition {
 	sQuery := source["query"]
 	dQuery := dst["query"]
-	if sQuery == nil {
+	s, ok := sQuery.(map[string]interface{})
+	if !ok {
+		return nil
+	}
+	d, ok := dQuery.(map[string]interface{})
+	if !ok {
+		return nil
+	}
+	if sQuery == nil || len(s) == 0 {
 		return source
 	}
-	if dQuery == nil {
+	if dQuery == nil || len(d) == 0 {
 		return dst
 	}
 	return models.Condition{

@@ -49,6 +49,7 @@ func bindParams(c echo.Context, i *permit.Request) error {
 	if err := (&echo.DefaultBinder{}).BindHeaders(c, i); err != nil {
 		return err
 	}
+	logger.Logger.WithName("bind params").Infow("ddd", "req -userID ", i.UserID)
 	i.Path = c.Request().URL.String()
 	if c.Get(path) != "" {
 		s, ok := c.Get(path).(string)

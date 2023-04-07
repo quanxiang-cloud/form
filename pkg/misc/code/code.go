@@ -17,6 +17,10 @@ const (
 	ErrNotPermit = 90074000002
 	// ErrParameter ErrParameter
 	ErrParameter = 90074000003
+	//ErrParameterProject ErrParameterProject
+	ErrParameterProject = 90074000004
+	// ErrAffectedRaw ErrAffectedRaw
+	ErrAffectedRaw = 90074000005
 )
 
 // CodeTable 码表
@@ -26,4 +30,6 @@ var CodeTable = map[int64]string{
 	ErrItemConvert:        "参数Items错误",
 	ErrNotPermit:          "没有权限 ，权限为空",
 	ErrParameter:          "类型转换错误",
+	ErrParameterProject:   "必须要有userID",
+	ErrAffectedRaw:        "修改失败,  影响的数据为0",
 }

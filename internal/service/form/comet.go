@@ -3,9 +3,8 @@ package form
 import (
 	"context"
 	"fmt"
-	"reflect"
-
-	"github.com/quanxiang-cloud/form/internal/service/types"
+	error2 "github.com/quanxiang-cloud/cabin/error"
+	"github.com/quanxiang-cloud/form/pkg/misc/code"
 	"github.com/quanxiang-cloud/form/pkg/misc/config"
 
 	"github.com/quanxiang-cloud/form/internal/service/consensus"
@@ -121,28 +120,6 @@ func (c *comet) callCreate(ctx context.Context, req *CreateReq) (*consensus.Resp
 	return resp, nil
 }
 
-func get(e consensus.Entity) types.Entity {
-	if e == nil {
-		return nil
-	}
-	value := reflect.ValueOf(e)
-	switch _t := reflect.TypeOf(e); _t.Kind() {
-	case reflect.Map:
-		iter := value.MapRange()
-		m := make(types.Entity)
-		for iter.Next() {
-			if !iter.Value().CanInterface() {
-				continue
-			}
-			m[iter.Key().String()] = iter.Value()
-		}
-		return m
-	default:
-		return nil
-	}
-	return nil
-}
-
 func (c *comet) callUpdate(ctx context.Context, req *UpdateReq) (*consensus.Response, error) {
 	dsl := make(map[string]interface{})
 	if req.Query != nil {
@@ -161,9 +138,17 @@ func (c *comet) callUpdate(ctx context.Context, req *UpdateReq) (*consensus.Resp
 	if err != nil {
 		return nil, err
 	}
-	resp := &consensus.Response{}
-	resp.Total = updates.SuccessCount
-	resp.Entity = req.Entity
+	if updates.SuccessCount == 0 {
+		return nil, error2.New(code.ErrAffectedRaw)
+	}
+	resp := &consensus.Response{
+		Total: 0,
+	}
+
+	if updates.SuccessCount > 0 {
+		resp.Total = updates.SuccessCount
+		resp.Entity = req.Entity
+	}
 	return resp, nil
 }
 
@@ -214,6 +199,9 @@ func (c *comet) callDelete(ctx context.Context, req *DeleteReq) (*consensus.Resp
 	deletes, err := c.formClient.Delete(ctx, formReq)
 	if err != nil {
 		return nil, err
+	}
+	if deletes.SuccessCount == 0 {
+		return nil, error2.New(code.ErrAffectedRaw)
 	}
 	resp := &consensus.Response{}
 	resp.Total = deletes.SuccessCount

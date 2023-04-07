@@ -22,6 +22,7 @@ const (
 type Condition struct {
 	parsers   map[string]Parser
 	searchAPI lowcode.SearchAPI
+	formAPI   *lowcode.Form
 }
 
 // NewCondition new condition.
@@ -29,6 +30,7 @@ func NewCondition(conf *config.Config) *Condition {
 	return &Condition{
 		parsers:   make(map[string]Parser),
 		searchAPI: lowcode.NewSearchAPI(conf),
+		formAPI:   lowcode.NewForm(conf.InternalNet),
 	}
 }
 
@@ -43,6 +45,7 @@ func (c *Condition) SetParse(ctx context.Context, req *permit.Request) {
 var parsers = []Parser{
 	&user{},
 	&subordinate{},
+	&project{},
 }
 
 // Parser parse param.
@@ -50,6 +53,53 @@ type Parser interface {
 	Tag() string
 	Build(context.Context, *Condition, *permit.Request)
 	Parse(string, map[string]interface{}) error
+}
+
+type project struct {
+	ctx  context.Context
+	cond *Condition
+	req  *permit.Request
+}
+
+func (p project) Tag() string {
+	return "$project"
+}
+
+func (p *project) Build(ctx context.Context, cond *Condition, req *permit.Request) {
+	p.ctx = ctx
+	p.cond = cond
+	p.req = req
+}
+
+func (p *project) getValue() ([]string, error) {
+	logger.Logger.WithName("project user data").Infow("data",
+		"req id ", header.GetRequestIDKV(p.ctx).Fuzzy()[1], "resp total ", p.req.UserID)
+	resp, err := p.cond.formAPI.UserProject(p.ctx, p.req.UserID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	ids := make([]string, resp.Total)
+	for index, value := range resp.List {
+		ids[index] = value.ProjectID
+	}
+
+	logger.Logger.WithName("project user data").Infow("data",
+		"req id ", header.GetRequestIDKV(p.ctx).Fuzzy()[1], "resp total ", resp.Total, "ids", ids)
+	return ids, nil
+}
+
+func (p *project) Parse(key string, params map[string]interface{}) error {
+	value, err := p.getValue()
+	if err != nil {
+		return err
+	}
+	params[_terms] = types.M{
+		"project_id": value,
+	}
+	delete(params, p.Tag())
+	return nil
 }
 
 type user struct {

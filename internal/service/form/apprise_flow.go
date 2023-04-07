@@ -56,6 +56,7 @@ func (a *appriseFlow) Do(ctx context.Context, bus *consensus.Bus) (*consensus.Re
 
 func (a *appriseFlow) createApprise(ctx context.Context, bus *consensus.Bus) {
 	data := new(inform.FormData)
+	data.RequestID = bus.RequestID
 	data.TableID = bus.TableID
 	data.Entity = bus.CreatedOrUpdate.Entity
 	inform.DefaultFormFiled(ctx, data, "post")
@@ -70,7 +71,6 @@ func (a *appriseFlow) deleteApprise(ctx context.Context, bus *consensus.Bus) {
 	} else {
 		ids = consensus.GetIDByQuery(bus.Get.OldQuery)
 	}
-
 	data := &inform.FormData{
 		TableID: bus.TableID,
 		Entity: map[string]interface{}{
@@ -78,6 +78,7 @@ func (a *appriseFlow) deleteApprise(ctx context.Context, bus *consensus.Bus) {
 			"delete_id": bus.UserID,
 		},
 	}
+	data.RequestID = bus.RequestID
 	inform.DefaultFormFiled(ctx, data, "delete")
 	logger.Logger.Infow("delete", "data is ", data)
 	a.inform.Send <- data
@@ -96,8 +97,9 @@ func (a *appriseFlow) updateApprise(ctx context.Context, bus *consensus.Bus) {
 			consensus.WithUpdateID(id),
 		)
 		data := &inform.FormData{
-			TableID: bus.TableID,
-			Entity:  entity,
+			TableID:   bus.TableID,
+			RequestID: bus.RequestID,
+			Entity:    entity,
 		}
 		inform.DefaultFormFiled(ctx, data, "put")
 		logger.Logger.Infow("update", "data is ", data)

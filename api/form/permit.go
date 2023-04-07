@@ -131,6 +131,7 @@ func (p *Permit) FindRole(c *gin.Context) {
 		AppID: c.Param(_appID),
 	}
 	ctx := header.MutateContext(c)
+	//
 	if err := c.ShouldBind(req); err != nil {
 		logger.Logger.WithName("FindRole").Errorw(err.Error(), header.GetRequestIDKV(ctx).Fuzzy()...)
 		c.AbortWithError(http.StatusBadRequest, err)
